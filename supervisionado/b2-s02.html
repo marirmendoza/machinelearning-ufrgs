@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fronteiras Lineares e Não Lineares</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .toggle-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .toggle-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .toggle-group {
+      display: inline-flex;
+      background: var(--bg3);
+      border: 1.5px solid var(--border);
+      border-radius: 999px;
+      padding: 3px;
+    }
+    .toggle-btn {
+      background: transparent;
+      border: none;
+      padding: 0.45rem 1.1rem;
+      border-radius: 999px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
+    .toggle-btn.active {
+      background: var(--purple);
+      color: white;
+      box-shadow: 0 2px 6px rgba(91,33,182,0.25);
+    }
+
+    .cards-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem;
+    }
+
+    .side-card {
+      background: var(--bg2);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+    .side-card.ok  { border-color: #86efac; }
+    .side-card.bad { border-color: #fca5a5; }
+
+    .side-badge {
+      align-self: flex-start;
+      padding: 0.25rem 0.8rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .ok  .side-badge { background: var(--green-lt); color: var(--green); border: 1px solid #86efac; }
+    .bad .side-badge { background: var(--red-lt); color: var(--red); border: 1px solid #fca5a5; }
+
+    .side-heading {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.25;
+    }
+    .side-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .plot-wrap {
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 0.4rem;
+    }
+    .plot-svg { width: 100%; height: auto; display: block; }
+    .axis-line { stroke: var(--text-dim); stroke-width: 1; }
+    .grid-line { stroke: var(--border2); stroke-width: 0.5; }
+    .axis-label { font-family: 'Fira Code', monospace; font-size: 9px; fill: var(--text-dim); }
+    .axis-title { font-family: 'Fira Code', monospace; font-size: 10px; fill: var(--text-muted); font-weight: 600; }
+
+    .pt { stroke: white; stroke-width: 1.5; }
+    .pt.dog { fill: #1d4ed8; }
+    .pt.cat { fill: #b91c1c; }
+    .pt.wrong { stroke: #fbbf24; stroke-width: 3; }
+
+    .boundary { fill: none; stroke-width: 2.5; }
+    .boundary.linear { stroke: var(--purple); stroke-dasharray: 5 4; }
+    .boundary.nonlinear { stroke: var(--purple); stroke-dasharray: 5 4; fill: rgba(91,33,182,0.06); }
+
+    .accuracy-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 0.55rem 0.9rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+    }
+    .accuracy-row .a-lbl { color: var(--text-muted); }
+    .accuracy-row .a-val { font-weight: 700; font-size: 1.05rem; }
+    .accuracy-row.good .a-val { color: var(--green); }
+    .accuracy-row.bad  .a-val { color: var(--red); }
+    .accuracy-row .a-note {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-dim);
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Aprendizado Supervisionado</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 2 · Slide 02 / 03</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Fronteiras: Lineares e Não Lineares</h1>
+        <p class="slide-subtitle">
+          Nem todo problema pode ser separado por uma <strong>reta</strong> — o formato da fronteira precisa combinar com o formato dos dados.
+        </p>
+      </div>
+
+      <div class="toggle-row">
+        <span class="toggle-label">Fronteira usada:</span>
+        <div class="toggle-group">
+          <button class="toggle-btn active" id="btn-linear" onclick="setMode('linear')">Linear</button>
+          <button class="toggle-btn" id="btn-nonlinear" onclick="setMode('nonlinear')">Não-linear</button>
+        </div>
+      </div>
+
+      <div class="cards-split">
+
+        <!-- LEFT: linearly separable -->
+        <div class="side-card ok" id="card-left">
+          <span class="side-badge">Linearmente separável</span>
+          <div class="side-heading">Peso e altura separam bem 🐶 e 🐱</div>
+          <div class="side-desc">As classes ficam em regiões distintas do espaço. Uma reta simples já resolve.</div>
+
+          <div class="plot-wrap">
+            <svg class="plot-svg" viewBox="0 0 300 240" xmlns="http://www.w3.org/2000/svg" id="svg-left">
+              <g id="grid-left"></g>
+              <line class="axis-line" x1="32" y1="205" x2="290" y2="205"/>
+              <line class="axis-line" x1="32" y1="12" x2="32" y2="205"/>
+              <text class="axis-title" x="140" y="228">peso (kg)</text>
+              <g id="boundary-left"></g>
+              <g id="points-left"></g>
+            </svg>
+          </div>
+
+          <div class="accuracy-row good" id="acc-left">
+            <span class="a-lbl">Acertos:</span>
+            <span class="a-val"><span id="acc-left-num">12</span>/12 · <span id="acc-left-pct">100%</span></span>
+            <span class="a-note" id="acc-left-note">linear suficiente</span>
+          </div>
+        </div>
+
+        <!-- RIGHT: non-linearly separable -->
+        <div class="side-card bad" id="card-right">
+          <span class="side-badge">Não-linearmente separável</span>
+          <div class="side-heading">🐶 formam um anel em volta dos 🐱</div>
+          <div class="side-desc">Nenhuma reta consegue separar bem — os gatos estão <em>rodeados</em> pelos cães. É preciso uma fronteira curva.</div>
+
+          <div class="plot-wrap">
+            <svg class="plot-svg" viewBox="0 0 300 240" xmlns="http://www.w3.org/2000/svg" id="svg-right">
+              <g id="grid-right"></g>
+              <line class="axis-line" x1="32" y1="205" x2="290" y2="205"/>
+              <line class="axis-line" x1="32" y1="12" x2="32" y2="205"/>
+              <text class="axis-title" x="140" y="228">peso (kg)</text>
+              <g id="boundary-right"></g>
+              <g id="points-right"></g>
+            </svg>
+          </div>
+
+          <div class="accuracy-row bad" id="acc-right">
+            <span class="a-lbl">Acertos:</span>
+            <span class="a-val"><span id="acc-right-num">8</span>/12 · <span id="acc-right-pct">67%</span></span>
+            <span class="a-note" id="acc-right-note">linear falha aqui</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">🧩</span>
+        <div class="i-text">
+          A escolha do <strong>tipo de fronteira</strong> — e portanto do <strong>algoritmo</strong> — depende do formato dos seus dados. Modelos lineares (regressão logística, perceptron) são rápidos e interpretáveis, mas só funcionam quando as classes se separam por retas. Modelos não-lineares (árvores, KNN, redes neurais) resolvem casos mais complexos, ao custo de mais dados e menos interpretabilidade.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b2-s01.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b2-s03.html">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+
+  <script>
+    // ============ LEFT: linearly separable ============
+    const leftDogs = [{p:10,a:25},{p:12,a:30},{p:14,a:27},{p:13,a:32},{p:11,a:28},{p:13,a:24}];
+    const leftCats = [{p:3,a:27},{p:5,a:25},{p:4,a:30},{p:6,a:24},{p:4,a:22},{p:5,a:32}];
+
+    // ============ RIGHT: nested clusters ============
+    const rightDogs = [{p:10,a:33},{p:15,a:30},{p:15,a:24},{p:10,a:21},{p:5,a:24},{p:5,a:30}];
+    const rightCats = [{p:10,a:26},{p:11,a:27},{p:10,a:28},{p:9,a:27},{p:10,a:27},{p:11,a:26}];
+
+    // Coord mapping for left (peso 0-20, altura 15-40)
+    const LX_MIN=0, LX_MAX=20, LY_MIN=15, LY_MAX=40;
+    const RX_MIN=0, RX_MAX=20, RY_MIN=15, RY_MAX=40;
+    const P_L=32, P_R=290, P_T=12, P_B=205;
+
+    function makeMap(xmin, xmax, ymin, ymax) {
+      return {
+        sx: x => P_L + (x - xmin) / (xmax - xmin) * (P_R - P_L),
+        sy: y => P_B - (y - ymin) / (ymax - ymin) * (P_B - P_T),
+      };
+    }
+    const mapL = makeMap(LX_MIN, LX_MAX, LY_MIN, LY_MAX);
+    const mapR = makeMap(RX_MIN, RX_MAX, RY_MIN, RY_MAX);
+
+    function drawGrid(gid, map, xstart, xstep, xmax, ystart, ystep, ymax) {
+      const g = document.getElementById(gid);
+      for (let x = xstart; x <= xmax; x += xstep) {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('class', 'grid-line');
+        line.setAttribute('x1', map.sx(x)); line.setAttribute('x2', map.sx(x));
+        line.setAttribute('y1', P_T); line.setAttribute('y2', P_B);
+        g.appendChild(line);
+        const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        lbl.setAttribute('class', 'axis-label');
+        lbl.setAttribute('x', map.sx(x) - 4); lbl.setAttribute('y', P_B + 12);
+        lbl.textContent = x;
+        g.appendChild(lbl);
+      }
+      for (let y = ystart; y <= ymax; y += ystep) {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('class', 'grid-line');
+        line.setAttribute('x1', P_L); line.setAttribute('x2', P_R);
+        line.setAttribute('y1', map.sy(y)); line.setAttribute('y2', map.sy(y));
+        g.appendChild(line);
+        const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        lbl.setAttribute('class', 'axis-label');
+        lbl.setAttribute('x', 16); lbl.setAttribute('y', map.sy(y) + 3);
+        lbl.textContent = y;
+        g.appendChild(lbl);
+      }
+    }
+    drawGrid('grid-left', mapL, 4, 4, 20, 20, 5, 40);
+    drawGrid('grid-right', mapR, 4, 4, 20, 20, 5, 40);
+
+    function drawPts(gid, map, pts, label, wrongPredicate) {
+      const g = document.getElementById(gid);
+      pts.forEach(p => {
+        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        let cls = 'pt ' + label;
+        if (wrongPredicate && wrongPredicate(p)) cls += ' wrong';
+        c.setAttribute('class', cls);
+        c.setAttribute('cx', map.sx(p.p));
+        c.setAttribute('cy', map.sy(p.a));
+        c.setAttribute('r', 5);
+        g.appendChild(c);
+      });
+    }
+
+    let mode = 'linear';
+
+    function drawAll() {
+      // Clear points and boundaries
+      document.getElementById('points-left').innerHTML = '';
+      document.getElementById('points-right').innerHTML = '';
+      document.getElementById('boundary-left').innerHTML = '';
+      document.getElementById('boundary-right').innerHTML = '';
+
+      // === LEFT: always linear boundary works ===
+      const bLeft = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      bLeft.setAttribute('class', 'boundary linear');
+      bLeft.setAttribute('x1', mapL.sx(7.5)); bLeft.setAttribute('x2', mapL.sx(7.5));
+      bLeft.setAttribute('y1', P_T); bLeft.setAttribute('y2', P_B);
+      document.getElementById('boundary-left').appendChild(bLeft);
+      // No wrong points on left
+      drawPts('points-left', mapL, leftDogs, 'dog', null);
+      drawPts('points-left', mapL, leftCats, 'cat', null);
+      // Left accuracy stays 12/12 in both modes
+      document.getElementById('acc-left-note').textContent = (mode === 'linear') ? 'linear suficiente' : 'não-linear não ajuda aqui';
+      document.getElementById('card-left').className = 'side-card ok';
+
+      // === RIGHT: linear vs non-linear ===
+      if (mode === 'linear') {
+        // Horizontal line at altura = 27.5
+        const bRight = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        bRight.setAttribute('class', 'boundary linear');
+        bRight.setAttribute('x1', P_L); bRight.setAttribute('x2', P_R);
+        bRight.setAttribute('y1', mapR.sy(27.5)); bRight.setAttribute('y2', mapR.sy(27.5));
+        document.getElementById('boundary-right').appendChild(bRight);
+        // Compute errors: dogs below 27.5 → wrong, cats above 27.5 → wrong
+        const wrongDogR = p => p.a <= 27.5;   // predicted cat, actually dog
+        const wrongCatR = p => p.a > 27.5;    // predicted dog, actually cat
+        drawPts('points-right', mapR, rightDogs, 'dog', wrongDogR);
+        drawPts('points-right', mapR, rightCats, 'cat', wrongCatR);
+        // Count: dogs correct = 3 (above), cats correct = 5 (below) → 8/12
+        setAccRight(8, 12, 'linear falha aqui', 'bad');
+      } else {
+        // Ellipse centered at (10, 27), rx=3, ry=2 (in data coords)
+        const cx = mapR.sx(10);
+        const cy = mapR.sy(27);
+        const rx = Math.abs(mapR.sx(13) - mapR.sx(10));
+        const ry = Math.abs(mapR.sy(25) - mapR.sy(27));
+        const ell = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+        ell.setAttribute('class', 'boundary nonlinear');
+        ell.setAttribute('cx', cx); ell.setAttribute('cy', cy);
+        ell.setAttribute('rx', rx); ell.setAttribute('ry', ry);
+        document.getElementById('boundary-right').appendChild(ell);
+        // No wrong points — ellipse perfectly separates
+        drawPts('points-right', mapR, rightDogs, 'dog', null);
+        drawPts('points-right', mapR, rightCats, 'cat', null);
+        setAccRight(12, 12, 'não-linear resolve', 'good');
+      }
+    }
+
+    function setAccRight(correct, total, note, cls) {
+      document.getElementById('acc-right-num').textContent = correct;
+      document.getElementById('acc-right-pct').textContent = Math.round(correct/total*100) + '%';
+      document.getElementById('acc-right-note').textContent = note;
+      const row = document.getElementById('acc-right');
+      row.classList.remove('good', 'bad');
+      row.classList.add(cls);
+      document.getElementById('card-right').className = 'side-card ' + (cls === 'good' ? 'ok' : 'bad');
+    }
+
+    function setMode(m) {
+      mode = m;
+      document.getElementById('btn-linear').classList.toggle('active', m === 'linear');
+      document.getElementById('btn-nonlinear').classList.toggle('active', m === 'nonlinear');
+      drawAll();
+    }
+
+    drawAll();
+  </script>
+</body>
+</html>

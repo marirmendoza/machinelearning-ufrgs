@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Toy Problem: KNN completo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .intro-strip {
+      background: linear-gradient(135deg, var(--blue-lt), var(--teal-lt));
+      border: 1.5px solid #93c5fd;
+      border-radius: var(--radius);
+      padding: 0.85rem 1.2rem;
+      display: flex;
+      gap: 0.8rem;
+      align-items: flex-start;
+      font-size: 0.92rem;
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .intro-strip .icon { font-size: 1.4rem; flex-shrink: 0; }
+    .intro-strip strong { color: var(--blue); }
+
+    .main-split { display: grid; grid-template-columns: 1.05fr 1fr; gap: 1.2rem; }
+
+    .plot-card {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.9rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .plot-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .plot-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--blue);
+    }
+    .plot-legend {
+      display: flex;
+      gap: 0.55rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.68rem;
+      color: var(--text-muted);
+    }
+    .plot-legend .swatch {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 0.25rem;
+    }
+    .swatch.aprov { background: #0e7490; }
+    .swatch.repr  { background: #b91c1c; }
+    .swatch.test  { background: white; border: 2px dashed var(--purple); }
+
+    .plot-wrap { background: var(--bg3); border-radius: 8px; padding: 0.4rem; }
+    .plot-svg { width: 100%; height: auto; display: block; }
+    .axis-line { stroke: var(--text-dim); stroke-width: 1; }
+    .grid-line { stroke: var(--border2); stroke-width: 0.5; }
+    .axis-label { font-family: 'Fira Code', monospace; font-size: 9px; fill: var(--text-dim); }
+    .axis-title { font-family: 'Fira Code', monospace; font-size: 10px; fill: var(--text-muted); font-weight: 600; }
+
+    .pt { stroke: white; stroke-width: 1.5; }
+    .pt.aprov { fill: #0e7490; }
+    .pt.repr  { fill: #b91c1c; }
+    .pt.test-processed { stroke-width: 2.5; stroke-dasharray: 3 2; stroke: var(--purple); }
+    .pt.test-current { stroke: var(--blue); stroke-width: 3.5; fill: white; }
+    .pt.neighbor { stroke: var(--blue); stroke-width: 3.5; }
+    .neighbor-line { stroke: var(--blue); stroke-width: 1.5; stroke-dasharray: 3 3; opacity: 0.65; }
+    .badge-text {
+      font-family: 'Fira Code', monospace;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .badge-text.ok { fill: var(--green); }
+    .badge-text.err { fill: var(--red); }
+
+    /* Right column cards */
+    .side-stack { display: flex; flex-direction: column; gap: 0.65rem; }
+
+    .config-card, .table-card, .metrics-card {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
+      box-shadow: var(--shadow);
+    }
+    .config-card { display: flex; flex-direction: column; gap: 0.6rem; }
+    .config-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .config-label {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+    }
+    .k-buttons { display: flex; gap: 0.35rem; }
+    .k-btn {
+      background: white;
+      border: 1.5px solid var(--border2);
+      border-radius: 8px;
+      padding: 0.4rem 0.8rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .k-btn:hover:not(.active) { border-color: var(--blue); color: var(--blue); }
+    .k-btn.active {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: white;
+    }
+
+    .distance-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.7rem;
+      background: var(--purple-lt);
+      border: 1px solid #c4b5fd;
+      border-radius: 999px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.78rem;
+      color: var(--purple);
+      font-weight: 700;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .btn-primary, .btn-reset {
+      padding: 0.55rem 1.1rem;
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.87rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+    }
+    .btn-primary { background: var(--blue); color: white; flex: 1; }
+    .btn-primary:hover:not(:disabled) { background: #1e40af; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-reset {
+      background: var(--bg3);
+      color: var(--text-muted);
+      border: 1.5px solid var(--border2);
+    }
+    .btn-reset:hover { background: var(--red-lt); color: var(--red); border-color: #fca5a5; }
+
+    .progress-line {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+    .progress-line .cnt { font-weight: 700; color: var(--text); }
+
+    /* Results table */
+    .table-card { padding: 0; overflow: hidden; }
+    .table-card .card-header {
+      background: var(--bg3);
+      padding: 0.55rem 0.85rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+      border-bottom: 1px solid var(--border2);
+    }
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+    }
+    .results-table th, .results-table td {
+      padding: 0.4rem 0.6rem;
+      text-align: center;
+    }
+    .results-table thead th {
+      background: var(--bg2);
+      color: var(--text-dim);
+      font-weight: 700;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border2);
+    }
+    .results-table tbody tr:not(:last-child) td { border-bottom: 1px solid var(--bg3); }
+    .results-table tbody tr.new-row { animation: rowIn 0.4s ease; background: var(--blue-lt); }
+    @keyframes rowIn {
+      from { opacity: 0; transform: translateX(-4px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    .results-table .cls-aprov { color: #0e7490; font-weight: 700; }
+    .results-table .cls-repr { color: #b91c1c; font-weight: 700; }
+    .results-table .check.ok { color: var(--green); font-weight: 700; font-size: 1rem; }
+    .results-table .check.err { color: var(--red); font-weight: 700; font-size: 1rem; }
+    .results-table .empty {
+      color: var(--text-dim);
+      font-style: italic;
+      padding: 0.9rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+    }
+
+    /* Metrics card */
+    .metrics-card {
+      background: linear-gradient(135deg, var(--green-lt), var(--blue-lt));
+      border-color: #86efac;
+      display: none;
+    }
+    .metrics-card.revealed { display: flex; flex-direction: column; gap: 0.6rem; animation: fadeIn 0.5s; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+    .accuracy-big {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .accuracy-lbl {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+    }
+    .accuracy-val {
+      font-family: 'Fira Code', monospace;
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--green);
+    }
+    .accuracy-formula {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+    .reflection {
+      font-size: 0.83rem;
+      line-height: 1.55;
+      color: var(--text-muted);
+      background: rgba(255,255,255,0.6);
+      border-radius: 6px;
+      padding: 0.55rem 0.75rem;
+    }
+    .reflection strong { color: var(--text); }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">K-Nearest Neighbors</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 4 · Slide 01 / 01</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Toy Problem: KNN do início ao fim</h1>
+        <p class="slide-subtitle">
+          Escolha <strong>k</strong>, clique <em>Predizer próximo</em> e acompanhe cada predição sendo feita — uma instância por vez.
+        </p>
+      </div>
+
+      <div class="intro-strip">
+        <span class="icon">📚</span>
+        <div>
+          <strong>Problema:</strong> prever se um aluno será <span class="text-teal" style="font-weight:700;">Aprovado</span> ou <span class="text-red" style="font-weight:700;">Reprovado</span> na prova a partir de <span class="mono">horas de estudo</span> e <span class="mono">horas de sono</span>. Coletamos <strong>17 alunos rotulados</strong> e <em>reservamos ~30% (5 alunos)</em> para avaliar a qualidade do modelo depois — usamos os outros 12 no treino.
+        </div>
+      </div>
+
+      <div class="main-split">
+
+        <!-- LEFT: plot -->
+        <div class="plot-card">
+          <div class="plot-card-header">
+            <span class="plot-title">📊 Espaço de entrada</span>
+            <span class="plot-legend">
+              <span><span class="swatch aprov"></span>aprovado</span>
+              <span><span class="swatch repr"></span>reprovado</span>
+              <span><span class="swatch test"></span>teste</span>
+            </span>
+          </div>
+          <div class="plot-wrap">
+            <svg class="plot-svg" viewBox="0 0 380 320" xmlns="http://www.w3.org/2000/svg" id="svg">
+              <g id="grid"></g>
+              <line class="axis-line" x1="45" y1="280" x2="365" y2="280"/>
+              <line class="axis-line" x1="45" y1="15" x2="45" y2="280"/>
+              <text class="axis-title" x="170" y="305">horas de estudo</text>
+              <text class="axis-title" x="12" y="150" transform="rotate(-90, 12, 150)">horas de sono</text>
+              <g id="train-pts"></g>
+              <g id="test-pts"></g>
+              <g id="neighbor-lines"></g>
+              <g id="current-pt"></g>
+              <g id="badges"></g>
+            </svg>
+          </div>
+        </div>
+
+        <!-- RIGHT: config + table + metrics -->
+        <div class="side-stack">
+
+          <div class="config-card">
+            <div class="config-row">
+              <span class="config-label">1. Normalizar (min-max)</span>
+              <div class="k-buttons">
+                <button class="k-btn active" data-norm="false" onclick="setNormalized(false)">Off</button>
+                <button class="k-btn" data-norm="true" onclick="setNormalized(true)">On</button>
+              </div>
+            </div>
+            <div class="config-row">
+              <span class="config-label">2. Número de vizinhos</span>
+              <div class="k-buttons">
+                <button class="k-btn" data-k="1" onclick="setK(1)">k=1</button>
+                <button class="k-btn active" data-k="3" onclick="setK(3)">k=3</button>
+                <button class="k-btn" data-k="5" onclick="setK(5)">k=5</button>
+              </div>
+            </div>
+            <div class="config-row">
+              <span class="config-label">3. Métrica de distância</span>
+              <span class="distance-badge">📐 Euclidiana</span>
+            </div>
+            <div class="action-buttons">
+              <button class="btn-primary" id="next-btn" onclick="predictNext()">▶ Predizer próximo</button>
+              <button class="btn-reset" onclick="reset()">↻ Reiniciar</button>
+            </div>
+            <div class="progress-line">Predições feitas: <span class="cnt" id="progress-cnt">0</span> / 5</div>
+          </div>
+
+          <div class="table-card">
+            <div class="card-header">📋 Resultados por instância</div>
+            <table class="results-table">
+              <thead>
+                <tr>
+                  <th>x (estudo, sono)</th>
+                  <th>ŷ predito</th>
+                  <th>y real</th>
+                  <th>?</th>
+                </tr>
+              </thead>
+              <tbody id="results-body">
+                <tr><td colspan="4" class="empty">Nenhuma predição feita ainda</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="metrics-card" id="metrics">
+            <div class="accuracy-big">
+              <div>
+                <div class="accuracy-lbl">Acurácia no teste</div>
+                <div class="accuracy-val"><span id="acc-pct">—</span></div>
+              </div>
+              <div class="accuracy-formula" id="acc-formula">= — / —</div>
+            </div>
+            <div class="reflection" id="reflection"></div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">✅</span>
+        <div class="i-text">
+          Este é o pipeline mínimo de <strong>qualquer</strong> projeto de aprendizado supervisionado — não só do KNN. O que muda entre algoritmos é <em>como</em> a predição é feita: em vez de "olhar os k vizinhos e votar", uma árvore percorreria os nós internos, e uma rede neural faria uma sequência de multiplicações matriciais. Em todos os casos, <strong>a metodologia é a mesma</strong>: separar treino/teste, treinar, avaliar em dados novos, reportar métricas.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b3-s02.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+      </div>
+      <a class="btn-nav disabled" href="#">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+
+  <script>
+    // ============ Data ============
+    // 12 alunos de treino (6 aprovados, 6 reprovados) — inclui um reprovado
+    // "atípico" (10, 8.5) que estudou muito mas foi reprovado; e uma amostra de
+    // aprovados/reprovados posicionados para gerar acurácias diferentes por k.
+    // Escalas dos dois atributos ficaram parecidas (span_x=10, span_y=8) para
+    // que a normalização não altere as predições — o que já é ilustrado
+    // dramaticamente no slide "Por que Normalizar?" (b3-s01).
+    const trainAprov = [
+      {x:7,  y:8},  {x:8, y:9},  {x:10, y:10}, {x:12, y:8},
+      {x:9,  y:10}, {x:13, y:6}
+    ];
+    const trainRepr = [
+      {x:3, y:2},   {x:4, y:3},   {x:5, y:4},   {x:5, y:2},
+      {x:4, y:4},   {x:10, y:8.5}   // ← outlier: estudou 10h, dormiu 8.5h, foi reprovado
+    ];
+    // 5 alunos de teste desenhados para mostrar o impacto de k
+    const testSet = [
+      {x:10,  y:9,   label:'aprov'},  // k=1 tropeça no outlier próximo
+      {x:7,   y:6,   label:'aprov'},  // k=5 puxa reprovados distantes
+      {x:11,  y:8,   label:'aprov'},  // fácil
+      {x:4,   y:3.5, label:'repr'},   // fácil
+      {x:5,   y:3,   label:'repr'},   // fácil
+    ];
+    const allTrain = [
+      ...trainAprov.map(p => ({...p, label:'aprov'})),
+      ...trainRepr.map(p => ({...p, label:'repr'}))
+    ];
+
+    // ============ State ============
+    let K = 3;
+    let normalized = false;
+    let currentIdx = 0;   // number of predictions made so far
+    let predictions = []; // {test, predicted, actual, correct, neighbors}
+
+    // Min/max computados só do treino (padrão em ML — teste usa mesmo scaler)
+    const _xs = allTrain.map(p => p.x);
+    const _ys = allTrain.map(p => p.y);
+    const NORM_X_MIN = Math.min(..._xs), NORM_X_MAX = Math.max(..._xs);
+    const NORM_Y_MIN = Math.min(..._ys), NORM_Y_MAX = Math.max(..._ys);
+    const normX = x => (x - NORM_X_MIN) / (NORM_X_MAX - NORM_X_MIN);
+    const normY = y => (y - NORM_Y_MIN) / (NORM_Y_MAX - NORM_Y_MIN);
+    function distance(a, b) {
+      if (normalized) {
+        return Math.hypot(normX(a.x) - normX(b.x), normY(a.y) - normY(b.y));
+      }
+      return Math.hypot(a.x - b.x, a.y - b.y);
+    }
+
+    // ============ Coord system ============
+    const XMIN=0, XMAX=15, YMIN=1, YMAX=11;
+    const PX_L=45, PX_R=365, PY_T=15, PY_B=280;
+    const sx = x => PX_L + (x - XMIN) / (XMAX - XMIN) * (PX_R - PX_L);
+    const sy = y => PY_B - (y - YMIN) / (YMAX - YMIN) * (PY_B - PY_T);
+
+    // ============ Grid ============
+    const grid = document.getElementById('grid');
+    for (let x = 3; x <= 15; x += 3) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('class', 'grid-line');
+      line.setAttribute('x1', sx(x)); line.setAttribute('x2', sx(x));
+      line.setAttribute('y1', PY_T); line.setAttribute('y2', PY_B);
+      grid.appendChild(line);
+      const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      lbl.setAttribute('class', 'axis-label');
+      lbl.setAttribute('x', sx(x) - 4); lbl.setAttribute('y', PY_B + 12);
+      lbl.textContent = x;
+      grid.appendChild(lbl);
+    }
+    for (let y = 2; y <= 10; y += 2) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('class', 'grid-line');
+      line.setAttribute('x1', PX_L); line.setAttribute('x2', PX_R);
+      line.setAttribute('y1', sy(y)); line.setAttribute('y2', sy(y));
+      grid.appendChild(line);
+      const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      lbl.setAttribute('class', 'axis-label');
+      lbl.setAttribute('x', 24); lbl.setAttribute('y', sy(y) + 3);
+      lbl.textContent = y;
+      grid.appendChild(lbl);
+    }
+
+    // Training points (always visible)
+    function drawTrain() {
+      const g = document.getElementById('train-pts');
+      g.innerHTML = '';
+      allTrain.forEach(p => {
+        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        c.setAttribute('class', 'pt ' + p.label);
+        c.setAttribute('cx', sx(p.x)); c.setAttribute('cy', sy(p.y)); c.setAttribute('r', 6);
+        g.appendChild(c);
+      });
+    }
+    drawTrain();
+
+    // ============ KNN predict ============
+    function predict(t) {
+      const dists = allTrain.map((p, i) => ({...p, i, d: distance(p, t)}));
+      dists.sort((a,b) => a.d - b.d);
+      const topK = dists.slice(0, K);
+      const nA = topK.filter(n => n.label === 'aprov').length;
+      const nR = topK.filter(n => n.label === 'repr').length;
+      const predicted = nA > nR ? 'aprov' : 'repr';
+      return { predicted, neighbors: topK };
+    }
+
+    // ============ Render ============
+    function renderPlot() {
+      // Processed test points (with badges) — but WITHOUT the current one; that's rendered separately
+      const tpG = document.getElementById('test-pts');
+      const badgeG = document.getElementById('badges');
+      tpG.innerHTML = '';
+      badgeG.innerHTML = '';
+      // Draw processed points (excluding the very last, which is the "current" highlighted one)
+      predictions.forEach((p, i) => {
+        const isCurrent = (i === predictions.length - 1);
+        if (isCurrent) return;   // skip; drawn as current
+        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        c.setAttribute('class', 'pt test-processed ' + p.test.label);
+        c.setAttribute('cx', sx(p.test.x)); c.setAttribute('cy', sy(p.test.y)); c.setAttribute('r', 7);
+        tpG.appendChild(c);
+        const badge = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        badge.setAttribute('class', 'badge-text ' + (p.correct ? 'ok' : 'err'));
+        badge.setAttribute('x', sx(p.test.x) + 10);
+        badge.setAttribute('y', sy(p.test.y) - 8);
+        badge.textContent = p.correct ? '✓' : '✗';
+        badgeG.appendChild(badge);
+      });
+
+      // Current test point + neighbor lines
+      const currentG = document.getElementById('current-pt');
+      const linesG = document.getElementById('neighbor-lines');
+      currentG.innerHTML = '';
+      linesG.innerHTML = '';
+      if (predictions.length > 0) {
+        const p = predictions[predictions.length - 1];
+        // Lines to neighbors
+        p.neighbors.forEach(n => {
+          const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          l.setAttribute('class', 'neighbor-line');
+          l.setAttribute('x1', sx(p.test.x)); l.setAttribute('y1', sy(p.test.y));
+          l.setAttribute('x2', sx(n.x));      l.setAttribute('y2', sy(n.y));
+          linesG.appendChild(l);
+        });
+        // Neighbor points highlighted (drawn on top of train)
+        p.neighbors.forEach(n => {
+          const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          c.setAttribute('class', 'pt ' + n.label + ' neighbor');
+          c.setAttribute('cx', sx(n.x)); c.setAttribute('cy', sy(n.y)); c.setAttribute('r', 6);
+          currentG.appendChild(c);
+        });
+        // Current test point
+        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        c.setAttribute('class', 'pt test-processed ' + p.test.label);
+        c.setAttribute('cx', sx(p.test.x)); c.setAttribute('cy', sy(p.test.y)); c.setAttribute('r', 8);
+        c.setAttribute('stroke', '#5b21b6');
+        c.setAttribute('stroke-width', 3.5);
+        currentG.appendChild(c);
+        // Badge for current
+        const badge = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        badge.setAttribute('class', 'badge-text ' + (p.correct ? 'ok' : 'err'));
+        badge.setAttribute('x', sx(p.test.x) + 10);
+        badge.setAttribute('y', sy(p.test.y) - 8);
+        badge.textContent = p.correct ? '✓' : '✗';
+        currentG.appendChild(badge);
+      }
+    }
+
+    function renderTable() {
+      const body = document.getElementById('results-body');
+      if (predictions.length === 0) {
+        body.innerHTML = '<tr><td colspan="4" class="empty">Nenhuma predição feita ainda</td></tr>';
+        return;
+      }
+      body.innerHTML = predictions.map((p, i) => {
+        const isNew = (i === predictions.length - 1);
+        const predLabel = p.predicted === 'aprov' ? 'Aprovado' : 'Reprovado';
+        const actualLabel = p.actual === 'aprov' ? 'Aprovado' : 'Reprovado';
+        return `<tr${isNew ? ' class="new-row"' : ''}>
+          <td>(${p.test.x}, ${p.test.y})</td>
+          <td class="cls-${p.predicted}">${predLabel}</td>
+          <td class="cls-${p.actual}">${actualLabel}</td>
+          <td class="check ${p.correct ? 'ok' : 'err'}">${p.correct ? '✓' : '✗'}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function renderProgress() {
+      document.getElementById('progress-cnt').textContent = predictions.length;
+      const btn = document.getElementById('next-btn');
+      if (predictions.length >= testSet.length) {
+        btn.disabled = true;
+        btn.innerHTML = '✓ Todas as predições feitas';
+      } else {
+        btn.disabled = false;
+        btn.innerHTML = `▶ Predizer próximo (${predictions.length + 1}/${testSet.length})`;
+      }
+    }
+
+    function renderMetrics() {
+      const m = document.getElementById('metrics');
+      if (predictions.length < testSet.length) {
+        m.classList.remove('revealed');
+        return;
+      }
+      const nOk = predictions.filter(p => p.correct).length;
+      const pct = Math.round(nOk / predictions.length * 100);
+      document.getElementById('acc-pct').textContent = pct + '%';
+      document.getElementById('acc-formula').textContent = `= ${nOk} / ${predictions.length}`;
+
+      // Reflexão sensível ao k escolhido — cada k tem um erro característico
+      // com este dataset (k=1 e k=5 erram por razões opostas; k=3 acerta tudo).
+      let refl;
+      if (K === 1) {
+        refl = `Com <strong>k=1</strong>, a predição depende <em>inteiramente</em> do único vizinho mais próximo. No 1º aluno de teste, o vizinho mais próximo foi um aluno <strong>reprovado atípico</strong> (estudou 10h e dormiu 8,5h, mas ainda assim reprovou) — o modelo se deixou levar por esse único ponto. Experimente <span class="mono">k=3</span> para ver como o voto majoritário absorve esse ruído.`;
+      } else if (K === 3) {
+        refl = `Com <strong>k=3</strong>, todas as predições acertaram — o voto majoritário <em>suavizou</em> tanto o efeito do outlier (que afetou k=1) quanto o efeito de vizinhos distantes (que afetará k=5). Para este dataset, k=3 é o melhor equilíbrio.`;
+      } else if (K === 5) {
+        refl = `Com <strong>k=5</strong>, vizinhos <em>mais distantes</em> também ganham voto. No 2º aluno de teste (região próxima à fronteira), três alunos reprovados entraram no top-5 mesmo estando um pouco longe — e derrubaram a predição. Experimente <span class="mono">k=3</span> para ver como uma vizinhança menor decide melhor.`;
+      }
+      if (normalized) {
+        refl += ` <br><br>💡 <em>Você aplicou <strong>normalização min-max</strong>, mas as predições ficaram idênticas ao caso sem normalização — porque horas de estudo e horas de sono já têm escalas parecidas. Em datasets com escalas muito diferentes (ex.: idade × salário, no slide "Por que Normalizar?"), o efeito é dramático.</em>`;
+      }
+      document.getElementById('reflection').innerHTML = refl;
+      m.classList.add('revealed');
+    }
+
+    function render() {
+      renderPlot();
+      renderTable();
+      renderProgress();
+      renderMetrics();
+    }
+
+    // ============ Actions ============
+    function setK(newK) {
+      K = newK;
+      document.querySelectorAll('.k-btn[data-k]').forEach(b => {
+        b.classList.toggle('active', parseInt(b.dataset.k) === K);
+      });
+      // Mudar k reseta o estado
+      currentIdx = 0;
+      predictions = [];
+      render();
+    }
+
+    function setNormalized(newState) {
+      normalized = newState;
+      document.querySelectorAll('.k-btn[data-norm]').forEach(b => {
+        b.classList.toggle('active', b.dataset.norm === String(newState));
+      });
+      // Mudar normalização também reseta o estado
+      currentIdx = 0;
+      predictions = [];
+      render();
+    }
+
+    function predictNext() {
+      if (currentIdx >= testSet.length) return;
+      const t = testSet[currentIdx];
+      const { predicted, neighbors } = predict(t);
+      predictions.push({
+        test: t,
+        predicted,
+        actual: t.label,
+        correct: predicted === t.label,
+        neighbors
+      });
+      currentIdx++;
+      render();
+    }
+
+    function reset() {
+      currentIdx = 0;
+      predictions = [];
+      render();
+    }
+
+    render();
+  </script>
+</body>
+</html>

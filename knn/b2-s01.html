@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>O Impacto de k</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .main-split { display: grid; grid-template-columns: 1.15fr 1fr; gap: 1.3rem; }
+    .plot-card, .info-card {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.15rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+    .plot-card { padding: 1rem; }
+    .plot-card-header { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
+    .plot-title { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--blue); }
+    .plot-legend { display: flex; gap: 0.7rem; font-family: 'Fira Code', monospace; font-size: 0.75rem; color: var(--text-muted); }
+    .plot-legend .swatch { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 0.3rem; vertical-align: baseline; }
+    .swatch.b { background: #0e7490; }
+    .swatch.m { background: #b91c1c; }
+
+    .plot-wrap { background: var(--bg3); border-radius: 8px; padding: 0.5rem; }
+    .plot-svg { width: 100%; height: auto; display: block; cursor: crosshair; }
+    .axis-line { stroke: var(--text-dim); stroke-width: 1; }
+    .grid-line { stroke: var(--border2); stroke-width: 0.5; }
+    .axis-label { font-family: 'Fira Code', monospace; font-size: 10px; fill: var(--text-dim); }
+    .axis-title { font-family: 'Fira Code', monospace; font-size: 11px; fill: var(--text-muted); font-weight: 600; }
+    .pt { stroke: white; stroke-width: 1.5; }
+    .pt.b { fill: #0e7490; }
+    .pt.m { fill: #b91c1c; }
+    .pt.neighbor { stroke: var(--blue); stroke-width: 3.5; }
+    .neighbor-line { stroke: var(--blue); stroke-width: 1.5; stroke-dasharray: 3 3; opacity: 0.6; }
+    .query-pt { fill: white; stroke: var(--blue); stroke-width: 3; }
+    .plot-hint { font-size: 0.78rem; color: var(--text-dim); font-family: 'Fira Code', monospace; text-align: center; }
+
+    /* K slider */
+    .k-slider-card {
+      background: linear-gradient(135deg, var(--blue-lt), var(--purple-lt));
+      border: 1.5px solid #93c5fd;
+      border-radius: 12px;
+      padding: 1rem 1.15rem;
+    }
+    .k-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.6rem;
+    }
+    .k-label {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+    }
+    .k-val {
+      font-family: 'Fira Code', monospace;
+      font-size: 1.7rem;
+      font-weight: 800;
+      color: var(--blue);
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--blue);
+    }
+    .k-ticks {
+      display: flex;
+      justify-content: space-between;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+      padding: 0 0.3rem;
+    }
+
+    /* Vote / prediction */
+    .vote-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 0.6rem;
+      align-items: center;
+      padding: 0.32rem 0;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+    }
+    .vote-row .swatch { width: 12px; height: 12px; border-radius: 50%; }
+    .vote-row .swatch.b { background: #0e7490; }
+    .vote-row .swatch.m { background: #b91c1c; }
+    .vote-count { font-weight: 700; color: var(--text); }
+    .prediction-line {
+      margin-top: 0.55rem;
+      padding-top: 0.55rem;
+      border-top: 1px dashed rgba(29,78,216,0.3);
+      font-family: 'Fira Code', monospace;
+      font-size: 1rem;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .prediction-line .label { font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; font-family: 'Inter', sans-serif; }
+    .prediction-line .value.b { color: #0e7490; }
+    .prediction-line .value.m { color: #b91c1c; }
+
+    /* Insight cards */
+    .k-insight {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 0.85rem 1.05rem;
+      font-size: 0.86rem;
+      line-height: 1.55;
+      color: var(--text);
+      display: flex;
+      gap: 0.6rem;
+      align-items: flex-start;
+    }
+    .k-insight.warn { border-left: 4px solid var(--orange); background: var(--orange-lt); }
+    .k-insight.note { border-left: 4px solid var(--blue); background: var(--blue-lt); }
+    .k-insight .s-icon { font-size: 1.15rem; flex-shrink: 0; }
+    .k-insight strong { color: var(--text); }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">K-Nearest Neighbors</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 2 · Slide 01 / 02</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">O Impacto de k</h1>
+        <p class="slide-subtitle">
+          Um único hiperparâmetro pode <strong>mudar completamente a predição</strong> — mesmo com os mesmos dados e o mesmo ponto de consulta.
+        </p>
+      </div>
+
+      <div class="main-split">
+
+        <!-- LEFT: plot -->
+        <div class="plot-card">
+          <div class="plot-card-header">
+            <span class="plot-title">🔬 Diagnóstico — 20 instâncias</span>
+            <span class="plot-legend">
+              <span><span class="swatch b"></span>benigno</span>
+              <span><span class="swatch m"></span>maligno</span>
+            </span>
+          </div>
+          <div class="plot-wrap">
+            <svg class="plot-svg" viewBox="0 0 380 320" xmlns="http://www.w3.org/2000/svg" id="svg" onclick="onClick(event)">
+              <g id="grid"></g>
+              <line class="axis-line" x1="42" y1="280" x2="365" y2="280"/>
+              <line class="axis-line" x1="42" y1="15" x2="42" y2="280"/>
+              <text class="axis-title" x="200" y="305">a₁</text>
+              <text class="axis-title" x="18" y="150" transform="rotate(-90, 18, 150)">a₂</text>
+              <g id="lines"></g>
+              <g id="points"></g>
+              <g id="query"></g>
+            </svg>
+          </div>
+          <div class="plot-hint">👆 clique para mover o "novo exemplo" · arraste o slider abaixo para mudar k</div>
+        </div>
+
+        <!-- RIGHT: k slider + votes -->
+        <div class="info-card">
+          <div class="k-slider-card">
+            <div class="k-header">
+              <span class="k-label">Número de vizinhos</span>
+              <span class="k-val">k = <span id="k-val">3</span></span>
+            </div>
+            <input type="range" id="k-slider" min="1" max="11" step="2" value="3" />
+            <div class="k-ticks">
+              <span>1</span><span>3</span><span>5</span><span>7</span><span>9</span><span>11</span>
+            </div>
+
+            <div style="margin-top: 0.9rem;">
+              <div id="votes"></div>
+              <div class="prediction-line">
+                <span class="label">Classe prevista</span>
+                <span class="value" id="prediction">—</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="k-insight note" style="margin-top: 0.6rem;">
+            <span class="s-icon">💡</span>
+            <div><strong>k pequeno</strong> (ex: k=1): a predição fica muito <em>sensível a ruído</em> — um único vizinho outlier pode dominar a resposta.</div>
+          </div>
+          <div class="k-insight warn">
+            <span class="s-icon">⚠️</span>
+            <div><strong>k grande demais</strong>: a predição fica muito <em>suavizada</em> e pode ignorar padrões locais importantes. Se k = n (número total), toda predição vira a classe majoritária global.</div>
+          </div>
+          <div class="k-insight">
+            <span class="s-icon">🎯</span>
+            <div><strong>Regras práticas</strong>: escolha <em>k ímpar</em> (evita empate) e <em>não múltiplo do número de classes</em>. O valor ótimo é encontrado <strong>experimentalmente</strong>, via validação.</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">🔧</span>
+        <div class="i-text">
+          <strong>k é um hiperparâmetro</strong> — um valor de entrada que <em>não é aprendido</em> a partir dos dados. Ele influencia diretamente o comportamento do modelo (aqui: quão local ou global é a decisão). Todo algoritmo de AM tem hiperparâmetros; aprender a escolhê-los bem é metade do trabalho de um bom projeto de AM.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b1-s01.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b2-s02.html">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+
+  <script>
+    // Same 20-point dataset as b1-s01
+    const points = [
+      {a1:0.20, a2:0.25, label:'b'},{a1:0.30, a2:0.35, label:'b'},{a1:0.15, a2:0.20, label:'b'},
+      {a1:0.25, a2:0.15, label:'b'},{a1:0.35, a2:0.30, label:'b'},{a1:0.10, a2:0.32, label:'b'},
+      {a1:0.28, a2:0.42, label:'b'},{a1:0.22, a2:0.28, label:'b'},{a1:0.40, a2:0.22, label:'b'},
+      {a1:0.32, a2:0.18, label:'b'},
+      {a1:0.65, a2:0.75, label:'m'},{a1:0.72, a2:0.68, label:'m'},{a1:0.80, a2:0.72, label:'m'},
+      {a1:0.75, a2:0.85, label:'m'},{a1:0.68, a2:0.80, label:'m'},{a1:0.85, a2:0.62, label:'m'},
+      {a1:0.78, a2:0.55, label:'m'},{a1:0.60, a2:0.65, label:'m'},{a1:0.90, a2:0.75, label:'m'},
+      {a1:0.70, a2:0.70, label:'m'},
+    ];
+
+    // Query starts at (0.50, 0.50) — ambiguous position where k affects prediction
+    let query = {a1: 0.50, a2: 0.50};
+    let K = 3;
+
+    const XMIN=0, XMAX=1, YMIN=0, YMAX=1;
+    const PX_L=42, PX_R=365, PY_T=15, PY_B=280;
+    const sx = x => PX_L + (x - XMIN) / (XMAX - XMIN) * (PX_R - PX_L);
+    const sy = y => PY_B - (y - YMIN) / (YMAX - YMIN) * (PY_B - PY_T);
+    const invx = px => XMIN + (px - PX_L) / (PX_R - PX_L) * (XMAX - XMIN);
+    const invy = py => YMIN + (PY_B - py) / (PY_B - PY_T) * (YMAX - YMIN);
+
+    // Grid
+    const gridG = document.getElementById('grid');
+    for (let x = 0; x <= 1; x += 0.2) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('class', 'grid-line');
+      line.setAttribute('x1', sx(x)); line.setAttribute('x2', sx(x));
+      line.setAttribute('y1', PY_T); line.setAttribute('y2', PY_B);
+      gridG.appendChild(line);
+      const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      lbl.setAttribute('class', 'axis-label');
+      lbl.setAttribute('x', sx(x) - 8); lbl.setAttribute('y', PY_B + 12);
+      lbl.textContent = x.toFixed(1);
+      gridG.appendChild(lbl);
+    }
+    for (let y = 0; y <= 1; y += 0.2) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('class', 'grid-line');
+      line.setAttribute('x1', PX_L); line.setAttribute('x2', PX_R);
+      line.setAttribute('y1', sy(y)); line.setAttribute('y2', sy(y));
+      gridG.appendChild(line);
+      const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      lbl.setAttribute('class', 'axis-label');
+      lbl.setAttribute('x', 20); lbl.setAttribute('y', sy(y) + 3);
+      lbl.textContent = y.toFixed(1);
+      gridG.appendChild(lbl);
+    }
+
+    function dist(a, b) { return Math.hypot(a.a1 - b.a1, a.a2 - b.a2); }
+
+    function findNeighbors(k) {
+      return points
+        .map((p, i) => ({...p, i, d: dist(p, query)}))
+        .sort((a, b) => a.d - b.d)
+        .slice(0, k);
+    }
+
+    function render() {
+      const neighbors = findNeighbors(K);
+      const neighIdx = new Set(neighbors.map(n => n.i));
+
+      const pg = document.getElementById('points');
+      pg.innerHTML = '';
+      points.forEach((p, i) => {
+        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        let cls = 'pt ' + p.label;
+        if (neighIdx.has(i)) cls += ' neighbor';
+        c.setAttribute('class', cls);
+        c.setAttribute('cx', sx(p.a1));
+        c.setAttribute('cy', sy(p.a2));
+        c.setAttribute('r', 6);
+        pg.appendChild(c);
+      });
+
+      const lg = document.getElementById('lines');
+      lg.innerHTML = '';
+      neighbors.forEach(n => {
+        const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        l.setAttribute('class', 'neighbor-line');
+        l.setAttribute('x1', sx(query.a1)); l.setAttribute('y1', sy(query.a2));
+        l.setAttribute('x2', sx(n.a1));     l.setAttribute('y2', sy(n.a2));
+        lg.appendChild(l);
+      });
+
+      const qg = document.getElementById('query');
+      qg.innerHTML = '';
+      const q = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      q.setAttribute('class', 'query-pt');
+      q.setAttribute('cx', sx(query.a1)); q.setAttribute('cy', sy(query.a2));
+      q.setAttribute('r', 8);
+      qg.appendChild(q);
+
+      const nB = neighbors.filter(n => n.label === 'b').length;
+      const nM = neighbors.filter(n => n.label === 'm').length;
+      document.getElementById('votes').innerHTML = `
+        <div class="vote-row"><span class="swatch b"></span><span>benigno</span><span class="vote-count">${nB} voto${nB !== 1 ? 's' : ''}</span></div>
+        <div class="vote-row"><span class="swatch m"></span><span>maligno</span><span class="vote-count">${nM} voto${nM !== 1 ? 's' : ''}</span></div>
+      `;
+
+      const pred = nM > nB ? 'm' : 'b';
+      const predEl = document.getElementById('prediction');
+      predEl.className = 'value ' + pred;
+      predEl.textContent = pred === 'm' ? 'maligno' : 'benigno';
+    }
+
+    function onClick(evt) {
+      const svg = document.getElementById('svg');
+      const rect = svg.getBoundingClientRect();
+      const px = ((evt.clientX - rect.left) / rect.width) * 380;
+      const py = ((evt.clientY - rect.top) / rect.height) * 320;
+      if (px < PX_L || px > PX_R || py < PY_T || py > PY_B) return;
+      query.a1 = invx(px);
+      query.a2 = invy(py);
+      render();
+    }
+
+    document.getElementById('k-slider').addEventListener('input', (e) => {
+      K = parseInt(e.target.value);
+      document.getElementById('k-val').textContent = K;
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>

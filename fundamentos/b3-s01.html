@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 3 — Rápido e Devagar</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .intro-box {
+      background: linear-gradient(135deg, var(--teal-lt), var(--purple-lt));
+      border: 1.5px solid #c4b5fd;
+      border-radius: var(--radius);
+      padding: 1.1rem 1.4rem;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+    .intro-box .book { font-size: 2.4rem; flex-shrink: 0; }
+    .intro-box .text { font-size: 0.98rem; line-height: 1.55; color: var(--text); }
+    .intro-box .text strong { color: var(--purple); }
+
+    .systems-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .system-card {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      transition: border-color 0.2s, transform 0.2s;
+      box-shadow: var(--shadow);
+    }
+    .system-card.s1 { border-color: #fdba74; }
+    .system-card.s2 { border-color: #93c5fd; }
+
+    .system-badge {
+      align-self: flex-start;
+      padding: 0.25rem 0.8rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .s1 .system-badge { background: var(--orange-lt); color: var(--orange); border: 1px solid #fdba74; }
+    .s2 .system-badge { background: var(--blue-lt); color: var(--blue); border: 1px solid #93c5fd; }
+
+    .system-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+    }
+    .s1 .system-title { color: var(--orange); }
+    .s2 .system-title { color: var(--blue); }
+
+    .system-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .system-ai {
+      margin-top: 0.3rem;
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 0.55rem 0.9rem;
+      font-size: 0.85rem;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .system-ai strong { color: var(--text); }
+    .s1 .system-ai { border-left: 3px solid var(--orange); }
+    .s2 .system-ai { border-left: 3px solid var(--blue); }
+
+    .tasks-panel {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.4rem;
+      box-shadow: var(--shadow);
+    }
+    .tasks-heading {
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--teal);
+      border-bottom: 2px solid var(--teal-lt);
+      padding-bottom: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .tasks-instruction {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+    .tasks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 0.85rem;
+    }
+    .task-card {
+      background: var(--bg3);
+      border: 2px solid var(--border2);
+      border-radius: 12px;
+      padding: 0.95rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .task-card:hover:not(.revealed) {
+      border-color: var(--teal);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(14,116,144,0.15);
+    }
+    .task-card.revealed { cursor: default; }
+    .task-card.revealed.s1 { border-color: #fdba74; background: var(--orange-lt); }
+    .task-card.revealed.s2 { border-color: #93c5fd; background: var(--blue-lt); }
+
+    .task-icon { font-size: 1.5rem; }
+    .task-text {
+      font-size: 0.92rem;
+      color: var(--text);
+      line-height: 1.4;
+      font-weight: 500;
+    }
+    .task-answer {
+      display: none;
+      font-size: 0.8rem;
+      font-family: 'Fira Code', monospace;
+      font-weight: 700;
+      padding-top: 0.35rem;
+      border-top: 1px dashed rgba(0,0,0,0.15);
+    }
+    .task-card.revealed .task-answer { display: block; }
+    .task-card.revealed.s1 .task-answer { color: var(--orange); }
+    .task-card.revealed.s2 .task-answer { color: var(--blue); }
+    .task-card .click-hint {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      font-family: 'Fira Code', monospace;
+    }
+    .task-card.revealed .click-hint { display: none; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Fundamentos de AM</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 3 · Slide 01 / 01</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Rápido e Devagar</h1>
+        <p class="slide-subtitle">
+          <strong>Sistema 1</strong> vs. <strong>Sistema 2</strong> — a analogia de Kahneman aplicada à IA.
+        </p>
+      </div>
+
+      <div class="intro-box">
+        <span class="book">📖</span>
+        <div class="text">
+          Em <em>"Rápido e Devagar"</em> (Kahneman, 2011), o pensamento humano é dividido em dois sistemas:
+          <strong>Sistema 1</strong> é rápido, intuitivo, automático — reconhecer um rosto, ler uma palavra.
+          <strong>Sistema 2</strong> é lento, deliberativo, custoso — resolver 47 × 23, planejar uma rota.
+          Cada tipo de tarefa favorece um tipo diferente de IA.
+        </div>
+      </div>
+
+      <div class="systems-row">
+        <div class="system-card s1">
+          <span class="system-badge">Sistema 1</span>
+          <div class="system-title">Rápido, intuitivo, automático</div>
+          <div class="system-desc">Reconhecimento de padrões, percepção, associações. Difícil de descrever formalmente, mas fácil de fazer.</div>
+          <div class="system-ai">🤖 <span><strong>IA baseada em aprendizado</strong> — aprende padrões a partir de exemplos</span></div>
+        </div>
+        <div class="system-card s2">
+          <span class="system-badge">Sistema 2</span>
+          <div class="system-title">Lento, deliberado, custoso</div>
+          <div class="system-desc">Raciocínio explícito, cálculo, busca sistemática. Fácil de descrever passo a passo, mas custoso de executar.</div>
+          <div class="system-ai">🤖 <span><strong>IA simbólica</strong> — enumera e explora soluções via regras explícitas</span></div>
+        </div>
+      </div>
+
+      <div class="tasks-panel">
+        <div class="tasks-heading">🎯 Teste você mesmo</div>
+        <div class="tasks-instruction">Para cada tarefa abaixo, <strong>clique para revelar</strong> em qual sistema ela se encaixa — e qual abordagem de IA é natural para resolvê-la.</div>
+        <div class="tasks-grid" id="tasks-grid"></div>
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">💡</span>
+        <div class="i-text">
+          O grande desafio da IA — e o motivo do aprendizado de máquina ter <strong>revolucionado</strong> o campo — foi conseguir resolver tarefas do <strong>Sistema 1</strong>: aquelas que humanos fazem sem pensar, mas que ninguém consegue descrever formalmente. É por isso que ML domina em visão, fala e linguagem natural.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b2-s01.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+      </div>
+      <a class="btn-nav" href="b4-s01.html">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+
+  <script>
+    const tasks = [
+      { icon: '👤', text: 'Reconhecer o rosto de um amigo em uma foto', system: 's1', ai: 'AM (visão computacional)' },
+      { icon: '🧮', text: 'Calcular 47 × 23 sem calculadora', system: 's2', ai: 'IA simbólica (regras de multiplicação)' },
+      { icon: '📧', text: 'Julgar se um e-mail é spam pelo assunto', system: 's1', ai: 'AM (classificação de texto)' },
+      { icon: '♟️', text: 'Planejar 10 lances à frente em uma partida de xadrez', system: 's2', ai: 'IA simbólica (busca em árvore)' },
+      { icon: '🩺', text: 'Detectar uma pneumonia numa radiografia de tórax', system: 's1', ai: 'AM (redes convolucionais)' },
+      { icon: '🧩', text: 'Resolver um Sudoku 9×9 do zero', system: 's2', ai: 'IA simbólica (backtracking)' },
+      { icon: '🗣️', text: 'Entender o sotaque de alguém falando português', system: 's1', ai: 'AM (reconhecimento de fala)' },
+      { icon: '🗺️', text: 'Encontrar o menor caminho entre duas cidades num mapa', system: 's2', ai: 'IA simbólica (Dijkstra, A*)' },
+    ];
+
+    const grid = document.getElementById('tasks-grid');
+    tasks.forEach((t, idx) => {
+      const card = document.createElement('div');
+      card.className = 'task-card';
+      card.dataset.system = t.system;
+      card.innerHTML = `
+        <span class="task-icon">${t.icon}</span>
+        <span class="task-text">${t.text}</span>
+        <span class="click-hint">clique para revelar ↓</span>
+        <span class="task-answer">${t.system === 's1' ? 'Sistema 1 · AM' : 'Sistema 2 · Simbólica'}<br><span style="font-weight:500; color:var(--text-muted);">→ ${t.ai}</span></span>
+      `;
+      card.addEventListener('click', () => {
+        card.classList.add('revealed', t.system);
+      });
+      grid.appendChild(card);
+    });
+  </script>
+</body>
+</html>

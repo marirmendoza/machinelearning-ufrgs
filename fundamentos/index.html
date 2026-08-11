@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fundamentos de AM — Índice dos Slides</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f8f9fb; --bg2: #ffffff; --bg3: #f0f2f6;
+      --border: #c7d0e0; --border2: #d1d9e8;
+      --text: #0f1724; --text-muted: #3d4f6e; --text-dim: #6b7fa3;
+      --teal: #0e7490; --grad: linear-gradient(135deg, #0e7490, #166534);
+    }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 3rem 1.5rem;
+    }
+    .hero { text-align: center; margin-bottom: 3rem; max-width: 640px; }
+    .badge {
+      display: inline-block;
+      padding: 0.3rem 1rem;
+      border-radius: 999px;
+      background: rgba(14,116,144,0.08);
+      border: 1px solid rgba(14,116,144,0.25);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 1.2rem;
+    }
+    h1 {
+      font-size: 2.4rem;
+      font-weight: 800;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.75rem;
+    }
+    .prof-name {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      margin: 0.5rem 0 0.7rem 0;
+    }
+    .hero-sub {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      max-width: 560px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 1.2rem;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      text-decoration: none;
+      font-family: 'Fira Code', monospace;
+    }
+    .back-link:hover { color: var(--teal); }
+
+    .blocks {
+      display: flex; flex-direction: column;
+      gap: 2rem;
+      max-width: 860px; width: 100%;
+    }
+    .block-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--teal);
+      margin-bottom: 1rem;
+      padding-left: 0.5rem;
+      border-left: 3px solid var(--teal);
+    }
+    .slides-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1rem;
+    }
+    .slide-link {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 1.1rem 1.25rem;
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      text-decoration: none;
+      color: var(--text);
+      transition: all 0.2s;
+      box-shadow: 0 1px 4px rgba(15,23,36,0.07);
+    }
+    .slide-link:hover {
+      border-color: var(--teal);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(14,116,144,0.12);
+    }
+    .sl-num { font-family: 'Fira Code', monospace; font-size: 0.7rem; color: var(--text-dim); }
+    .sl-icon { font-size: 1.5rem; }
+    .sl-title { font-size: 0.95rem; font-weight: 600; line-height: 1.3; color: var(--text); }
+    .sl-desc { font-size: 0.78rem; color: var(--text-muted); line-height: 1.45; }
+    .sl-tag {
+      align-self: flex-start;
+      padding: 0.15rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      background: rgba(14,116,144,0.08);
+      border: 1px solid rgba(14,116,144,0.2);
+      color: var(--teal);
+    }
+    .coming-soon { opacity: 0.4; pointer-events: none; }
+    .coming-soon .sl-tag {
+      background: rgba(100,116,139,0.08);
+      border-color: var(--border2);
+      color: var(--text-dim);
+    }
+    footer {
+      margin-top: 3rem;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      text-align: center;
+      font-family: 'Fira Code', monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <a href="../index.html" class="back-link">← Todas as aulas</a>
+    <div class="badge">UFRGS · Aprendizado de Máquina</div>
+    <h1>Fundamentos de AM</h1>
+    <div class="prof-name">Profa. Mariana Recamonde-Mendoza</div>
+    <p class="hero-sub">Explore os conceitos fundamentais de aprendizado de máquina através de exemplos manipuláveis. Cada slide isola um conceito e permite que o aluno interaja com ele.</p>
+  </div>
+
+  <div class="blocks">
+
+    <!-- Bloco 1 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 1 — O que é Aprendizado de Máquina?</div>
+      <div class="slides-grid">
+        <a href="b1-s01.html" class="slide-link">
+          <div class="sl-num">Slide 01</div>
+          <div class="sl-icon">⚖️</div>
+          <div class="sl-title">Programado vs. Aprendido</div>
+          <div class="sl-desc">Compare lado a lado um sistema baseado em regras e um sistema treinado com exemplos.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="b1-s02.html" class="slide-link">
+          <div class="sl-num">Slide 02</div>
+          <div class="sl-icon">🎓</div>
+          <div class="sl-title">Supervisionado vs. Não-supervisionado</div>
+          <div class="sl-desc">Mesmos dados, dois paradigmas. Veja a diferença essencial: existência (ou não) de rótulos humanos.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="b1-s03.html" class="slide-link">
+          <div class="sl-num">Slide 03</div>
+          <div class="sl-icon">🔬</div>
+          <div class="sl-title">Anatomia de um Dataset</div>
+          <div class="sl-desc">Instância, atributo, alvo, dimensionalidade e notação — passe o mouse na tabela WDBC para ver cada conceito destacado.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="b1-s04.html" class="slide-link">
+          <div class="sl-num">Slide 04</div>
+          <div class="sl-icon">🏷️</div>
+          <div class="sl-title">Tipos de Atributos</div>
+          <div class="sl-desc">Qualitativo (nominal/ordinal) vs. quantitativo (discreto/contínuo) — com dataset de exemplo e hover que destaca cada tipo.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Bloco 2 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 2 — Taxonomia de Tarefas</div>
+      <div class="slides-grid">
+        <a href="b2-s01.html" class="slide-link">
+          <div class="sl-num">Slide 01</div>
+          <div class="sl-icon">🎯</div>
+          <div class="sl-title">Classificador de Tarefas</div>
+          <div class="sl-desc">5 cenários reais — classifique cada um como preditivo/descritivo ou supervisionado/não supervisionado.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Bloco 3 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 3 — Sistema 1 vs. Sistema 2</div>
+      <div class="slides-grid">
+        <a href="b3-s01.html" class="slide-link">
+          <div class="sl-num">Slide 01</div>
+          <div class="sl-icon">🧠</div>
+          <div class="sl-title">Rápido e Devagar</div>
+          <div class="sl-desc">A analogia de Kahneman aplicada a IA simbólica vs. IA de aprendizado — clique nas tarefas para descobrir qual sistema (e qual IA) cabe melhor.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Bloco 4 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 4 — Pipeline de AM</div>
+      <div class="slides-grid">
+        <a href="b4-s01.html" class="slide-link">
+          <div class="sl-num">Slide 01</div>
+          <div class="sl-icon">🔧</div>
+          <div class="sl-title">Etapas do Pipeline</div>
+          <div class="sl-desc">Pipeline clicável de 5 etapas — clique em cada uma para ver perguntas típicas, decisões comuns e onde o processo falha.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    UFRGS · Aprendizado de Máquina · Profa. Mariana Recamonde-Mendoza
+  </footer>
+</body>
+</html>

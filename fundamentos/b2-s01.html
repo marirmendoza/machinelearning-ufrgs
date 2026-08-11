@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 2 — Classificador de Tarefas</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .exercise-panel {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 1.1rem;
+    }
+
+    .progress-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .progress-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      white-space: nowrap;
+      font-weight: 600;
+    }
+    .progress-bar-outer {
+      flex: 1;
+      height: 6px;
+      background: var(--bg3);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-bar-inner {
+      height: 100%;
+      background: var(--grad-title);
+      transition: width 0.3s ease;
+    }
+    .score-badge {
+      background: var(--yellow-lt);
+      color: var(--yellow);
+      padding: 0.35rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border: 1px solid #fde047;
+      white-space: nowrap;
+    }
+
+    .tag-row { display: flex; gap: 0.5rem; }
+    .tag {
+      display: inline-block;
+      padding: 0.25rem 0.8rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .tag-num { background: var(--bg3); color: var(--text-muted); border: 1px solid var(--border2); }
+    .tag-tipo { background: var(--blue-lt); color: var(--blue); border: 1px solid #93c5fd; }
+    .tag-paradigma { background: var(--orange-lt); color: var(--orange); border: 1px solid #fdba74; }
+
+    .scenario-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+    }
+    .scenario-desc {
+      color: var(--text-muted);
+      font-size: 1rem;
+      line-height: 1.55;
+    }
+
+    .question-label {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-top: 0.4rem;
+    }
+
+    .options {
+      display: flex;
+      gap: 0.7rem;
+      flex-wrap: wrap;
+    }
+    .option-btn {
+      flex: 1;
+      min-width: 180px;
+      padding: 0.9rem 1.2rem;
+      border: 2px solid var(--border2);
+      background: var(--bg2);
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+      transition: all 0.15s ease;
+      font-family: 'Inter', sans-serif;
+      text-align: left;
+    }
+    .option-btn:hover:not(:disabled) {
+      border-color: var(--teal);
+      background: var(--teal-lt);
+    }
+    .option-btn:disabled { cursor: not-allowed; }
+    .option-btn.selected-correct {
+      background: var(--green-lt);
+      border-color: var(--green);
+      color: var(--green);
+    }
+    .option-btn.selected-wrong {
+      background: var(--red-lt);
+      border-color: var(--red);
+      color: var(--red);
+    }
+    .option-btn.correct-answer {
+      background: var(--green-lt);
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    .feedback {
+      padding: 1rem 1.2rem;
+      background: var(--bg3);
+      border-left: 4px solid var(--teal);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+      display: none;
+    }
+    .feedback.show { display: block; animation: fadeIn 0.3s ease; }
+    .feedback strong { color: var(--text); }
+    .feedback em { color: var(--teal); font-style: normal; font-weight: 600; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .nav-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.8rem;
+    }
+    .action-btn {
+      padding: 0.7rem 1.4rem;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.15s;
+    }
+    .action-btn.primary {
+      background: var(--teal);
+      color: white;
+    }
+    .action-btn.primary:hover:not(:disabled) { background: #075a70; transform: translateY(-1px); }
+    .action-btn.primary:disabled { opacity: 0.3; cursor: not-allowed; }
+    .action-btn.ghost {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1.5px solid var(--border2);
+    }
+    .action-btn.ghost:hover:not(:disabled) { background: var(--bg3); }
+    .action-btn.ghost:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    /* Final screen */
+    .final-screen {
+      text-align: center;
+      padding: 2.5rem 2rem;
+      display: none;
+    }
+    .final-screen.show { display: flex; flex-direction: column; align-items: center; gap: 0.8rem; }
+    .final-emoji { font-size: 3rem; }
+    .final-score-big {
+      font-size: 3rem;
+      font-weight: 800;
+      background: var(--grad-title);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .final-msg { color: var(--text-muted); font-size: 1.05rem; max-width: 460px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Fundamentos de AM</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 2 · Slide 01 / 01</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Classificador de Tarefas</h1>
+        <p class="slide-subtitle">
+          Cinco cenários reais. Cada um pergunta uma coisa: <strong>tipo de tarefa</strong> ou <strong>paradigma</strong>.
+        </p>
+      </div>
+
+      <div class="exercise-panel" id="quiz-panel">
+        <div class="progress-row">
+          <span class="progress-label">Cenário <span id="cur">1</span>/<span id="tot">5</span></span>
+          <div class="progress-bar-outer"><div class="progress-bar-inner" id="pbar" style="width:20%"></div></div>
+          <span class="score-badge">Acertos: <span id="score">0</span></span>
+        </div>
+
+        <div id="quiz-body"></div>
+      </div>
+
+      <div class="exercise-panel final-screen" id="final-screen">
+        <div class="final-emoji" id="final-emoji">🎯</div>
+        <div class="final-score-big"><span id="final-score">0</span>/5</div>
+        <p class="final-msg" id="final-msg"></p>
+        <button class="action-btn primary" onclick="restart()">Refazer</button>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b1-s04.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+      </div>
+      <a class="btn-nav" href="b3-s01.html">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+
+  <script>
+    const scenarios = [
+      {
+        ask: "paradigma",
+        title: "Detecção de fraude no Nubank",
+        desc: "A cada nova transação de cartão, um modelo decide em milissegundos se ela é legítima ou fraudulenta. O banco tem histórico de milhões de transações passadas já rotuladas como 'fraude' ou 'ok' — foi com esses dados que o modelo foi treinado.",
+        question: "Qual paradigma de aprendizado o Nubank usou para treinar este modelo?",
+        options: ["Supervisionado", "Não supervisionado"],
+        correct: "Supervisionado",
+        feedback: "É <strong>supervisionado</strong>: o banco tem exemplos passados com o rótulo correto ('fraude' ou 'ok'). O modelo aprende mapeando as características de cada transação para o rótulo — é o cenário clássico de aprendizado supervisionado."
+      },
+      {
+        ask: "tipo",
+        title: "Previsão do preço de imóveis em Porto Alegre",
+        desc: "Uma imobiliária quer estimar o preço de venda de um imóvel a partir de tamanho, bairro, número de quartos e ano de construção. Ela tem histórico de 15 mil vendas registradas nos últimos 5 anos, com os preços finais praticados.",
+        question: "Que tipo de tarefa é esta?",
+        options: ["Preditiva", "Descritiva"],
+        correct: "Preditiva",
+        feedback: "É <strong>preditiva</strong>: queremos estimar o valor de um atributo (o preço) que ainda não conhecemos. <em>Detalhe importante:</em> como o preço é numérico e contínuo, esta é uma tarefa de <strong>regressão</strong> — dentro de tarefas preditivas existem duas subclasses (classificação e regressão)."
+      },
+      {
+        ask: "paradigma",
+        title: "Segmentação de clientes em um e-commerce",
+        desc: "Uma loja online quer descobrir se seus clientes formam grupos naturais (compradores frequentes, caçadores de promoção, sazonais...) para direcionar campanhas específicas para cada grupo. Ela não sabe de antemão quantos grupos existem, nem quem pertence a qual.",
+        question: "Qual paradigma de aprendizado é adequado para este problema?",
+        options: ["Supervisionado", "Não supervisionado"],
+        correct: "Não supervisionado",
+        feedback: "É <strong>não supervisionado</strong>: não existe um rótulo pré-definido dizendo 'este cliente é do grupo A'. O algoritmo (ex.: k-means, que veremos mais adiante) descobre os agrupamentos apenas pela similaridade entre os clientes."
+      },
+      {
+        ask: "tipo",
+        title: "Descoberta de subtipos moleculares de câncer",
+        desc: "Um grupo de pesquisa em oncologia analisa a expressão de milhares de genes em tumores de mama de 500 pacientes. O objetivo é investigar se existem subtipos moleculares ainda não descritos na literatura clínica — algo que possa levar a tratamentos mais personalizados no futuro.",
+        question: "Que tipo de tarefa é esta?",
+        options: ["Preditiva", "Descritiva"],
+        correct: "Descritiva",
+        feedback: "É <strong>descritiva</strong>: o objetivo é <em>encontrar estrutura</em> nos dados, não prever um rótulo já conhecido. Note que este é o mesmo domínio (câncer) que aparece em problemas preditivos (diagnosticar tumor maligno/benigno) — o que muda é a <strong>pergunta</strong>, não os dados."
+      },
+      {
+        ask: "paradigma",
+        title: "Filtro de spam do Gmail",
+        desc: "O Gmail classifica cada e-mail que chega como 'spam' ou 'não spam'. Ao longo dos anos, bilhões de usuários marcaram manualmente e-mails como spam (ou tiraram da caixa de spam) — esses cliques foram usados para treinar o modelo.",
+        question: "Qual paradigma de aprendizado o Google usa aqui?",
+        options: ["Supervisionado", "Não supervisionado"],
+        correct: "Supervisionado",
+        feedback: "É <strong>supervisionado</strong>: os cliques dos usuários ('marcar como spam' / 'não é spam') funcionam como rótulos. O modelo aprende a mapear as características do e-mail (remetente, palavras, links...) para o rótulo correspondente."
+      }
+    ];
+
+    let currentIdx = 0;
+    let score = 0;
+    let answered = false;
+
+    const body = document.getElementById('quiz-body');
+    document.getElementById('tot').textContent = scenarios.length;
+
+    function renderScenario(idx) {
+      const s = scenarios[idx];
+      answered = false;
+      document.getElementById('cur').textContent = idx + 1;
+      document.getElementById('pbar').style.width = ((idx + 1) / scenarios.length * 100) + '%';
+
+      const tagClass = s.ask === 'tipo' ? 'tag-tipo' : 'tag-paradigma';
+      const tagLabel = s.ask === 'tipo' ? 'Tipo de tarefa' : 'Paradigma';
+
+      body.innerHTML = `
+        <div class="tag-row">
+          <span class="tag tag-num">Cenário ${idx + 1}</span>
+          <span class="tag ${tagClass}">${tagLabel}</span>
+        </div>
+        <div class="scenario-title">${s.title}</div>
+        <div class="scenario-desc">${s.desc}</div>
+        <div class="question-label">${s.question}</div>
+        <div class="options" id="opts">
+          ${s.options.map(o => `<button class="option-btn" onclick="answer('${o}')">${o}</button>`).join('')}
+        </div>
+        <div class="feedback" id="fb">${s.feedback}</div>
+        <div class="nav-row">
+          <button class="action-btn ghost" onclick="prev()" ${idx === 0 ? 'disabled' : ''}>← Anterior</button>
+          <button class="action-btn primary" id="next-btn" onclick="next()" disabled>${idx === scenarios.length - 1 ? 'Ver resultado' : 'Próximo →'}</button>
+        </div>
+      `;
+    }
+
+    function answer(choice) {
+      if (answered) return;
+      answered = true;
+      const s = scenarios[currentIdx];
+      document.querySelectorAll('#opts .option-btn').forEach(btn => {
+        btn.disabled = true;
+        if (btn.textContent === choice && choice === s.correct) {
+          btn.classList.add('selected-correct');
+          score++;
+          document.getElementById('score').textContent = score;
+        } else if (btn.textContent === choice) {
+          btn.classList.add('selected-wrong');
+        }
+        if (btn.textContent === s.correct && choice !== s.correct) {
+          btn.classList.add('correct-answer');
+        }
+      });
+      document.getElementById('fb').classList.add('show');
+      document.getElementById('next-btn').disabled = false;
+    }
+
+    function next() {
+      if (currentIdx < scenarios.length - 1) {
+        currentIdx++;
+        renderScenario(currentIdx);
+      } else {
+        showFinal();
+      }
+    }
+    function prev() {
+      if (currentIdx > 0) { currentIdx--; renderScenario(currentIdx); }
+    }
+    function showFinal() {
+      document.getElementById('quiz-panel').style.display = 'none';
+      const fs = document.getElementById('final-screen');
+      fs.classList.add('show');
+      document.getElementById('final-score').textContent = score;
+      const pct = score / scenarios.length;
+      let e, m;
+      if (pct === 1) { e = '🏆'; m = 'Perfeito! Você dominou a taxonomia básica dos paradigmas de AM.'; }
+      else if (pct >= 0.8) { e = '🎯'; m = 'Muito bom! Revise apenas os cenários em que errou.'; }
+      else if (pct >= 0.6) { e = '👍'; m = 'Bom começo. Vale reler os slides sobre tarefas preditivas vs. descritivas.'; }
+      else { e = '📚'; m = 'Sem problema — este é o primeiro contato. Refaça com calma.'; }
+      document.getElementById('final-emoji').textContent = e;
+      document.getElementById('final-msg').textContent = m;
+    }
+    function restart() {
+      currentIdx = 0;
+      score = 0;
+      document.getElementById('score').textContent = 0;
+      document.getElementById('quiz-panel').style.display = 'flex';
+      document.getElementById('final-screen').classList.remove('show');
+      renderScenario(0);
+    }
+
+    renderScenario(0);
+  </script>
+</body>
+</html>

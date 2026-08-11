@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KNN — Índice dos Slides</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f8f9fb; --bg2: #ffffff; --bg3: #f0f2f6;
+      --border: #c7d0e0; --border2: #d1d9e8;
+      --text: #0f1724; --text-muted: #3d4f6e; --text-dim: #6b7fa3;
+      --blue: #1d4ed8; --grad: linear-gradient(135deg, #1d4ed8, #0e7490);
+    }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 3rem 1.5rem;
+    }
+    .hero { text-align: center; margin-bottom: 3rem; max-width: 640px; }
+    .badge {
+      display: inline-block;
+      padding: 0.3rem 1rem;
+      border-radius: 999px;
+      background: rgba(29,78,216,0.08);
+      border: 1px solid rgba(29,78,216,0.25);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 1.2rem;
+    }
+    h1 {
+      font-size: 2.4rem;
+      font-weight: 800;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.75rem;
+    }
+    .prof-name {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      margin: 0.5rem 0 0.7rem 0;
+    }
+    .hero-sub {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      max-width: 560px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 1.2rem;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      text-decoration: none;
+      font-family: 'Fira Code', monospace;
+    }
+    .back-link:hover { color: var(--blue); }
+
+    .blocks {
+      display: flex; flex-direction: column;
+      gap: 2rem;
+      max-width: 900px; width: 100%;
+    }
+    .block-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--blue);
+      margin-bottom: 1rem;
+      padding-left: 0.5rem;
+      border-left: 3px solid var(--blue);
+    }
+    .slides-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1rem;
+    }
+    .slide-link {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 1.1rem 1.25rem;
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      text-decoration: none;
+      color: var(--text);
+      transition: all 0.2s;
+      box-shadow: 0 1px 4px rgba(15,23,36,0.07);
+    }
+    .slide-link:hover {
+      border-color: var(--blue);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(29,78,216,0.12);
+    }
+    .sl-num { font-family: 'Fira Code', monospace; font-size: 0.7rem; color: var(--text-dim); }
+    .sl-icon { font-size: 1.5rem; }
+    .sl-title { font-size: 0.95rem; font-weight: 600; line-height: 1.3; color: var(--text); }
+    .sl-desc { font-size: 0.78rem; color: var(--text-muted); line-height: 1.45; }
+    .sl-tag {
+      align-self: flex-start;
+      padding: 0.15rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      background: rgba(29,78,216,0.08);
+      border: 1px solid rgba(29,78,216,0.2);
+      color: var(--blue);
+    }
+    footer {
+      margin-top: 3rem;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      text-align: center;
+      font-family: 'Fira Code', monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <a href="../index.html" class="back-link">← Todas as aulas</a>
+    <div class="badge">UFRGS · Aprendizado de Máquina</div>
+    <h1>K-Nearest Neighbors (KNN)</h1>
+    <div class="prof-name">Profa. Mariana Recamonde-Mendoza</div>
+    <p class="hero-sub">Um dos algoritmos mais simples e intuitivos de AM — e um dos que mais se beneficia de cuidados com os dados. Racional, hiperparâmetros, normalização, dimensionalidade e aplicação prática.</p>
+  </div>
+
+  <div class="blocks">
+
+    <div class="block-section">
+      <div class="block-title">Bloco 1 — Racional do KNN</div>
+      <div class="slides-grid">
+        <a href="b1-s01.html" class="slide-link">
+          <div class="sl-num">Slide 01</div>
+          <div class="sl-icon">🎯</div>
+          <div class="sl-title">A Ideia Central</div>
+          <div class="sl-desc">Viés indutivo do KNN: dados similares se concentram em regiões próximas. Adicione um ponto novo e veja a votação dos vizinhos.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <div class="block-section">
+      <div class="block-title">Bloco 2 — Hiperparâmetros: k e distância</div>
+      <div class="slides-grid">
+        <a href="b2-s01.html" class="slide-link">
+          <div class="sl-num">Slide 01</div>
+          <div class="sl-icon">🔢</div>
+          <div class="sl-title">O Impacto de k</div>
+          <div class="sl-desc">Ajuste o slider e veja como o valor de k muda a predição, os vizinhos considerados e a fronteira de decisão.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="b2-s02.html" class="slide-link">
+          <div class="sl-num">Slide 02</div>
+          <div class="sl-icon">📐</div>
+          <div class="sl-title">Métricas de Distância</div>
+          <div class="sl-desc">Euclidiana vs. Manhattan: como a escolha da métrica muda quem é "vizinho" e, portanto, muda a predição.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <div class="block-section">
+      <div class="block-title">Bloco 3 — Cuidados com os dados</div>
+      <div class="slides-grid">
+        <a href="b3-s01.html" class="slide-link">
+          <div class="sl-num">Slide 01</div>
+          <div class="sl-icon">⚖️</div>
+          <div class="sl-title">Por que Normalizar?</div>
+          <div class="sl-desc">Sem normalização, o atributo de maior escala vira o único critério de "proximidade". Veja a distorção acontecendo ao vivo.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="b3-s02.html" class="slide-link">
+          <div class="sl-num">Slide 02</div>
+          <div class="sl-icon">📏</div>
+          <div class="sl-title">Maldição da Dimensionalidade</div>
+          <div class="sl-desc">Em altas dimensões, todos os pontos ficam "igualmente distantes" — e o conceito de vizinho mais próximo perde sentido.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <div class="block-section">
+      <div class="block-title">Bloco 4 — Aplicando o KNN</div>
+      <div class="slides-grid">
+        <a href="b4-s01.html" class="slide-link">
+          <div class="sl-num">Slide 01</div>
+          <div class="sl-icon">🧪</div>
+          <div class="sl-title">Toy Problem: do Dataset à Avaliação</div>
+          <div class="sl-desc">Um problema completo: prepara dados, treina o KNN, avalia no teste, reporta a taxa de acerto.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    UFRGS · Aprendizado de Máquina · Profa. Mariana Recamonde-Mendoza
+  </footer>
+</body>
+</html>

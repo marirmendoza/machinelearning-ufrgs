@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 4 — Pipeline de Aprendizado de Máquina</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .pipeline-wrap {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    .pipeline-heading {
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--teal);
+      border-bottom: 2px solid var(--teal-lt);
+      padding-bottom: 0.5rem;
+      margin-bottom: 1.2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .click-hint-small {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      font-family: 'Fira Code', monospace;
+      text-transform: none;
+      letter-spacing: 0;
+      font-weight: 500;
+    }
+
+    .pipeline {
+      display: flex;
+      align-items: stretch;
+      gap: 0.5rem;
+      overflow-x: auto;
+      padding-bottom: 0.4rem;
+    }
+
+    .stage {
+      flex: 1;
+      min-width: 130px;
+      background: var(--bg3);
+      border: 2px solid var(--border2);
+      border-radius: 12px;
+      padding: 1rem 0.6rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      text-align: center;
+      position: relative;
+    }
+    .stage:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 16px rgba(15,23,36,0.10);
+    }
+    .stage.stage-1:hover { border-color: var(--teal); }
+    .stage.stage-2:hover { border-color: var(--orange); }
+    .stage.stage-3:hover { border-color: var(--purple); }
+    .stage.stage-4:hover { border-color: var(--blue); }
+    .stage.stage-5:hover { border-color: var(--green); }
+
+    .stage.active { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(15,23,36,0.14); }
+    .stage.stage-1.active { border-color: var(--teal);   background: var(--teal-lt); }
+    .stage.stage-2.active { border-color: var(--orange); background: var(--orange-lt); }
+    .stage.stage-3.active { border-color: var(--purple); background: var(--purple-lt); }
+    .stage.stage-4.active { border-color: var(--blue);   background: var(--blue-lt); }
+    .stage.stage-5.active { border-color: var(--green);  background: var(--green-lt); }
+
+    .stage-num {
+      position: absolute;
+      top: 6px;
+      left: 8px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      font-weight: 700;
+    }
+    .stage-icon { font-size: 2rem; }
+    .stage-label { font-size: 0.85rem; font-weight: 700; color: var(--text); line-height: 1.2; }
+
+    .arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-dim);
+      font-size: 1.4rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      padding: 0 0.15rem;
+    }
+
+    .detail-panel {
+      margin-top: 1.4rem;
+      background: var(--bg3);
+      border-radius: 12px;
+      padding: 1.3rem 1.4rem;
+      border-left: 5px solid var(--teal);
+      transition: border-left-color 0.2s;
+    }
+    .detail-panel.stage-1 { border-left-color: var(--teal); }
+    .detail-panel.stage-2 { border-left-color: var(--orange); }
+    .detail-panel.stage-3 { border-left-color: var(--purple); }
+    .detail-panel.stage-4 { border-left-color: var(--blue); }
+    .detail-panel.stage-5 { border-left-color: var(--green); }
+
+    .detail-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      margin-bottom: 0.35rem;
+    }
+    .detail-panel.stage-1 .detail-title { color: var(--teal); }
+    .detail-panel.stage-2 .detail-title { color: var(--orange); }
+    .detail-panel.stage-3 .detail-title { color: var(--purple); }
+    .detail-panel.stage-4 .detail-title { color: var(--blue); }
+    .detail-panel.stage-5 .detail-title { color: var(--green); }
+
+    .detail-subtitle {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      line-height: 1.5;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .detail-cell {
+      background: var(--bg2);
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+    }
+    .detail-cell h4 {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      margin-bottom: 0.5rem;
+    }
+    .detail-cell ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .detail-cell li {
+      font-size: 0.9rem;
+      color: var(--text);
+      padding: 0.25rem 0;
+      line-height: 1.5;
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-start;
+    }
+    .detail-cell li::before {
+      content: '›';
+      color: var(--text-dim);
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .warning-strip {
+      margin-top: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: rgba(185, 28, 28, 0.08);
+      border: 1px solid rgba(185, 28, 28, 0.25);
+      border-radius: 8px;
+      padding: 0.55rem 0.9rem;
+      font-size: 0.85rem;
+      color: var(--red);
+    }
+    .warning-strip strong { color: var(--red); }
+
+    .example-strip {
+      margin-top: 0.9rem;
+      background: var(--bg2);
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      padding: 0.65rem 0.95rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+    .example-strip strong { color: var(--text); font-family: 'Inter', sans-serif; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Fundamentos de AM</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 4 · Slide 01 / 01</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Pipeline de Aprendizado de Máquina</h1>
+        <p class="slide-subtitle">
+          O caminho de <strong>dados brutos</strong> até um <strong>modelo utilizável</strong> — em 5 etapas.
+        </p>
+      </div>
+
+      <div class="pipeline-wrap">
+        <div class="pipeline-heading">
+          <span>🔧 Etapas do pipeline</span>
+          <span class="click-hint-small">clique em uma etapa para explorar ↓</span>
+        </div>
+
+        <div class="pipeline">
+          <div class="stage stage-1" data-stage="1">
+            <span class="stage-num">01</span>
+            <span class="stage-icon">📥</span>
+            <span class="stage-label">Dados</span>
+          </div>
+          <div class="arrow">→</div>
+          <div class="stage stage-2" data-stage="2">
+            <span class="stage-num">02</span>
+            <span class="stage-icon">🧹</span>
+            <span class="stage-label">Preparação</span>
+          </div>
+          <div class="arrow">→</div>
+          <div class="stage stage-3" data-stage="3">
+            <span class="stage-num">03</span>
+            <span class="stage-icon">🎓</span>
+            <span class="stage-label">Treinamento</span>
+          </div>
+          <div class="arrow">→</div>
+          <div class="stage stage-4" data-stage="4">
+            <span class="stage-num">04</span>
+            <span class="stage-icon">🤖</span>
+            <span class="stage-label">Modelo</span>
+          </div>
+          <div class="arrow">→</div>
+          <div class="stage stage-5" data-stage="5">
+            <span class="stage-num">05</span>
+            <span class="stage-icon">📊</span>
+            <span class="stage-label">Avaliação</span>
+          </div>
+        </div>
+
+        <div class="detail-panel" id="detail"></div>
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">♻️</span>
+        <div class="i-text">
+          O pipeline é <strong>iterativo</strong>, não linear: os resultados da avaliação (etapa 5) geralmente exigem <em>voltar</em> para coletar mais dados, revisar a preparação, ou trocar o algoritmo. Um modelo em produção passa por esse ciclo várias vezes.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b3-s01.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+      </div>
+      <a class="btn-nav disabled" href="#">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+
+  <script>
+    const stages = {
+      1: {
+        title: 'Dados',
+        subtitle: 'Coletar as observações que descrevem o problema — estruturadas (tabelas, planilhas) ou não estruturadas (texto, imagens, áudio).',
+        left: {
+          title: 'Perguntas típicas',
+          items: [
+            'Que dados eu preciso para resolver o problema?',
+            'Onde eles estão? De quem eu preciso pedir?',
+            'A base é representativa da realidade que quero modelar?',
+            'Quantos exemplos rotulados eu tenho?',
+          ]
+        },
+        right: {
+          title: 'Decisões comuns',
+          items: [
+            'Fontes: bases públicas, APIs, coleta manual, sensores',
+            'Volume: dezenas, milhares ou milhões de instâncias?',
+            'Rótulos: já existem ou precisam ser criados?',
+            'Frequência: dados estáticos ou stream contínuo?',
+          ]
+        },
+        warning: 'Se a base não representa bem o problema, nenhum algoritmo vai salvar. <strong>Garbage in, garbage out.</strong>',
+        example: '<strong>Exemplo:</strong> WDBC — 569 biópsias de câncer de mama com 30 medidas cada, coletadas em hospital dos EUA nos anos 1990.'
+      },
+      2: {
+        title: 'Preparação',
+        subtitle: 'Transformar dados brutos em dados prontos para o algoritmo — o passo que consome ~70% do tempo de qualquer projeto de AM.',
+        left: {
+          title: 'Perguntas típicas',
+          items: [
+            'Existem valores ausentes? Como tratá-los?',
+            'Os atributos estão em escalas comparáveis?',
+            'Como codificar atributos categóricos (texto)?',
+            'Preciso reduzir dimensionalidade?',
+          ]
+        },
+        right: {
+          title: 'Técnicas comuns',
+          items: [
+            'Limpeza: remoção de duplicatas, outliers, ruído',
+            'Normalização: min-max, z-score',
+            'Codificação: one-hot, label encoding',
+            'Divisão: treino / validação / teste',
+          ]
+        },
+        warning: 'Introduzir <strong>viés</strong> no pré-processamento é um dos erros mais comuns — e mais difíceis de detectar depois.',
+        example: '<strong>Exemplo:</strong> converter a coluna "Diagnosis" de {M, B} para {1, 0}; escalar todos os atributos numéricos para média 0 e desvio 1.'
+      },
+      3: {
+        title: 'Treinamento',
+        subtitle: 'Escolher o algoritmo e ajustar seus parâmetros a partir dos dados rotulados — é aqui que o "aprendizado" acontece.',
+        left: {
+          title: 'Perguntas típicas',
+          items: [
+            'Qual paradigma? (supervisionado, não superv...)',
+            'Que algoritmo é adequado ao tipo de tarefa?',
+            'Que hiperparâmetros devo usar?',
+            'Quanto tempo/GPU eu tenho?',
+          ]
+        },
+        right: {
+          title: 'Algoritmos que veremos',
+          items: [
+            'KNN — baseado em distâncias',
+            'Árvores de decisão — simbólico',
+            'Regressão linear e logística — estatístico',
+            'Redes neurais — conexionista',
+          ]
+        },
+        warning: 'Escolher um algoritmo antes de entender os dados é como comprar um remédio antes do diagnóstico.',
+        example: '<strong>Exemplo:</strong> treinar um <span class="mono">RandomForestClassifier</span> com 100 árvores nos dados de biópsia; ajustar profundidade máxima via validação cruzada.'
+      },
+      4: {
+        title: 'Modelo',
+        subtitle: 'O artefato treinado — pronto para receber novos exemplos e devolver predições. É o "produto final" do processo de aprendizado.',
+        left: {
+          title: 'O que é um modelo?',
+          items: [
+            'Uma função f(x) aprendida a partir dos dados',
+            'Um conjunto de parâmetros que codifica o padrão',
+            'Um arquivo serializável (ex.: pickle, ONNX)',
+            'Um endpoint de API para receber requisições',
+          ]
+        },
+        right: {
+          title: 'Uso do modelo',
+          items: [
+            'Predição em tempo real (uma amostra por vez)',
+            'Predição em lote (milhões por noite)',
+            'Integração em produtos e sistemas',
+            'Monitoramento contínuo em produção',
+          ]
+        },
+        warning: 'Um modelo treinado envelhece: os dados do mundo mudam, e o modelo pode virar obsoleto sem que ninguém perceba (<em>data drift</em>).',
+        example: '<strong>Exemplo:</strong> <span class="mono">modelo.predict([17, 23, 98])</span> retorna <span class="mono">"M"</span> (maligno) — o modelo aprendeu a mapear entrada → diagnóstico.'
+      },
+      5: {
+        title: 'Avaliação',
+        subtitle: 'Medir se o modelo é bom o suficiente — no papel e no mundo real. Sem avaliação honesta, você não sabe o que está entregando.',
+        left: {
+          title: 'Perguntas típicas',
+          items: [
+            'Qual métrica corresponde ao que importa?',
+            'Como avaliar em dados que o modelo nunca viu?',
+            'Meu modelo generaliza? Está sobreajustado?',
+            'Qual o custo de um erro em cada direção?',
+          ]
+        },
+        right: {
+          title: 'Estratégias comuns',
+          items: [
+            'Holdout: separar parte dos dados para teste',
+            'Cross-validation: rodar várias divisões',
+            'Métricas: acurácia, precisão, recall, F1, AUC, RMSE',
+            'Análise de erros: onde e por que o modelo erra',
+          ]
+        },
+        warning: 'Um modelo com <strong>99% de acurácia</strong> pode ser inútil (ou perigoso) — sempre analise por classe e por subgrupo.',
+        example: '<strong>Exemplo:</strong> no diagnóstico de câncer, um falso negativo (dizer "benigno" para um tumor maligno) custa infinitamente mais que um falso positivo.'
+      }
+    };
+
+    const detailPanel = document.getElementById('detail');
+    let currentStage = 1;
+
+    function renderDetail(n) {
+      const s = stages[n];
+      detailPanel.className = 'detail-panel stage-' + n;
+      detailPanel.innerHTML = `
+        <div class="detail-title">Etapa ${n} · ${s.title}</div>
+        <div class="detail-subtitle">${s.subtitle}</div>
+        <div class="detail-grid">
+          <div class="detail-cell">
+            <h4>${s.left.title}</h4>
+            <ul>${s.left.items.map(i => `<li>${i}</li>`).join('')}</ul>
+          </div>
+          <div class="detail-cell">
+            <h4>${s.right.title}</h4>
+            <ul>${s.right.items.map(i => `<li>${i}</li>`).join('')}</ul>
+          </div>
+        </div>
+        <div class="warning-strip">⚠️ ${s.warning}</div>
+        <div class="example-strip">${s.example}</div>
+      `;
+
+      document.querySelectorAll('.stage').forEach(st => st.classList.remove('active'));
+      document.querySelector(`.stage[data-stage="${n}"]`).classList.add('active');
+    }
+
+    document.querySelectorAll('.stage').forEach(st => {
+      st.addEventListener('click', () => {
+        currentStage = parseInt(st.dataset.stage);
+        renderDetail(currentStage);
+      });
+    });
+
+    renderDetail(1);
+  </script>
+</body>
+</html>

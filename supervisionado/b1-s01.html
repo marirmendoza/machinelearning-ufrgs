@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 2 — Adivinhe o Padrão</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .exp-panel {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.4rem;
+      box-shadow: var(--shadow);
+    }
+
+    .exp-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.9rem;
+      gap: 1rem;
+    }
+    .exp-title-small {
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--purple);
+    }
+
+    .exp-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.4rem;
+    }
+
+    /* Data table */
+    .data-table {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2px;
+      background: var(--border2);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+    }
+    .data-table .cell {
+      background: var(--bg2);
+      padding: 0.55rem 0.4rem;
+      text-align: center;
+    }
+    .data-table .cell.header {
+      background: var(--bg3);
+      font-weight: 700;
+      color: var(--purple);
+      font-size: 0.85rem;
+    }
+
+    /* Plot */
+    .plot-wrap {
+      background: var(--bg2);
+      border: 1.5px solid var(--border2);
+      border-radius: 8px;
+      padding: 0.5rem;
+    }
+    .plot-svg { width: 100%; height: auto; display: block; }
+    .axis-line { stroke: var(--text-dim); stroke-width: 1; }
+    .grid-line { stroke: var(--border2); stroke-width: 0.5; }
+    .axis-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 10px;
+      fill: var(--text-dim);
+    }
+    .data-point { fill: var(--purple); }
+    .data-point-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 10px;
+      fill: var(--purple);
+      font-weight: 700;
+    }
+    .curve { fill: none; stroke-width: 2.5; opacity: 0; transition: opacity 0.5s; }
+    .curve.visible { opacity: 1; }
+    .curve.c1 { stroke: #14a06b; }
+    .curve.c2 { stroke: #c2410c; }
+    .curve.c3 { stroke: #1d4ed8; }
+
+    /* Question */
+    .question-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+    .question-text {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.4;
+    }
+    .options-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+    .option-item {
+      background: var(--bg2);
+      border: 2px solid var(--border2);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.88rem;
+      color: var(--text);
+    }
+    .option-item:hover:not(.disabled) {
+      border-color: var(--purple);
+      background: var(--purple-lt);
+    }
+    .option-item.disabled { cursor: not-allowed; }
+    .option-item .swatch {
+      width: 16px; height: 16px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+    .option-item .swatch.s1 { background: #14a06b; }
+    .option-item .swatch.s2 { background: #c2410c; }
+    .option-item .swatch.s3 { background: #1d4ed8; }
+    .option-item .swatch.sall { background: linear-gradient(135deg, #14a06b, #c2410c, #1d4ed8); }
+    .option-item.selected {
+      border-color: var(--purple);
+      background: var(--purple-lt);
+      color: var(--purple);
+    }
+    .option-item.correct {
+      border-color: var(--green);
+      background: var(--green-lt);
+      color: var(--green);
+      font-weight: 700;
+    }
+    .option-item.wrong {
+      border-color: var(--red);
+      background: var(--red-lt);
+      color: var(--red);
+    }
+
+    /* Reveal predictions */
+    .prediction-block {
+      display: none;
+      margin-top: 1rem;
+      background: var(--bg3);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+    }
+    .prediction-block.show { display: block; animation: fadeIn 0.4s; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .prediction-block h4 {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      margin-bottom: 0.6rem;
+    }
+    .prediction-list {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.4rem 1rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+    }
+    .prediction-list .fname { color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem; }
+    .prediction-list .fname .sw {
+      width: 12px; height: 12px; border-radius: 2px; display: inline-block;
+    }
+    .prediction-list .fname .sw.s1 { background: #14a06b; }
+    .prediction-list .fname .sw.s2 { background: #c2410c; }
+    .prediction-list .fname .sw.s3 { background: #1d4ed8; }
+    .prediction-list .fval { font-weight: 700; color: var(--text); text-align: right; }
+
+    .btn-row { display: flex; gap: 0.6rem; margin-top: 1rem; }
+    .action-btn {
+      padding: 0.55rem 1.1rem;
+      border: 1.5px solid var(--border2);
+      background: var(--bg2);
+      border-radius: 999px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      color: var(--text-muted);
+      transition: all 0.15s;
+    }
+    .action-btn:hover:not(:disabled) { background: var(--purple); color: white; border-color: var(--purple); }
+    .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Aprendizado Supervisionado</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 1 · Slide 01 / 01</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Adivinhe o Padrão</h1>
+        <p class="slide-subtitle">
+          Você tem 4 pontos. Qual é a função <strong>f(x)</strong> que os gerou?
+        </p>
+      </div>
+
+      <div class="exp-panel">
+        <div class="exp-heading">
+          <span class="exp-title-small">🧮 Dados observados</span>
+        </div>
+
+        <div class="exp-grid">
+          <!-- LEFT: data + plot -->
+          <div>
+            <div class="data-table">
+              <div class="cell header">x</div>
+              <div class="cell">1</div>
+              <div class="cell">2</div>
+              <div class="cell">3</div>
+              <div class="cell header">y = f(x)</div>
+              <div class="cell">1</div>
+              <div class="cell">4</div>
+              <div class="cell">9</div>
+              <div class="cell header">x</div>
+              <div class="cell">4</div>
+              <div class="cell">?</div>
+              <div class="cell">?</div>
+              <div class="cell header">y = f(x)</div>
+              <div class="cell">16</div>
+              <div class="cell">?</div>
+              <div class="cell">?</div>
+            </div>
+
+            <div class="plot-wrap">
+              <svg class="plot-svg" viewBox="0 0 320 260" xmlns="http://www.w3.org/2000/svg">
+                <!-- Grid -->
+                <g id="grid"></g>
+                <!-- Axes -->
+                <line class="axis-line" x1="30" y1="230" x2="310" y2="230"/>
+                <line class="axis-line" x1="30" y1="10" x2="30" y2="230"/>
+                <!-- Axis labels -->
+                <text class="axis-label" x="315" y="234">x</text>
+                <text class="axis-label" x="20" y="16">y</text>
+                <!-- Curves (initially hidden) -->
+                <path id="curve-1" class="curve c1" d=""/>
+                <path id="curve-2" class="curve c2" d=""/>
+                <path id="curve-3" class="curve c3" d=""/>
+                <!-- Data points -->
+                <g id="points"></g>
+                <!-- New point at x=5 (initially hidden) -->
+                <g id="new-x" style="display:none;">
+                  <line class="axis-line" x1="0" y1="0" x2="0" y2="0" id="new-x-line" stroke-dasharray="3 3" stroke="#5b21b6"/>
+                </g>
+              </svg>
+            </div>
+          </div>
+
+          <!-- RIGHT: question -->
+          <div class="question-panel">
+            <div class="question-text">
+              Assinale a(s) função(ões) f(x) que passa(m) pelos 4 pontos:
+            </div>
+            <div class="options-list" id="options"></div>
+
+            <div class="btn-row">
+              <button class="action-btn" id="reveal-btn" disabled onclick="reveal()">Revelar em x = 5 →</button>
+              <button class="action-btn" onclick="reset()">Recomeçar</button>
+            </div>
+
+            <div class="prediction-block" id="predictions">
+              <h4>Predição em x = 5</h4>
+              <div class="prediction-list">
+                <div class="fname"><span class="sw s1"></span>A: x²</div>
+                <div class="fval">25</div>
+                <div class="fname"><span class="sw s2"></span>B: x² + Π(x−k)</div>
+                <div class="fval">49</div>
+                <div class="fname"><span class="sw s3"></span>C: x² − Π(x−k)</div>
+                <div class="fval">1</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">🎯</span>
+        <div class="i-text">
+          <strong>Todas as três funções são igualmente compatíveis com os 4 exemplos</strong>, mas dão predições completamente diferentes para <span class="mono">x = 5</span>. O algoritmo de AM precisa <strong>escolher</strong> uma — e essa preferência (geralmente pela mais simples) é chamada de <em>viés indutivo</em>. Sem viés, aprendizado é impossível.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav disabled" href="#">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+      </div>
+      <a class="btn-nav" href="b2-s01.html">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+
+  <script>
+    // Coordinate mapping for the SVG
+    // x: 0-6 → 30-310 pixels
+    // y: 0-50 → 230-10 pixels (inverted)
+    const XMIN = 0, XMAX = 6, YMIN = 0, YMAX = 50;
+    const PX_L = 30, PX_R = 310, PY_T = 10, PY_B = 230;
+    const sx = x => PX_L + (x - XMIN) / (XMAX - XMIN) * (PX_R - PX_L);
+    const sy = y => PY_B - (y - YMIN) / (YMAX - YMIN) * (PY_B - PY_T);
+
+    // Grid
+    const gridG = document.getElementById('grid');
+    for (let x = 1; x <= 6; x++) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('class', 'grid-line');
+      line.setAttribute('x1', sx(x)); line.setAttribute('x2', sx(x));
+      line.setAttribute('y1', PY_T); line.setAttribute('y2', PY_B);
+      gridG.appendChild(line);
+      const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      lbl.setAttribute('class', 'axis-label');
+      lbl.setAttribute('x', sx(x) - 3); lbl.setAttribute('y', PY_B + 12);
+      lbl.textContent = x;
+      gridG.appendChild(lbl);
+    }
+    for (let y = 10; y <= 50; y += 10) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('class', 'grid-line');
+      line.setAttribute('x1', PX_L); line.setAttribute('x2', PX_R);
+      line.setAttribute('y1', sy(y)); line.setAttribute('y2', sy(y));
+      gridG.appendChild(line);
+      const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      lbl.setAttribute('class', 'axis-label');
+      lbl.setAttribute('x', 8); lbl.setAttribute('y', sy(y) + 3);
+      lbl.textContent = y;
+      gridG.appendChild(lbl);
+    }
+
+    // Data points
+    const data = [ {x:1, y:1}, {x:2, y:4}, {x:3, y:9}, {x:4, y:16} ];
+    const pointsG = document.getElementById('points');
+    data.forEach(p => {
+      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      c.setAttribute('class', 'data-point');
+      c.setAttribute('cx', sx(p.x)); c.setAttribute('cy', sy(p.y)); c.setAttribute('r', 5);
+      pointsG.appendChild(c);
+      const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      t.setAttribute('class', 'data-point-label');
+      t.setAttribute('x', sx(p.x) + 8); t.setAttribute('y', sy(p.y) + 3);
+      t.textContent = `(${p.x},${p.y})`;
+      pointsG.appendChild(t);
+    });
+
+    // Curves (all pass through the 4 points, differ at x=5)
+    // A: f(x) = x²  → f(5) = 25
+    // B: f(x) = x² + (x-1)(x-2)(x-3)(x-4)  → f(5) = 49
+    // C: f(x) = x² - (x-1)(x-2)(x-3)(x-4)  → f(5) = 1
+    function fA(x) { return x*x; }
+    function fB(x) { return x*x + (x-1)*(x-2)*(x-3)*(x-4); }
+    function fC(x) { return x*x - (x-1)*(x-2)*(x-3)*(x-4); }
+
+    function makePath(fn) {
+      const pts = [];
+      for (let x = 0.8; x <= 5.2; x += 0.05) {
+        const y = fn(x);
+        if (y >= -5 && y <= 55) pts.push(`${sx(x).toFixed(1)},${sy(y).toFixed(1)}`);
+      }
+      return 'M' + pts.join(' L');
+    }
+    document.getElementById('curve-1').setAttribute('d', makePath(fA));
+    document.getElementById('curve-2').setAttribute('d', makePath(fB));
+    document.getElementById('curve-3').setAttribute('d', makePath(fC));
+
+    // Options
+    const options = [
+      { id: 'A', label: 'A: f(x) = x²', swClass: 's1', correct: true },
+      { id: 'B', label: 'B: f(x) = x² + (x−1)(x−2)(x−3)(x−4)', swClass: 's2', correct: true },
+      { id: 'C', label: 'C: f(x) = x² − (x−1)(x−2)(x−3)(x−4)', swClass: 's3', correct: true },
+      { id: 'ALL', label: 'D: Todas as anteriores', swClass: 'sall', correct: true, isAll: true },
+    ];
+
+    const optsEl = document.getElementById('options');
+    let answered = false;
+    options.forEach(o => {
+      const el = document.createElement('div');
+      el.className = 'option-item';
+      el.dataset.id = o.id;
+      el.innerHTML = `<span class="swatch ${o.swClass}"></span><span>${o.label}</span>`;
+      el.addEventListener('click', () => onSelect(o.id));
+      optsEl.appendChild(el);
+    });
+
+    function onSelect(id) {
+      if (answered) return;
+      answered = true;
+      document.querySelectorAll('.option-item').forEach(el => {
+        el.classList.add('disabled');
+        if (el.dataset.id === id) {
+          // The "correct" pedagogical answer is D (Todas)
+          if (id === 'ALL') el.classList.add('correct');
+          else el.classList.add('wrong');
+        }
+        // Highlight the true best answer (D)
+        if (el.dataset.id === 'ALL' && id !== 'ALL') el.classList.add('correct');
+      });
+      // Show all curves
+      document.getElementById('curve-1').classList.add('visible');
+      document.getElementById('curve-2').classList.add('visible');
+      document.getElementById('curve-3').classList.add('visible');
+      document.getElementById('reveal-btn').disabled = false;
+    }
+
+    function reveal() {
+      // show vertical line at x=5
+      const g = document.getElementById('new-x');
+      g.style.display = '';
+      const line = document.getElementById('new-x-line');
+      line.setAttribute('x1', sx(5));
+      line.setAttribute('x2', sx(5));
+      line.setAttribute('y1', PY_T);
+      line.setAttribute('y2', PY_B);
+      // add point markers at x=5 for each curve
+      [
+        { fn: fA, cls: 's1' },
+        { fn: fB, cls: 's2' },
+        { fn: fC, cls: 's3' },
+      ].forEach(({fn, cls}) => {
+        const y = fn(5);
+        if (y >= YMIN && y <= YMAX) {
+          const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          c.setAttribute('cx', sx(5)); c.setAttribute('cy', sy(y)); c.setAttribute('r', 5);
+          c.setAttribute('fill', cls === 's1' ? '#14a06b' : cls === 's2' ? '#c2410c' : '#1d4ed8');
+          c.setAttribute('stroke', 'white'); c.setAttribute('stroke-width', 2);
+          g.appendChild(c);
+          const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          t.setAttribute('x', sx(5) + 8); t.setAttribute('y', sy(y) + 3);
+          t.setAttribute('font-family', 'Fira Code, monospace'); t.setAttribute('font-size', 10);
+          t.setAttribute('font-weight', 700);
+          t.setAttribute('fill', cls === 's1' ? '#14a06b' : cls === 's2' ? '#c2410c' : '#1d4ed8');
+          t.textContent = y;
+          g.appendChild(t);
+        }
+      });
+      document.getElementById('predictions').classList.add('show');
+      document.getElementById('reveal-btn').disabled = true;
+    }
+
+    function reset() {
+      answered = false;
+      document.querySelectorAll('.option-item').forEach(el => {
+        el.classList.remove('disabled', 'correct', 'wrong', 'selected');
+      });
+      document.getElementById('curve-1').classList.remove('visible');
+      document.getElementById('curve-2').classList.remove('visible');
+      document.getElementById('curve-3').classList.remove('visible');
+      document.getElementById('predictions').classList.remove('show');
+      document.getElementById('reveal-btn').disabled = true;
+      // clear extra circles from new-x group
+      const g = document.getElementById('new-x');
+      g.style.display = 'none';
+      // remove all children except the first (the line)
+      while (g.children.length > 1) g.removeChild(g.lastChild);
+    }
+  </script>
+</body>
+</html>

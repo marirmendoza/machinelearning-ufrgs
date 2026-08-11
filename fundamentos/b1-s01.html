@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 1 — Programado vs. Aprendido</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .approach-panel {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      box-shadow: var(--shadow);
+      transition: border-color 0.2s;
+    }
+    .approach-panel.classic  { border-color: #fca5a5; }
+    .approach-panel.ml       { border-color: #86efac; }
+
+    .panel-badge {
+      align-self: flex-start;
+      padding: 0.3rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .classic .panel-badge { background: var(--red-lt); color: var(--red); border: 1px solid #fca5a5; }
+    .ml      .panel-badge { background: var(--green-lt); color: var(--green); border: 1px solid #86efac; }
+
+    .panel-heading {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .classic .panel-heading { color: var(--red); }
+    .ml      .panel-heading { color: var(--green); }
+
+    .panel-tagline {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-top: -0.4rem;
+    }
+
+    /* Number line viz */
+    .weight-line {
+      position: relative;
+      height: 100px;
+      background: linear-gradient(to bottom, transparent 48px, var(--border) 48px, var(--border) 52px, transparent 52px);
+      margin: 0.4rem 0 0.2rem;
+    }
+    .fruit {
+      position: absolute;
+      top: 30px;
+      transform: translate(-50%, 0);
+      font-size: 1.6rem;
+      transition: filter 0.2s;
+      cursor: default;
+    }
+    .fruit.wrong { filter: grayscale(0.6) opacity(0.5); }
+    .fruit.correct { filter: none; }
+    .fruit .marker {
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px; height: 4px;
+      border-radius: 50%;
+    }
+    .fruit.correct .marker { background: var(--green); }
+    .fruit.wrong .marker { background: var(--red); }
+
+    .threshold-line {
+      position: absolute;
+      top: 8px;
+      bottom: 8px;
+      width: 3px;
+      background: var(--teal);
+      transform: translateX(-50%);
+      transition: left 0.05s linear;
+      z-index: 2;
+    }
+    .threshold-line::after {
+      content: '';
+      position: absolute;
+      top: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 8px solid var(--teal);
+    }
+    .threshold-label {
+      position: absolute;
+      top: -22px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--teal);
+      color: white;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    .axis-labels {
+      display: flex;
+      justify-content: space-between;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-top: 0.4rem;
+    }
+
+    /* Slider */
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+    }
+    .slider-row label {
+      font-size: 0.88rem;
+      font-family: 'Fira Code', monospace;
+      color: var(--text-muted);
+      font-weight: 600;
+      min-width: 80px;
+    }
+    input[type="range"] {
+      flex: 1;
+      accent-color: var(--teal);
+    }
+    input[type="range"]:disabled { opacity: 0.4; }
+    .val-display {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--teal);
+      min-width: 68px;
+      text-align: right;
+    }
+
+    /* Code preview */
+    .code-preview {
+      background: #0f1724;
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 0.8rem 1rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+    .code-preview .kw { color: #c4b5fd; }
+    .code-preview .str { color: #86efac; }
+    .code-preview .num { color: #fbbf24; }
+    .code-preview .com { color: #6b7fa3; font-style: italic; }
+
+    /* Accuracy badge */
+    .accuracy-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 0.6rem 1rem;
+      font-size: 0.95rem;
+    }
+    .accuracy-row .label {
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .accuracy-row .value {
+      font-family: 'Fira Code', monospace;
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: var(--text);
+    }
+    .accuracy-row.good .value { color: var(--green); }
+
+    /* Train button */
+    .train-btn {
+      background: var(--green);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.2rem;
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .train-btn:hover:not(:disabled) {
+      background: #14532d;
+      transform: translateY(-1px);
+    }
+    .train-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .training-indicator {
+      display: none;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      font-family: 'Fira Code', monospace;
+    }
+    .training-indicator.active { display: flex; }
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid var(--border2);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .verdict {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-style: italic;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Fundamentos de AM</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 1 · Slide 01 / 04</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Programado vs. Aprendido</h1>
+        <p class="slide-subtitle">
+          O mesmo problema, dois caminhos: <strong>quem</strong> descobre a regra?
+        </p>
+      </div>
+
+      <div class="highlight-box teal" style="justify-content:center;">
+        <span class="icon">🍎🍊</span>
+        <p><strong>Problema:</strong> classificar cada fruta como <span class="text-teal" style="font-weight:700;">maçã</span> ou <span class="text-orange" style="font-weight:700;">laranja</span> a partir do peso (g). Temos 20 frutas rotuladas.</p>
+      </div>
+
+      <div class="content-split">
+
+        <!-- LEFT: Rule-based -->
+        <div class="approach-panel classic">
+          <span class="panel-badge">Sistema programado</span>
+          <div class="panel-heading">Um humano escreve a regra</div>
+          <div class="panel-tagline">Você tem que descobrir <em>manualmente</em> o melhor limite de peso. Arraste o marcador ↔.</div>
+
+          <div class="code-preview">
+<span class="kw">if</span> peso &gt; <span class="num" id="code-thresh-left">175</span>:
+    <span class="kw">return</span> <span class="str">"maçã"</span>
+<span class="kw">else</span>:
+    <span class="kw">return</span> <span class="str">"laranja"</span>
+          </div>
+
+          <div>
+            <div class="weight-line" id="line-left"></div>
+            <div class="axis-labels"><span>80g</span><span>150g</span><span>220g</span></div>
+          </div>
+
+          <div class="slider-row">
+            <label>limiar</label>
+            <input type="range" id="slider-left" min="80" max="220" value="175" step="1" />
+            <span class="val-display" id="val-left">175 g</span>
+          </div>
+
+          <div class="accuracy-row" id="acc-left-row">
+            <span class="label">Acertos:</span>
+            <span class="value"><span id="acc-left">?</span>/20</span>
+          </div>
+
+          <div class="verdict">
+            📝 Se aparecer um novo tipo de fruta, você precisa <strong>reescrever</strong> a regra. Se os pesos mudarem (safra diferente), <strong>reescrever</strong> de novo.
+          </div>
+        </div>
+
+        <!-- RIGHT: Learned -->
+        <div class="approach-panel ml">
+          <span class="panel-badge">Sistema aprendido (AM)</span>
+          <div class="panel-heading">O algoritmo descobre a regra</div>
+          <div class="panel-tagline">Clique em <em>Treinar</em> e o modelo encontra o melhor limite <strong>a partir dos dados rotulados</strong>.</div>
+
+          <div class="code-preview">
+modelo = TreinaClassificador(
+    dados=<span class="str">"20 frutas rotuladas"</span>
+)
+limiar = modelo.aprendeu  <span class="com"># ← descoberto!</span>
+          </div>
+
+          <div>
+            <div class="weight-line" id="line-right"></div>
+            <div class="axis-labels"><span>80g</span><span>150g</span><span>220g</span></div>
+          </div>
+
+          <div class="slider-row">
+            <label>limiar</label>
+            <input type="range" id="slider-right" min="80" max="220" value="100" step="1" disabled />
+            <span class="val-display" id="val-right">100 g</span>
+          </div>
+
+          <div class="accuracy-row" id="acc-right-row">
+            <span class="label">Acertos:</span>
+            <span class="value"><span id="acc-right">10</span>/20</span>
+          </div>
+
+          <div style="display:flex; gap:0.8rem; align-items:center;">
+            <button class="train-btn" id="train-btn" onclick="train()">
+              <span>🎓</span> Treinar modelo
+            </button>
+            <div class="training-indicator" id="train-indicator">
+              <div class="spinner"></div>
+              <span>Aprendendo com os exemplos...</span>
+            </div>
+          </div>
+
+          <div class="verdict">
+            🎯 Se aparecerem novos dados, basta <strong>retreinar</strong>. O modelo se adapta — ninguém precisa reescrever regra nenhuma.
+          </div>
+        </div>
+
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">💡</span>
+        <div class="i-text">
+          <strong>Sistemas que são treinados para realizar uma tarefa, ao invés de serem explicitamente programados para tal.</strong>
+          Essa é a essência do aprendizado de máquina: mover o esforço humano de <em>codificar regras</em> para <em>coletar e rotular exemplos</em>.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav disabled" href="#">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b1-s02.html">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+
+  <script>
+    // Dados: 10 laranjas (leves, ~90-160g) + 10 maçãs (mais pesadas, ~140-215g)
+    // Fronteira ótima em ~155g
+    const fruits = [
+      { weight:  92, type: 'laranja' },
+      { weight: 105, type: 'laranja' },
+      { weight: 112, type: 'laranja' },
+      { weight: 118, type: 'laranja' },
+      { weight: 125, type: 'laranja' },
+      { weight: 132, type: 'laranja' },
+      { weight: 138, type: 'laranja' },
+      { weight: 145, type: 'laranja' },
+      { weight: 150, type: 'laranja' },
+      { weight: 158, type: 'laranja' },  // overlap
+      { weight: 148, type: 'maçã' },     // overlap
+      { weight: 155, type: 'maçã' },     // overlap
+      { weight: 162, type: 'maçã' },
+      { weight: 170, type: 'maçã' },
+      { weight: 178, type: 'maçã' },
+      { weight: 185, type: 'maçã' },
+      { weight: 190, type: 'maçã' },
+      { weight: 198, type: 'maçã' },
+      { weight: 205, type: 'maçã' },
+      { weight: 212, type: 'maçã' },
+    ];
+    const MIN_W = 80, MAX_W = 220;
+
+    function pctOf(w) {
+      return ((w - MIN_W) / (MAX_W - MIN_W)) * 100;
+    }
+
+    function accuracyAt(threshold) {
+      let correct = 0;
+      for (const f of fruits) {
+        const predicted = f.weight > threshold ? 'maçã' : 'laranja';
+        if (predicted === f.type) correct++;
+      }
+      return correct;
+    }
+
+    function bestThreshold() {
+      let best = 0, bestT = MIN_W;
+      for (let t = MIN_W; t <= MAX_W; t++) {
+        const a = accuracyAt(t);
+        if (a > best) { best = a; bestT = t; }
+      }
+      return { threshold: bestT, accuracy: best };
+    }
+
+    function renderLine(containerId, threshold) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+      // fruits
+      for (const f of fruits) {
+        const el = document.createElement('span');
+        el.className = 'fruit';
+        el.textContent = f.type === 'maçã' ? '🍎' : '🍊';
+        el.style.left = pctOf(f.weight) + '%';
+        const predicted = f.weight > threshold ? 'maçã' : 'laranja';
+        el.classList.add(predicted === f.type ? 'correct' : 'wrong');
+        const marker = document.createElement('span');
+        marker.className = 'marker';
+        el.appendChild(marker);
+        container.appendChild(el);
+      }
+      // threshold line
+      const line = document.createElement('div');
+      line.className = 'threshold-line';
+      line.style.left = pctOf(threshold) + '%';
+      const lbl = document.createElement('span');
+      lbl.className = 'threshold-label';
+      lbl.textContent = threshold + 'g';
+      line.appendChild(lbl);
+      container.appendChild(line);
+    }
+
+    function updateLeft() {
+      const t = parseInt(document.getElementById('slider-left').value);
+      document.getElementById('val-left').textContent = t + ' g';
+      document.getElementById('code-thresh-left').textContent = t;
+      const acc = accuracyAt(t);
+      document.getElementById('acc-left').textContent = acc;
+      document.getElementById('acc-left-row').classList.toggle('good', acc >= 18);
+      renderLine('line-left', t);
+    }
+
+    function updateRight(t) {
+      document.getElementById('slider-right').value = t;
+      document.getElementById('val-right').textContent = t + ' g';
+      const acc = accuracyAt(t);
+      document.getElementById('acc-right').textContent = acc;
+      document.getElementById('acc-right-row').classList.toggle('good', acc >= 18);
+      renderLine('line-right', t);
+    }
+
+    document.getElementById('slider-left').addEventListener('input', updateLeft);
+
+    let training = false;
+    function train() {
+      if (training) return;
+      training = true;
+      const btn = document.getElementById('train-btn');
+      const ind = document.getElementById('train-indicator');
+      btn.disabled = true;
+      ind.classList.add('active');
+
+      const target = bestThreshold().threshold;
+      const start = parseInt(document.getElementById('slider-right').value);
+      const duration = 1400;
+      const startTime = performance.now();
+
+      function frame(now) {
+        const t = Math.min(1, (now - startTime) / duration);
+        const eased = 1 - Math.pow(1 - t, 3);
+        const current = Math.round(start + (target - start) * eased);
+        updateRight(current);
+        if (t < 1) requestAnimationFrame(frame);
+        else {
+          ind.classList.remove('active');
+          btn.disabled = false;
+          btn.innerHTML = '<span>✅</span> Retreinar';
+          training = false;
+        }
+      }
+      requestAnimationFrame(frame);
+    }
+
+    // Init
+    updateLeft();
+    updateRight(100);
+  </script>
+</body>
+</html>

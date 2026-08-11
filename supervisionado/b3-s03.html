@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Regressão</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .main-split {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 1.3rem;
+    }
+    .plot-card, .info-card {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.15rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+    .plot-card { padding: 1rem; }
+    .plot-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .plot-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--orange);
+    }
+    .plot-legend {
+      display: flex;
+      gap: 0.6rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      align-items: center;
+    }
+    .plot-legend .swatch {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 0.3rem;
+      vertical-align: baseline;
+    }
+    .swatch.actual { background: #0e7490; }
+    .swatch.line { background: var(--orange); border-radius: 0; height: 2px; width: 16px; }
+    .swatch.resid { background: white; border: 1.5px dashed #fbbf24; border-radius: 0; height: 8px; width: 2px; margin: 0 3px; }
+
+    .plot-wrap { background: var(--bg3); border-radius: 8px; padding: 0.5rem; }
+    .plot-svg { width: 100%; height: auto; display: block; }
+    .axis-line { stroke: var(--text-dim); stroke-width: 1; }
+    .grid-line { stroke: var(--border2); stroke-width: 0.5; }
+    .axis-label { font-family: 'Fira Code', monospace; font-size: 10px; fill: var(--text-dim); }
+    .axis-title { font-family: 'Fira Code', monospace; font-size: 11px; fill: var(--text-muted); font-weight: 600; }
+
+    .regr-line { stroke: var(--orange); stroke-width: 2.5; fill: none; }
+    .actual-pt { fill: #0e7490; stroke: white; stroke-width: 1.5; }
+    .predicted-pt { fill: white; stroke: var(--orange); stroke-width: 2; }
+    .resid-line { stroke: #f59e0b; stroke-width: 2; stroke-dasharray: 3 2; }
+    .resid-line.big { stroke: #dc2626; stroke-width: 2.5; }
+
+    /* Residuals table */
+    .resid-table {
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 0.65rem 0.9rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+    }
+    .resid-table .row {
+      display: grid;
+      grid-template-columns: 0.7fr 0.9fr 0.9fr 0.8fr;
+      gap: 0.5rem;
+      padding: 0.2rem 0;
+      align-items: center;
+    }
+    .resid-table .row.header {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-bottom: 1px solid var(--border2);
+      padding-bottom: 0.35rem;
+      margin-bottom: 0.15rem;
+    }
+    .resid-table .val-actual   { color: #0e7490; font-weight: 600; }
+    .resid-table .val-pred     { color: var(--orange); font-weight: 600; }
+    .resid-table .val-err      { color: var(--text-muted); font-weight: 700; text-align: right; }
+    .resid-table .val-err.big  { color: #dc2626; }
+
+    /* Metric cards */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+    }
+    .metric-tile {
+      background: linear-gradient(135deg, var(--orange-lt), var(--yellow-lt));
+      border: 1.5px solid #fdba74;
+      border-radius: 10px;
+      padding: 0.7rem 0.9rem;
+      text-align: center;
+    }
+    .metric-tile .m-lbl {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .metric-tile .m-val {
+      font-family: 'Fira Code', monospace;
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--orange);
+    }
+    .metric-tile .m-formula {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+    .metric-tile .m-unit {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      font-family: 'Inter', sans-serif;
+    }
+
+    .other-metrics {
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 0.65rem 0.9rem;
+      font-size: 0.83rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+    .other-metrics strong { color: var(--orange); }
+    .other-metrics .mono {
+      font-family: 'Fira Code', monospace;
+      background: var(--bg2);
+      padding: 0.05rem 0.35rem;
+      border-radius: 4px;
+      font-size: 0.78rem;
+    }
+
+    .method-strips { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; }
+    .strip {
+      background: var(--bg2);
+      border-left: 4px solid var(--orange);
+      border-radius: 8px;
+      padding: 0.85rem 1.05rem;
+      font-size: 0.87rem;
+      line-height: 1.55;
+      color: var(--text);
+      display: flex;
+      gap: 0.6rem;
+      align-items: flex-start;
+    }
+    .strip.warn { border-left-color: #dc2626; background: #fef2f2; }
+    .strip.note { border-left-color: var(--orange); background: var(--orange-lt); }
+    .strip .s-icon { font-size: 1.15rem; flex-shrink: 0; }
+    .strip strong { color: var(--text); }
+    .strip .mono { font-family: 'Fira Code', monospace; background: rgba(255,255,255,0.6); padding: 0.05rem 0.3rem; border-radius: 4px; font-size: 0.8rem; }
+
+    @media (max-width: 900px) {
+      .method-strips { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Aprendizado Supervisionado</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 3 · Slide 03 / 03</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Regressão</h1>
+        <p class="slide-subtitle">
+          A saída é <strong>numérica</strong>. O modelo aprende uma <strong>função</strong> que mapeia a entrada em um valor real.
+        </p>
+      </div>
+
+      <div class="main-split">
+
+        <!-- LEFT: plot -->
+        <div class="plot-card">
+          <div class="plot-card-header">
+            <span class="plot-title">🏠 Preço de imóveis vs. tamanho</span>
+            <span class="plot-legend">
+              <span><span class="swatch actual"></span>valor real</span>
+              <span><span class="swatch line"></span>função aprendida</span>
+              <span><span class="swatch resid"></span>resíduo</span>
+            </span>
+          </div>
+          <div class="plot-wrap">
+            <svg class="plot-svg" viewBox="0 0 380 320" xmlns="http://www.w3.org/2000/svg" id="svg">
+              <g id="grid"></g>
+              <line class="axis-line" x1="52" y1="280" x2="365" y2="280"/>
+              <line class="axis-line" x1="52" y1="15" x2="52" y2="280"/>
+              <text class="axis-title" x="180" y="305">tamanho (m²)</text>
+              <text class="axis-title" x="12" y="150" transform="rotate(-90, 12, 150)">preço (R$ mil)</text>
+              <line id="regr-line" class="regr-line" x1="0" y1="0" x2="0" y2="0"/>
+              <g id="resids"></g>
+              <g id="points"></g>
+            </svg>
+          </div>
+        </div>
+
+        <!-- RIGHT: metrics + residuals table -->
+        <div class="info-card">
+          <div class="metrics-row">
+            <div class="metric-tile">
+              <div class="m-lbl">MAE</div>
+              <div class="m-val">12,2</div>
+              <div class="m-unit">R$ mil</div>
+              <div class="m-formula">= média |erro|</div>
+            </div>
+            <div class="metric-tile">
+              <div class="m-lbl">RMSE</div>
+              <div class="m-val">12,9</div>
+              <div class="m-unit">R$ mil</div>
+              <div class="m-formula">= √(média erro²)</div>
+            </div>
+          </div>
+
+          <div class="resid-table">
+            <div class="row header">
+              <div>Tamanho</div><div>Real</div><div>Predito</div><div>Erro</div>
+            </div>
+            <div class="row"><div>40 m²</div><div class="val-actual">180</div><div class="val-pred">170</div><div class="val-err">+10</div></div>
+            <div class="row"><div>55 m²</div><div class="val-actual">200</div><div class="val-pred">215</div><div class="val-err">−15</div></div>
+            <div class="row"><div>65 m²</div><div class="val-actual">260</div><div class="val-pred">245</div><div class="val-err">+15</div></div>
+            <div class="row"><div>75 m²</div><div class="val-actual">270</div><div class="val-pred">275</div><div class="val-err">−5</div></div>
+            <div class="row"><div>90 m²</div><div class="val-actual">340</div><div class="val-pred">320</div><div class="val-err big">+20 ← maior</div></div>
+            <div class="row"><div>105 m²</div><div class="val-actual">355</div><div class="val-pred">365</div><div class="val-err">−10</div></div>
+            <div class="row" style="color:var(--text-dim); font-style:italic;"><div>… (mais 3 pontos)</div><div></div><div></div><div></div></div>
+          </div>
+
+          <div class="other-metrics">
+            <strong>Outras métricas comuns:</strong>
+            <span class="mono">MSE</span>, <span class="mono">R²</span>, <span class="mono">MAPE</span> — cada uma trata os resíduos de forma diferente (média, quadrado, relativo).
+          </div>
+        </div>
+
+      </div>
+
+      <div class="method-strips">
+        <div class="strip note">
+          <span class="s-icon">📐</span>
+          <div><strong>O que é um erro?</strong> Errar por 5 é <em>muito diferente</em> de errar por 50. A <strong>magnitude</strong> importa — cada resíduo é uma distância entre o valor predito e o valor real, medida na mesma unidade da saída.</div>
+        </div>
+        <div class="strip warn">
+          <span class="s-icon">⚠️</span>
+          <div><strong>Impacto na metodologia:</strong> métricas quadráticas (<span class="mono">MSE</span>, <span class="mono">RMSE</span>) <em>punem mais</em> erros grandes que erros pequenos. Se seu problema tem <em>outliers</em>, o modelo vai se esforçar mais para acertá-los — o que pode ser bom ou ruim, dependendo do contexto.</div>
+        </div>
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">🔁</span>
+        <div class="i-text">
+          Em regressão, a pergunta é <strong>contínua</strong> ("qual valor?") e a resposta é medida por <strong>distância</strong>. Nunca acertamos "exatamente" — o objetivo é minimizar a distância média entre predito e real. Boa metodologia significa escolher a métrica que trata <em>outliers</em> como o problema exige (MAE se você quer ignorá-los, MSE/RMSE se quer priorizá-los) e reportar o erro na <strong>unidade original</strong> — dizer "RMSE = 12,9 mil reais" é muito mais informativo que apenas "RMSE = 12,9".
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b3-s02.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <a class="btn-nav disabled" href="#">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+
+  <script>
+    // Dataset: house sizes and prices
+    // Predicted line: y = 3x + 50
+    const data = [
+      { x:40,  actual:180, predicted:170 },  // +10
+      { x:55,  actual:200, predicted:215 },  // -15
+      { x:65,  actual:260, predicted:245 },  // +15
+      { x:75,  actual:270, predicted:275 },  // -5
+      { x:90,  actual:340, predicted:320 },  // +20 (largest)
+      { x:105, actual:355, predicted:365 },  // -10
+      { x:120, actual:425, predicted:410 },  // +15
+      { x:135, actual:445, predicted:455 },  // -10
+      { x:150, actual:510, predicted:500 },  // +10
+    ];
+
+    const XMIN=20, XMAX=170, YMIN=100, YMAX=560;
+    const PX_L=52, PX_R=365, PY_T=15, PY_B=280;
+    const sx = x => PX_L + (x - XMIN) / (XMAX - XMIN) * (PX_R - PX_L);
+    const sy = y => PY_B - (y - YMIN) / (YMAX - YMIN) * (PY_B - PY_T);
+
+    // Grid
+    const grid = document.getElementById('grid');
+    for (let x = 40; x <= 160; x += 30) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('class', 'grid-line');
+      line.setAttribute('x1', sx(x)); line.setAttribute('x2', sx(x));
+      line.setAttribute('y1', PY_T); line.setAttribute('y2', PY_B);
+      grid.appendChild(line);
+      const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      lbl.setAttribute('class', 'axis-label');
+      lbl.setAttribute('x', sx(x) - 7); lbl.setAttribute('y', PY_B + 12);
+      lbl.textContent = x;
+      grid.appendChild(lbl);
+    }
+    for (let y = 150; y <= 550; y += 100) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('class', 'grid-line');
+      line.setAttribute('x1', PX_L); line.setAttribute('x2', PX_R);
+      line.setAttribute('y1', sy(y)); line.setAttribute('y2', sy(y));
+      grid.appendChild(line);
+      const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      lbl.setAttribute('class', 'axis-label');
+      lbl.setAttribute('x', 22); lbl.setAttribute('y', sy(y) + 3);
+      lbl.textContent = y;
+      grid.appendChild(lbl);
+    }
+
+    // Regression line: y = 3x + 50 (from x=20 to x=170)
+    const line = document.getElementById('regr-line');
+    line.setAttribute('x1', sx(XMIN)); line.setAttribute('y1', sy(3*XMIN + 50));
+    line.setAttribute('x2', sx(XMAX)); line.setAttribute('y2', sy(3*XMAX + 50));
+
+    // Residuals + points
+    const resG = document.getElementById('resids');
+    const ptG = document.getElementById('points');
+    data.forEach(d => {
+      const px = sx(d.x);
+      const pyActual = sy(d.actual);
+      const pyPred = sy(d.predicted);
+      const err = Math.abs(d.actual - d.predicted);
+
+      // Residual line
+      const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      l.setAttribute('class', 'resid-line' + (err >= 18 ? ' big' : ''));
+      l.setAttribute('x1', px); l.setAttribute('x2', px);
+      l.setAttribute('y1', pyActual); l.setAttribute('y2', pyPred);
+      resG.appendChild(l);
+
+      // Actual point (filled)
+      const cA = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      cA.setAttribute('class', 'actual-pt');
+      cA.setAttribute('cx', px); cA.setAttribute('cy', pyActual); cA.setAttribute('r', 5);
+      ptG.appendChild(cA);
+    });
+  </script>
+</body>
+</html>

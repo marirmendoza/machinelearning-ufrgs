@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Anatomia de um Dataset</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .dataset-panel {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.4rem;
+      box-shadow: var(--shadow);
+    }
+    .dataset-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.9rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .dataset-title-small {
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--teal);
+    }
+    .dataset-source {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      font-family: 'Fira Code', monospace;
+    }
+    .table-wrap {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 1.2rem;
+    }
+    /* Interactive table */
+    .wdbc-table {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2px;
+      background: var(--border2);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.88rem;
+    }
+    .cell {
+      background: var(--bg2);
+      padding: 0.5rem 0.7rem;
+      text-align: center;
+      transition: background 0.15s;
+      position: relative;
+    }
+    .cell.header {
+      background: var(--bg3);
+      font-weight: 700;
+      color: var(--text);
+      font-size: 0.8rem;
+      padding: 0.6rem 0.5rem;
+    }
+    .cell.header.target { color: var(--teal); }
+
+    .wdbc-table[data-highlight="instancia"] .cell.row-active:not(.header) { background: var(--blue-lt); color: var(--blue); font-weight: 700; }
+    .wdbc-table[data-highlight="atributo"] .col-active { background: var(--teal-lt); color: var(--teal); font-weight: 700; }
+    .wdbc-table[data-highlight="atributo"] .col-active.header { background: var(--teal-lt); color: var(--teal); }
+    .wdbc-table[data-highlight="alvo"] .col-target { background: var(--purple-lt); color: var(--purple); font-weight: 700; }
+    .wdbc-table[data-highlight="alvo"] .col-target.header { background: var(--purple-lt); color: var(--purple); }
+    .wdbc-table[data-highlight="alvo"] .col-features { opacity: 0.35; }
+    .wdbc-table[data-highlight="dimensao"] .header:not(.target) { background: var(--orange-lt); color: var(--orange); }
+    .wdbc-table[data-highlight="notacao"] .cell.row-notation:not(.header) { background: var(--blue-lt); color: var(--blue); font-weight: 700; }
+    .wdbc-table[data-highlight="notacao"] .cell-notation { background: var(--green-lt); color: var(--green); font-weight: 700; box-shadow: inset 0 0 0 2px var(--green); }
+    .wdbc-table[data-highlight="tuple"] .cell.row-notation:not(.header) { background: var(--pink-lt); color: var(--pink); font-weight: 700; }
+
+    .concepts { display: flex; flex-direction: column; gap: 0.5rem; }
+    .concept-btn {
+      background: var(--bg2);
+      border: 1.5px solid var(--border2);
+      border-radius: 10px;
+      padding: 0.75rem 0.9rem;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      color: var(--text);
+      text-align: left;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .concept-btn:hover { border-color: var(--teal); transform: translateX(3px); }
+    .concept-btn.active { background: var(--teal); border-color: var(--teal); color: white; }
+    .concept-btn .btn-icon { font-size: 1.15rem; }
+    .concept-btn .btn-label { font-weight: 600; flex: 1; }
+
+    .explanation {
+      background: var(--bg3);
+      border-left: 4px solid var(--teal);
+      border-radius: 8px;
+      padding: 1rem 1.2rem;
+      margin-top: 1rem;
+      font-size: 0.95rem;
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 60px;
+    }
+    .explanation strong { color: var(--teal); }
+    .explanation .exp-formula {
+      display: inline-block;
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      padding: 0.15rem 0.5rem;
+      margin: 0 0.2rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Fundamentos de AM</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 1 · Slide 03 / 04</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Anatomia de um Dataset</h1>
+        <p class="slide-subtitle">
+          Todo dataset supervisionado tem a mesma estrutura: <strong>linhas são instâncias, colunas são atributos</strong>.
+        </p>
+      </div>
+
+      <div class="dataset-panel">
+        <div class="dataset-header">
+          <span class="dataset-title-small">🔬 Diagnóstico de câncer de mama (WDBC) — 12 primeiras instâncias</span>
+          <span class="dataset-source">University of Wisconsin, 1993 · 569 pacientes reais</span>
+        </div>
+
+        <div class="table-wrap">
+          <div class="concepts">
+            <button class="concept-btn active" data-hl="instancia">
+              <span class="btn-icon">👤</span>
+              <span class="btn-label">Instância</span>
+            </button>
+            <button class="concept-btn" data-hl="atributo">
+              <span class="btn-icon">📊</span>
+              <span class="btn-label">Atributo</span>
+            </button>
+            <button class="concept-btn" data-hl="alvo">
+              <span class="btn-icon">🎯</span>
+              <span class="btn-label">Atributo alvo</span>
+            </button>
+            <button class="concept-btn" data-hl="dimensao">
+              <span class="btn-icon">📐</span>
+              <span class="btn-label">Dimensionalidade</span>
+            </button>
+            <button class="concept-btn" data-hl="notacao">
+              <span class="btn-icon">✍️</span>
+              <span class="btn-label">Notação x<sub>k</sub><sup>i</sup></span>
+            </button>
+            <button class="concept-btn" data-hl="tuple">
+              <span class="btn-icon">🔗</span>
+              <span class="btn-label">Par (x<sub>k</sub>, y<sub>k</sub>)</span>
+            </button>
+          </div>
+
+          <div>
+            <div class="wdbc-table" id="wdbc-table" data-highlight="instancia"></div>
+          </div>
+        </div>
+
+        <div class="explanation" id="explanation"></div>
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">📚</span>
+        <div class="i-text">
+          Essa estrutura — <strong>linhas = instâncias, colunas = atributos, coluna especial = alvo</strong> — é chamada de <em>tidy data</em> e é a forma canônica que quase todo algoritmo de AM espera. Preparar os dados nesse formato é o primeiro passo de qualquer projeto real.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b1-s02.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b1-s04.html">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+
+  <script>
+    const data = [
+      { radius: 14, texture: 23, perimeter: 94,  diagnosis: 'M' },
+      { radius: 15, texture: 28, perimeter: 97,  diagnosis: 'M' },
+      { radius: 15, texture: 20, perimeter: 95,  diagnosis: 'M' },
+      { radius: 16, texture: 21, perimeter: 108, diagnosis: 'M' },
+      { radius: 20, texture: 22, perimeter: 130, diagnosis: 'M' },
+      { radius: 15, texture: 14, perimeter: 102, diagnosis: 'M' },
+      { radius:  9, texture: 21, perimeter: 55,  diagnosis: 'B' },
+      { radius:  9, texture: 14, perimeter: 59,  diagnosis: 'B' },
+      { radius:  9, texture: 21, perimeter: 60,  diagnosis: 'B' },
+      { radius: 11, texture: 19, perimeter: 72,  diagnosis: 'B' },
+      { radius:  9, texture: 17, perimeter: 59,  diagnosis: 'B' },
+      { radius: 13, texture: 16, perimeter: 81,  diagnosis: 'B' },
+    ];
+    const HIGHLIGHT_ROW = 3;
+    const HIGHLIGHT_COL = 1;
+    const NOTATION_ROW = 3;
+    const NOTATION_COL = 1;
+
+    const cols = [
+      { label: 'Radius',    key: 'radius',    kind: 'feature' },
+      { label: 'Texture',   key: 'texture',   kind: 'feature' },
+      { label: 'Perimeter', key: 'perimeter', kind: 'feature' },
+      { label: 'Diagnosis', key: 'diagnosis', kind: 'target'  },
+    ];
+
+    const table = document.getElementById('wdbc-table');
+    cols.forEach((c, idx) => {
+      const el = document.createElement('div');
+      el.className = 'cell header';
+      if (c.kind === 'target') el.classList.add('target', 'col-target');
+      else el.classList.add('col-features');
+      if (idx === HIGHLIGHT_COL) el.classList.add('col-active');
+      el.textContent = c.label;
+      table.appendChild(el);
+    });
+
+    data.forEach((row, rIdx) => {
+      cols.forEach((c, cIdx) => {
+        const el = document.createElement('div');
+        el.className = 'cell';
+        if (c.kind === 'target') el.classList.add('col-target');
+        else el.classList.add('col-features');
+        if (cIdx === HIGHLIGHT_COL) el.classList.add('col-active');
+        if (rIdx === HIGHLIGHT_ROW) el.classList.add('row-active');
+        if (rIdx === NOTATION_ROW) el.classList.add('row-notation');
+        if (rIdx === NOTATION_ROW && cIdx === NOTATION_COL) el.classList.add('cell-notation');
+        el.textContent = row[c.key];
+        table.appendChild(el);
+      });
+    });
+
+    const explanations = {
+      instancia: `
+        <strong>Instância</strong> (também: <em>objeto</em>, <em>exemplo</em>): cada linha do dataset representa
+        uma <strong>unidade observacional</strong> — aqui, uma paciente cuja biópsia foi analisada.
+        A linha destacada é a instância <span class="exp-formula">x<sub>4</sub></span>.
+      `,
+      atributo: `
+        <strong>Atributo</strong> (ou <em>variável</em>, <em>feature</em>): cada coluna representa uma característica mensurável
+        das instâncias. A coluna <em>Texture</em> guarda uma medida específica das células do tumor —
+        seu valor varia entre instâncias, mas o <strong>tipo</strong> é o mesmo.
+      `,
+      alvo: `
+        <strong>Atributo alvo</strong> (ou <em>target</em>, <em>rótulo</em>): a coluna especial que queremos
+        <strong>prever</strong>. Aqui é <em>Diagnosis</em> — M (maligno) ou B (benigno). No aprendizado supervisionado,
+        conhecemos o alvo nos dados de treino; depois usamos o modelo para prever o alvo de novos pacientes.
+      `,
+      dimensao: `
+        <strong>Dimensionalidade</strong>: número de <strong>atributos preditivos</strong> (o alvo não conta).
+        Este exemplo tem <span class="exp-formula">d = 3</span> dimensões (Radius, Texture, Perimeter).
+        O WDBC original tem <span class="exp-formula">d = 30</span>. Datasets modernos podem ter milhares.
+      `,
+      notacao: `
+        <strong>Notação:</strong> <span class="exp-formula">x<sub>k</sub></span> representa a instância <em>k</em> inteira
+        (o vetor com todos os atributos) — destacada em azul. Já
+        <span class="exp-formula">x<sub>k</sub><sup>i</sup></span> representa o valor do atributo <em>i</em> na instância <em>k</em>
+        — a célula única destacada em verde. Aqui: <span class="exp-formula">x<sub>4</sub><sup>2</sup> = 21</span>.
+      `,
+      tuple: `
+        <strong>Par entrada-saída</strong> <span class="exp-formula">(x<sub>k</sub>, y<sub>k</sub>)</span>: no aprendizado
+        supervisionado, cada instância é um <em>par</em> entre o vetor de atributos preditivos e o valor do alvo.
+        Aqui: <span class="exp-formula">(x<sub>4</sub>, y<sub>4</sub>) = ([16, 21, 108], "M")</span>.
+        O dataset de treino é o conjunto <span class="exp-formula">D = {(x<sub>k</sub>, y<sub>k</sub>), k = 1...n}</span>.
+      `,
+    };
+
+    const buttons = document.querySelectorAll('.concept-btn');
+    const explBox = document.getElementById('explanation');
+    function selectConcept(hl) {
+      table.dataset.highlight = hl;
+      buttons.forEach(b => b.classList.toggle('active', b.dataset.hl === hl));
+      explBox.innerHTML = explanations[hl];
+    }
+    buttons.forEach(b => {
+      b.addEventListener('click', () => selectConcept(b.dataset.hl));
+    });
+    selectConcept('instancia');
+  </script>
+</body>
+</html>

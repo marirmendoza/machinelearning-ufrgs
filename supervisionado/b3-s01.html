@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Duas Perguntas em Aprendizado Supervisionado</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .questions-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.3rem;
+    }
+
+    .qcard {
+      background: var(--bg2);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.3rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+    .qcard.classif { border-color: #93c5fd; }
+    .qcard.regres  { border-color: #fdba74; }
+
+    .qbadge {
+      align-self: flex-start;
+      padding: 0.3rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .classif .qbadge { background: var(--blue-lt); color: var(--blue); border: 1px solid #93c5fd; }
+    .regres  .qbadge { background: var(--orange-lt); color: var(--orange); border: 1px solid #fdba74; }
+
+    .qquestion {
+      font-size: 1.35rem;
+      font-weight: 800;
+      line-height: 1.25;
+    }
+    .classif .qquestion { color: var(--blue); }
+    .regres  .qquestion { color: var(--orange); }
+
+    .qsub {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* Table */
+    .mini-table {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2px;
+      background: var(--border2);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+    }
+    .mini-table .cell {
+      background: var(--bg2);
+      padding: 0.4rem 0.5rem;
+      text-align: center;
+    }
+    .mini-table .cell.header {
+      background: var(--bg3);
+      font-weight: 700;
+      color: var(--text);
+      font-size: 0.72rem;
+      padding: 0.5rem 0.3rem;
+    }
+    .classif .mini-table .cell.target,
+    .classif .mini-table .cell.header.target { background: var(--blue-lt); color: var(--blue); font-weight: 700; }
+    .regres  .mini-table .cell.target,
+    .regres  .mini-table .cell.header.target { background: var(--orange-lt); color: var(--orange); font-weight: 700; }
+
+    .output-badge {
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 0.6rem 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+    }
+    .output-badge .ob-lbl {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .output-badge .ob-val {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+    .classif .output-badge .ob-val { color: var(--blue); }
+    .regres  .output-badge .ob-val { color: var(--orange); }
+    .output-badge .ob-domain {
+      margin-left: auto;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-family: 'Fira Code', monospace;
+    }
+
+    /* Same features indicator */
+    .same-features {
+      background: linear-gradient(90deg, transparent 0%, var(--bg3) 20%, var(--bg3) 80%, transparent 100%);
+      text-align: center;
+      padding: 0.55rem 1rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      margin: 0.5rem 0;
+    }
+    .same-features strong { color: var(--purple); }
+
+    /* Quick quiz */
+    .quiz-strip {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .quiz-strip-title {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      flex-shrink: 0;
+    }
+    .scenario-btn {
+      background: var(--bg3);
+      border: 2px solid var(--border2);
+      border-radius: 10px;
+      padding: 0.55rem 0.85rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-family: 'Inter', sans-serif;
+      color: var(--text);
+      transition: all 0.15s;
+      flex: 1;
+      min-width: 180px;
+    }
+    .scenario-btn:hover:not(.answered) { border-color: var(--purple); }
+    .scenario-btn.answered { cursor: default; }
+    .scenario-btn.classif { border-color: var(--blue); background: var(--blue-lt); color: var(--blue); font-weight: 600; }
+    .scenario-btn.regres  { border-color: var(--orange); background: var(--orange-lt); color: var(--orange); font-weight: 600; }
+    .scenario-btn .tag {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 0.2rem;
+      opacity: 0.85;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Aprendizado Supervisionado</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 3 · Slide 01 / 03</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Duas Perguntas em Aprendizado Supervisionado</h1>
+        <p class="slide-subtitle">
+          A diferença fundamental está no <strong>tipo de saída</strong> — categórica ou numérica.
+        </p>
+      </div>
+
+      <div class="same-features">
+        Mesmos atributos preditivos · <strong>diferente atributo alvo</strong> · diferente tarefa
+      </div>
+
+      <div class="questions-split">
+
+        <!-- LEFT: Classification -->
+        <div class="qcard classif">
+          <span class="qbadge">🎯 Classificação</span>
+          <div class="qquestion">"Este tumor é maligno ou benigno?"</div>
+          <div class="qsub">A partir dos mesmos atributos, prever uma <em>categoria</em>.</div>
+
+          <div class="mini-table">
+            <div class="cell header">Radius</div>
+            <div class="cell header">Texture</div>
+            <div class="cell header">Perimeter</div>
+            <div class="cell header target">Diagnosis</div>
+            <div class="cell">14</div><div class="cell">23</div><div class="cell">94</div><div class="cell target">M</div>
+            <div class="cell">15</div><div class="cell">28</div><div class="cell">97</div><div class="cell target">M</div>
+            <div class="cell">15</div><div class="cell">20</div><div class="cell">95</div><div class="cell target">M</div>
+            <div class="cell">9</div><div class="cell">14</div><div class="cell">59</div><div class="cell target">B</div>
+            <div class="cell">9</div><div class="cell">21</div><div class="cell">60</div><div class="cell target">B</div>
+            <div class="cell">11</div><div class="cell">19</div><div class="cell">72</div><div class="cell target">B</div>
+          </div>
+
+          <div class="output-badge">
+            <span class="ob-lbl">Tipo de saída</span>
+            <span class="ob-val">categórica</span>
+            <span class="ob-domain">y ∈ {M, B}</span>
+          </div>
+        </div>
+
+        <!-- RIGHT: Regression -->
+        <div class="qcard regres">
+          <span class="qbadge">📈 Regressão</span>
+          <div class="qquestion">"Quantos meses de sobrevida?"</div>
+          <div class="qsub">A partir dos mesmos atributos, prever um <em>número</em>.</div>
+
+          <div class="mini-table">
+            <div class="cell header">Radius</div>
+            <div class="cell header">Texture</div>
+            <div class="cell header">Perimeter</div>
+            <div class="cell header target">Survival</div>
+            <div class="cell">14</div><div class="cell">23</div><div class="cell">94</div><div class="cell target">35</div>
+            <div class="cell">15</div><div class="cell">28</div><div class="cell">97</div><div class="cell target">18</div>
+            <div class="cell">15</div><div class="cell">20</div><div class="cell">95</div><div class="cell target">32</div>
+            <div class="cell">9</div><div class="cell">14</div><div class="cell">59</div><div class="cell target">15</div>
+            <div class="cell">9</div><div class="cell">21</div><div class="cell">60</div><div class="cell target">13</div>
+            <div class="cell">11</div><div class="cell">19</div><div class="cell">72</div><div class="cell target">27</div>
+          </div>
+
+          <div class="output-badge">
+            <span class="ob-lbl">Tipo de saída</span>
+            <span class="ob-val">numérica</span>
+            <span class="ob-domain">y ∈ ℝ</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="quiz-strip">
+        <span class="quiz-strip-title">🎓 Teste você: clique para revelar</span>
+        <button class="scenario-btn" data-type="classif" onclick="reveal(this)">
+          Prever se um cliente vai cancelar o plano
+          <span class="tag" style="display:none">Classificação</span>
+        </button>
+        <button class="scenario-btn" data-type="regres" onclick="reveal(this)">
+          Prever o preço de venda de um imóvel
+          <span class="tag" style="display:none">Regressão</span>
+        </button>
+        <button class="scenario-btn" data-type="regres" onclick="reveal(this)">
+          Estimar o tempo de entrega de um pedido
+          <span class="tag" style="display:none">Regressão</span>
+        </button>
+        <button class="scenario-btn" data-type="classif" onclick="reveal(this)">
+          Detectar se um e-mail é spam
+          <span class="tag" style="display:none">Classificação</span>
+        </button>
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">🔀</span>
+        <div class="i-text">
+          <strong>Mesmos atributos preditivos</strong>, <strong>diferente alvo</strong>, <strong>diferente tarefa</strong>. A escolha entre classificação e regressão é ditada pelo tipo do alvo, não pelos dados de entrada. Essa diferença aparentemente pequena muda quase tudo depois: <em>que algoritmos usamos, como avaliamos os erros, e o que significa um "bom modelo"</em> — como veremos nos próximos slides.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b2-s03.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b3-s02.html">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+
+  <script>
+    function reveal(btn) {
+      if (btn.classList.contains('answered')) return;
+      btn.classList.add('answered', btn.dataset.type);
+      btn.querySelector('.tag').style.display = 'inline';
+    }
+  </script>
+</body>
+</html>

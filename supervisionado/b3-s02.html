@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Classificação</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .main-split {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 1.3rem;
+    }
+    .plot-card, .info-card {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.15rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+    .plot-card { padding: 1rem; }
+    .plot-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .plot-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--blue);
+    }
+    .plot-legend {
+      display: flex;
+      gap: 0.7rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    .plot-legend .swatch {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 0.3rem;
+      vertical-align: baseline;
+    }
+    .swatch.dog { background: #1d4ed8; }
+    .swatch.cat { background: #b91c1c; }
+    .swatch.err { background: white; border: 2px solid #fbbf24; }
+
+    .plot-wrap { background: var(--bg3); border-radius: 8px; padding: 0.5rem; }
+    .plot-svg { width: 100%; height: auto; display: block; }
+    .axis-line { stroke: var(--text-dim); stroke-width: 1; }
+    .grid-line { stroke: var(--border2); stroke-width: 0.5; }
+    .axis-label { font-family: 'Fira Code', monospace; font-size: 10px; fill: var(--text-dim); }
+    .axis-title { font-family: 'Fira Code', monospace; font-size: 11px; fill: var(--text-muted); font-weight: 600; }
+    .pt { stroke: white; stroke-width: 1.5; }
+    .pt.dog { fill: #1d4ed8; }
+    .pt.cat { fill: #b91c1c; }
+    .pt.wrong { stroke: #fbbf24; stroke-width: 3.5; }
+    .boundary {
+      stroke: var(--purple);
+      stroke-width: 2.5;
+      stroke-dasharray: 5 4;
+    }
+    .boundary-label {
+      fill: var(--purple);
+      font-family: 'Fira Code', monospace;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    /* Predictions table */
+    .predictions {
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 0.7rem 0.9rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.83rem;
+    }
+    .predictions .pred-row {
+      display: grid;
+      grid-template-columns: 1fr 0.8fr 0.8fr 0.6fr;
+      gap: 0.5rem;
+      padding: 0.25rem 0;
+      align-items: center;
+    }
+    .predictions .pred-row.header {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-bottom: 1px solid var(--border2);
+      padding-bottom: 0.35rem;
+      margin-bottom: 0.2rem;
+    }
+    .predictions .pred-row.error { background: #fef3c7; margin: 0 -0.4rem; padding: 0.3rem 0.4rem; border-radius: 4px; }
+    .predictions .check { text-align: center; font-weight: 700; }
+    .predictions .check.ok { color: var(--green); }
+    .predictions .check.no { color: var(--red); }
+
+    /* Metric card */
+    .metric-big {
+      background: linear-gradient(135deg, var(--blue-lt), var(--purple-lt));
+      border: 1.5px solid #93c5fd;
+      border-radius: 10px;
+      padding: 0.9rem 1.1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .metric-big .m-lbl {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .metric-big .m-val {
+      font-family: 'Fira Code', monospace;
+      font-size: 1.7rem;
+      font-weight: 800;
+      color: var(--blue);
+    }
+    .metric-big .m-formula {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .other-metrics {
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 0.65rem 0.9rem;
+      font-size: 0.83rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+    .other-metrics strong { color: var(--blue); }
+    .other-metrics .mono {
+      font-family: 'Fira Code', monospace;
+      background: var(--bg2);
+      padding: 0.05rem 0.35rem;
+      border-radius: 4px;
+      font-size: 0.78rem;
+    }
+
+    /* Method boxes */
+    .method-strips { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; }
+    .strip {
+      background: var(--bg2);
+      border-left: 4px solid var(--purple);
+      border-radius: 8px;
+      padding: 0.85rem 1.05rem;
+      font-size: 0.87rem;
+      line-height: 1.55;
+      color: var(--text);
+      display: flex;
+      gap: 0.6rem;
+      align-items: flex-start;
+    }
+    .strip.warn { border-left-color: var(--orange); background: var(--orange-lt); }
+    .strip.note { border-left-color: var(--blue); background: var(--blue-lt); }
+    .strip .s-icon { font-size: 1.15rem; flex-shrink: 0; }
+    .strip strong { color: var(--text); }
+
+    @media (max-width: 900px) {
+      .method-strips { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Aprendizado Supervisionado</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 3 · Slide 02 / 03</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Classificação</h1>
+        <p class="slide-subtitle">
+          A saída é uma <strong>categoria</strong>. O modelo aprende uma <strong>fronteira de decisão</strong> que separa as classes.
+        </p>
+      </div>
+
+      <div class="main-split">
+
+        <!-- LEFT: plot -->
+        <div class="plot-card">
+          <div class="plot-card-header">
+            <span class="plot-title">🐶🐱 Fronteira aprendida</span>
+            <span class="plot-legend">
+              <span><span class="swatch dog"></span>cachorro</span>
+              <span><span class="swatch cat"></span>gato</span>
+              <span><span class="swatch err"></span>erro</span>
+            </span>
+          </div>
+          <div class="plot-wrap">
+            <svg class="plot-svg" viewBox="0 0 360 300" xmlns="http://www.w3.org/2000/svg" id="svg">
+              <g id="grid"></g>
+              <line class="axis-line" x1="42" y1="265" x2="345" y2="265"/>
+              <line class="axis-line" x1="42" y1="15" x2="42" y2="265"/>
+              <text class="axis-title" x="175" y="288">peso (kg)</text>
+              <line id="boundary" class="boundary" x1="0" y1="0" x2="0" y2="0"/>
+              <text id="boundary-label" class="boundary-label"></text>
+              <g id="points"></g>
+            </svg>
+          </div>
+        </div>
+
+        <!-- RIGHT: metric + predictions -->
+        <div class="info-card">
+          <div class="metric-big">
+            <div>
+              <div class="m-lbl">Acurácia</div>
+              <div class="m-val">83,3%</div>
+            </div>
+            <div class="m-formula">= 10 / 12</div>
+          </div>
+
+          <div class="predictions">
+            <div class="pred-row header">
+              <div>Ponto</div><div>Real</div><div>Predito</div><div>?</div>
+            </div>
+            <div class="pred-row"><div>x₁ (12, 30)</div><div style="color:#1d4ed8;">🐶</div><div style="color:#1d4ed8;">🐶</div><div class="check ok">✓</div></div>
+            <div class="pred-row error"><div>x₇ (7, 30)</div><div style="color:#1d4ed8;">🐶</div><div style="color:#b91c1c;">🐱</div><div class="check no">✗</div></div>
+            <div class="pred-row"><div>x₈ (5, 27)</div><div style="color:#b91c1c;">🐱</div><div style="color:#b91c1c;">🐱</div><div class="check ok">✓</div></div>
+            <div class="pred-row error"><div>x₁₂ (8, 29)</div><div style="color:#b91c1c;">🐱</div><div style="color:#1d4ed8;">🐶</div><div class="check no">✗</div></div>
+            <div class="pred-row" style="color:var(--text-dim); font-style:italic;"><div>… (mais 8 corretos)</div><div></div><div></div><div class="check ok">✓</div></div>
+          </div>
+
+          <div class="other-metrics">
+            <strong>Outras métricas comuns:</strong>
+            <span class="mono">precisão</span>, <span class="mono">recall</span>, <span class="mono">F1</span>, <span class="mono">AUC-ROC</span>, <span class="mono">matriz de confusão</span> — cada uma responde uma pergunta diferente sobre o modelo (veremos em detalhe mais adiante).
+          </div>
+        </div>
+
+      </div>
+
+      <div class="method-strips">
+        <div class="strip">
+          <span class="s-icon">🎯</span>
+          <div><strong>O que é um erro?</strong> Errar a categoria <em>é</em> errar — todos os erros valem <strong>1</strong>, independente de "quão perto" da fronteira o ponto estava. Um erro sutil e um erro absurdo contam igual na acurácia.</div>
+        </div>
+        <div class="strip warn">
+          <span class="s-icon">⚠️</span>
+          <div><strong>Impacto na metodologia:</strong> na prática, nem todo erro custa o mesmo. Dizer "benigno" para um tumor maligno é <em>muito pior</em> que o contrário. Por isso métricas como <span class="mono">recall</span> e <span class="mono">precisão</span> ganham importância — a acurácia sozinha esconde esses trade-offs.</div>
+        </div>
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">🧭</span>
+        <div class="i-text">
+          Em classificação, a pergunta é <strong>discreta</strong> ("qual classe?") e a resposta é <strong>certa ou errada</strong>. A acurácia é o ponto de partida, mas boa metodologia significa escolher a métrica que reflete o <em>custo real</em> dos erros no problema — algo muito diferente na regressão, como veremos a seguir.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b3-s01.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b3-s03.html">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+
+  <script>
+    // Same dataset as b2-s03 (12 training points, 2 misclassified at boundary=7.5)
+    const dogs = [
+      {p:10,a:25},{p:12,a:30},{p:14,a:27},{p:15,a:32},{p:11,a:28},{p:9,a:22},
+      {p:7,a:30},   // ← misclassified
+    ];
+    const cats = [
+      {p:5,a:27},{p:4,a:30},{p:6,a:24},{p:3,a:22},
+      {p:8,a:29},   // ← misclassified
+    ];
+    const BOUNDARY = 7.5;
+    const XMIN=0, XMAX=20, YMIN=15, YMAX=40;
+    const PX_L=42, PX_R=345, PY_T=15, PY_B=265;
+    const sx = x => PX_L + (x - XMIN) / (XMAX - XMIN) * (PX_R - PX_L);
+    const sy = y => PY_B - (y - YMIN) / (YMAX - YMIN) * (PY_B - PY_T);
+
+    const grid = document.getElementById('grid');
+    for (let x = 4; x <= 20; x += 4) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('class', 'grid-line');
+      line.setAttribute('x1', sx(x)); line.setAttribute('x2', sx(x));
+      line.setAttribute('y1', PY_T); line.setAttribute('y2', PY_B);
+      grid.appendChild(line);
+      const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      lbl.setAttribute('class', 'axis-label');
+      lbl.setAttribute('x', sx(x) - 5); lbl.setAttribute('y', PY_B + 12);
+      lbl.textContent = x;
+      grid.appendChild(lbl);
+    }
+    for (let y = 20; y <= 40; y += 5) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('class', 'grid-line');
+      line.setAttribute('x1', PX_L); line.setAttribute('x2', PX_R);
+      line.setAttribute('y1', sy(y)); line.setAttribute('y2', sy(y));
+      grid.appendChild(line);
+      const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      lbl.setAttribute('class', 'axis-label');
+      lbl.setAttribute('x', 20); lbl.setAttribute('y', sy(y) + 3);
+      lbl.textContent = y;
+      grid.appendChild(lbl);
+    }
+
+    // Boundary
+    const b = document.getElementById('boundary');
+    b.setAttribute('x1', sx(BOUNDARY)); b.setAttribute('x2', sx(BOUNDARY));
+    b.setAttribute('y1', PY_T); b.setAttribute('y2', PY_B);
+    const bl = document.getElementById('boundary-label');
+    bl.setAttribute('x', sx(BOUNDARY) + 5);
+    bl.setAttribute('y', PY_T + 12);
+    bl.textContent = 'fronteira';
+
+    // Points
+    const pg = document.getElementById('points');
+    dogs.forEach(p => {
+      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      let cls = 'pt dog';
+      if (p.p <= BOUNDARY) cls += ' wrong';
+      c.setAttribute('class', cls);
+      c.setAttribute('cx', sx(p.p)); c.setAttribute('cy', sy(p.a)); c.setAttribute('r', 7);
+      pg.appendChild(c);
+    });
+    cats.forEach(p => {
+      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      let cls = 'pt cat';
+      if (p.p > BOUNDARY) cls += ' wrong';
+      c.setAttribute('class', cls);
+      c.setAttribute('cx', sx(p.p)); c.setAttribute('cy', sy(p.a)); c.setAttribute('r', 7);
+      pg.appendChild(c);
+    });
+  </script>
+</body>
+</html>

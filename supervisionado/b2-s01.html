@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aprendizado no Espaço de Entrada</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .main-split {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 1.3rem;
+    }
+
+    /* Plot */
+    .plot-card {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .plot-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .plot-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--purple);
+    }
+    .plot-legend {
+      display: flex;
+      gap: 0.8rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+    .plot-legend .swatch {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 0.3rem;
+      vertical-align: baseline;
+    }
+    .swatch.dog { background: #1d4ed8; }
+    .swatch.cat { background: #b91c1c; }
+
+    .plot-wrap {
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 0.5rem;
+      position: relative;
+    }
+    .plot-svg { width: 100%; height: auto; display: block; cursor: crosshair; }
+
+    .axis-line { stroke: var(--text-dim); stroke-width: 1; }
+    .grid-line { stroke: var(--border2); stroke-width: 0.5; }
+    .axis-label { font-family: 'Fira Code', monospace; font-size: 10px; fill: var(--text-dim); }
+    .axis-title { font-family: 'Fira Code', monospace; font-size: 11px; fill: var(--text-muted); font-weight: 600; }
+
+    .pt { stroke: white; stroke-width: 1.5; }
+    .pt.dog { fill: #1d4ed8; }
+    .pt.cat { fill: #b91c1c; }
+
+    .boundary-line {
+      stroke: var(--purple);
+      stroke-width: 3;
+      stroke-dasharray: 6 4;
+      opacity: 0;
+      transition: opacity 0.6s;
+    }
+    .boundary-line.visible { opacity: 1; }
+    .boundary-label {
+      fill: var(--purple);
+      font-family: 'Fira Code', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      opacity: 0;
+      transition: opacity 0.6s;
+    }
+    .boundary-label.visible { opacity: 1; }
+
+    .query-pt {
+      fill: white;
+      stroke: var(--purple);
+      stroke-width: 3;
+      animation: popIn 0.3s ease;
+    }
+    @keyframes popIn { from { r: 0; } to { r: 8; } }
+
+    .plot-hint {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      font-family: 'Fira Code', monospace;
+      text-align: center;
+    }
+
+    /* Steps panel */
+    .steps { display: flex; flex-direction: column; gap: 0.8rem; }
+    .step {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.15rem;
+      display: flex;
+      gap: 0.8rem;
+      align-items: flex-start;
+      transition: all 0.2s;
+    }
+    .step.active { border-color: var(--purple); background: linear-gradient(to right, var(--bg2), var(--purple-lt)); }
+    .step.done { border-color: var(--green); }
+    .step-num {
+      background: var(--bg3);
+      color: var(--text-dim);
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Fira Code', monospace;
+      font-weight: 700;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .step.active .step-num { background: var(--purple); color: white; }
+    .step.done .step-num { background: var(--green); color: white; }
+    .step-body { flex: 1; min-width: 0; }
+    .step-title { font-size: 0.98rem; font-weight: 700; color: var(--text); margin-bottom: 0.3rem; }
+    .step-desc { font-size: 0.87rem; color: var(--text-muted); line-height: 1.5; }
+
+    .step-btn {
+      margin-top: 0.6rem;
+      background: var(--purple);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .step-btn:hover:not(:disabled) { background: #4c1d95; }
+    .step-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .learned-fn {
+      margin-top: 0.6rem;
+      background: #0f1724;
+      color: #e2e8f0;
+      padding: 0.65rem 0.9rem;
+      border-radius: 8px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+      line-height: 1.55;
+      display: none;
+    }
+    .learned-fn.show { display: block; animation: fadeIn 0.4s; }
+    .learned-fn .kw { color: #c4b5fd; }
+    .learned-fn .str { color: #86efac; }
+    .learned-fn .num { color: #fbbf24; }
+    .learned-fn .com { color: #6b7fa3; font-style: italic; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+    .prediction-box {
+      margin-top: 0.6rem;
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      display: none;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+    }
+    .prediction-box.show { display: block; animation: fadeIn 0.3s; }
+    .prediction-box .pred-lbl {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+    }
+    .prediction-box .pred-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+    .prediction-box .pred-value.dog { color: #1d4ed8; }
+    .prediction-box .pred-value.cat { color: #b91c1c; }
+    .prediction-box .pred-detail { color: var(--text-muted); font-size: 0.8rem; margin-top: 0.35rem; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Aprendizado Supervisionado</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 2 · Slide 01 / 03</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Aprendizado no Espaço de Entrada</h1>
+        <p class="slide-subtitle">
+          Aprender = descobrir uma <strong>função que mapeia entrada em saída</strong>, a partir dos padrões das instâncias anteriores.
+        </p>
+      </div>
+
+      <div class="main-split">
+        <!-- LEFT: interactive plot -->
+        <div class="plot-card">
+          <div class="plot-card-header">
+            <span class="plot-title">🐶🐱 Cachorro vs. Gato — 2 atributos, 12 instâncias</span>
+            <span class="plot-legend">
+              <span><span class="swatch dog"></span>cachorro</span>
+              <span><span class="swatch cat"></span>gato</span>
+            </span>
+          </div>
+
+          <div class="plot-wrap">
+            <svg class="plot-svg" viewBox="0 0 380 320" xmlns="http://www.w3.org/2000/svg" id="svg" onclick="onPlotClick(event)">
+              <g id="grid"></g>
+              <line class="axis-line" x1="42" y1="280" x2="365" y2="280"/>
+              <line class="axis-line" x1="42" y1="15" x2="42" y2="280"/>
+              <text class="axis-title" x="180" y="305">peso (kg)</text>
+              <text class="axis-title" x="14" y="150" transform="rotate(-90, 14, 150)">altura (cm)</text>
+
+              <!-- Boundary (initially hidden) -->
+              <line id="boundary" class="boundary-line" x1="0" y1="0" x2="0" y2="0"/>
+              <text id="boundary-label" class="boundary-label"></text>
+
+              <!-- Data points -->
+              <g id="points"></g>
+
+              <!-- Query point (dynamic) -->
+              <g id="query"></g>
+            </svg>
+          </div>
+
+          <div class="plot-hint" id="plot-hint">↑ instâncias de treino já rotuladas: cada ponto sabe se é 🐶 ou 🐱</div>
+        </div>
+
+        <!-- RIGHT: steps -->
+        <div class="steps">
+          <div class="step done">
+            <span class="step-num">1</span>
+            <div class="step-body">
+              <div class="step-title">Cada instância vira um ponto no espaço</div>
+              <div class="step-desc">
+                Os atributos preditivos definem os eixos. Cada linha da tabela — um cachorro ou um gato — vira um <strong>ponto</strong> posicionado por (peso, altura). O rótulo aparece na cor.
+              </div>
+            </div>
+          </div>
+
+          <div class="step active" id="step-2">
+            <span class="step-num">2</span>
+            <div class="step-body">
+              <div class="step-title">O algoritmo aprende uma função <em>f</em></div>
+              <div class="step-desc">
+                A partir dos pontos rotulados, o algoritmo descobre uma regra que separa as classes. Essa regra é a <strong>fronteira de decisão</strong> — a materialização visível da função aprendida.
+              </div>
+              <button class="step-btn" id="learn-btn" onclick="learn()">🎓 Aprender função a partir dos dados</button>
+              <div class="learned-fn" id="learned-fn">
+<span class="com"># função aprendida a partir das 12 instâncias:</span>
+<span class="kw">def</span> f(peso, altura):
+    <span class="kw">if</span> peso &gt; <span class="num">7</span>:
+        <span class="kw">return</span> <span class="str">"🐶"</span>
+    <span class="kw">else</span>:
+        <span class="kw">return</span> <span class="str">"🐱"</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="step" id="step-3">
+            <span class="step-num">3</span>
+            <div class="step-body">
+              <div class="step-title">Novos pontos são classificados pela função</div>
+              <div class="step-desc">
+                Uma vez aprendida, a função responde para qualquer entrada nova. Clique em qualquer lugar da plotagem para adicionar um ponto e ver a predição.
+              </div>
+              <div class="prediction-box" id="prediction-box">
+                <div class="pred-lbl">Predição</div>
+                <div class="pred-value" id="pred-value">—</div>
+                <div class="pred-detail" id="pred-detail"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">🎯</span>
+        <div class="i-text">
+          Todo algoritmo de aprendizado supervisionado — KNN, árvores, regressão, redes neurais — está fazendo <strong>a mesma coisa</strong>: encontrar uma função que particiona o espaço de entrada de acordo com os padrões observados nos exemplos rotulados. O que muda entre algoritmos é <em>o formato</em> dessa fronteira (reta, curva, degraus, superfície complexa…) e <em>como</em> ela é encontrada.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b1-s01.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b2-s02.html">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+
+  <script>
+    // Same dataset as b1-s02 (dogs = a, cats = b)
+    const points = [
+      { peso: 8,  altura: 22, label: 'dog' },
+      { peso: 12, altura: 28, label: 'dog' },
+      { peso: 10, altura: 25, label: 'dog' },
+      { peso: 15, altura: 32, label: 'dog' },
+      { peso: 9,  altura: 30, label: 'dog' },
+      { peso: 13, altura: 26, label: 'dog' },
+      { peso: 3,  altura: 24, label: 'cat' },
+      { peso: 5,  altura: 28, label: 'cat' },
+      { peso: 4,  altura: 22, label: 'cat' },
+      { peso: 6,  altura: 26, label: 'cat' },
+      { peso: 4,  altura: 30, label: 'cat' },
+      { peso: 5,  altura: 32, label: 'cat' },
+    ];
+    // Boundary aprendida: peso = 7
+    const BOUNDARY_PESO = 7;
+
+    // Coordinate mapping
+    const XMIN = 0, XMAX = 20, YMIN = 15, YMAX = 40;
+    const PX_L = 42, PX_R = 365, PY_T = 15, PY_B = 280;
+    const sx = x => PX_L + (x - XMIN) / (XMAX - XMIN) * (PX_R - PX_L);
+    const sy = y => PY_B - (y - YMIN) / (YMAX - YMIN) * (PY_B - PY_T);
+    const invx = px => XMIN + (px - PX_L) / (PX_R - PX_L) * (XMAX - XMIN);
+    const invy = py => YMIN + (PY_B - py) / (PY_B - PY_T) * (YMAX - YMIN);
+
+    // Grid
+    const gridG = document.getElementById('grid');
+    for (let x = 4; x <= 20; x += 4) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('class', 'grid-line');
+      line.setAttribute('x1', sx(x)); line.setAttribute('x2', sx(x));
+      line.setAttribute('y1', PY_T); line.setAttribute('y2', PY_B);
+      gridG.appendChild(line);
+      const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      lbl.setAttribute('class', 'axis-label');
+      lbl.setAttribute('x', sx(x) - 5); lbl.setAttribute('y', PY_B + 12);
+      lbl.textContent = x;
+      gridG.appendChild(lbl);
+    }
+    for (let y = 20; y <= 40; y += 5) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('class', 'grid-line');
+      line.setAttribute('x1', PX_L); line.setAttribute('x2', PX_R);
+      line.setAttribute('y1', sy(y)); line.setAttribute('y2', sy(y));
+      gridG.appendChild(line);
+      const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      lbl.setAttribute('class', 'axis-label');
+      lbl.setAttribute('x', 20); lbl.setAttribute('y', sy(y) + 3);
+      lbl.textContent = y;
+      gridG.appendChild(lbl);
+    }
+
+    // Draw points
+    const ptsG = document.getElementById('points');
+    points.forEach(p => {
+      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      c.setAttribute('class', 'pt ' + p.label);
+      c.setAttribute('cx', sx(p.peso));
+      c.setAttribute('cy', sy(p.altura));
+      c.setAttribute('r', 6);
+      ptsG.appendChild(c);
+    });
+
+    let learned = false;
+
+    function learn() {
+      if (learned) return;
+      learned = true;
+      const btn = document.getElementById('learn-btn');
+      btn.disabled = true;
+      btn.innerHTML = '✓ Função aprendida';
+
+      // Show boundary line at peso = BOUNDARY_PESO
+      const bx = sx(BOUNDARY_PESO);
+      const line = document.getElementById('boundary');
+      line.setAttribute('x1', bx); line.setAttribute('x2', bx);
+      line.setAttribute('y1', PY_T); line.setAttribute('y2', PY_B);
+      line.classList.add('visible');
+
+      const bLbl = document.getElementById('boundary-label');
+      bLbl.setAttribute('x', bx + 5);
+      bLbl.setAttribute('y', PY_T + 12);
+      bLbl.textContent = 'fronteira de decisão';
+      bLbl.classList.add('visible');
+
+      // Show learned function pseudo-code
+      document.getElementById('learned-fn').classList.add('show');
+
+      // Activate step 3
+      document.getElementById('step-2').classList.remove('active');
+      document.getElementById('step-2').classList.add('done');
+      document.getElementById('step-3').classList.add('active');
+
+      // Update hint
+      document.getElementById('plot-hint').textContent = '👆 clique em qualquer lugar da plotagem para prever a classe de um ponto novo';
+    }
+
+    function onPlotClick(evt) {
+      if (!learned) return;
+      const svg = document.getElementById('svg');
+      const rect = svg.getBoundingClientRect();
+      const px = ((evt.clientX - rect.left) / rect.width) * 380;
+      const py = ((evt.clientY - rect.top) / rect.height) * 320;
+      if (px < PX_L || px > PX_R || py < PY_T || py > PY_B) return;
+
+      const peso = invx(px);
+      const altura = invy(py);
+      const prediction = peso > BOUNDARY_PESO ? 'dog' : 'cat';
+
+      // Clear previous query
+      const q = document.getElementById('query');
+      q.innerHTML = '';
+
+      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      c.setAttribute('class', 'query-pt');
+      c.setAttribute('cx', px);
+      c.setAttribute('cy', py);
+      c.setAttribute('r', 8);
+      q.appendChild(c);
+
+      // Prediction result
+      const box = document.getElementById('prediction-box');
+      const value = document.getElementById('pred-value');
+      const detail = document.getElementById('pred-detail');
+      box.classList.add('show');
+      value.className = 'pred-value ' + prediction;
+      value.textContent = prediction === 'dog' ? '🐶 cachorro' : '🐱 gato';
+      detail.innerHTML = `ponto = (${peso.toFixed(1)} kg, ${altura.toFixed(1)} cm) · lado ${prediction === 'dog' ? 'direito' : 'esquerdo'} da fronteira`;
+    }
+  </script>
+</body>
+</html>

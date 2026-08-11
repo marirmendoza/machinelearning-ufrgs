@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generalização</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .main-split {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 1.3rem;
+    }
+
+    .plot-card {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .plot-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .plot-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--purple);
+    }
+    .plot-legend {
+      display: flex;
+      gap: 0.7rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    .plot-legend .swatch {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 0.3rem;
+      vertical-align: baseline;
+    }
+    .swatch.dog { background: #1d4ed8; }
+    .swatch.cat { background: #b91c1c; }
+    .swatch.test { background: white; border: 2px dashed var(--purple); }
+
+    .plot-wrap {
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 0.5rem;
+    }
+    .plot-svg { width: 100%; height: auto; display: block; }
+    .axis-line { stroke: var(--text-dim); stroke-width: 1; }
+    .grid-line { stroke: var(--border2); stroke-width: 0.5; }
+    .axis-label { font-family: 'Fira Code', monospace; font-size: 10px; fill: var(--text-dim); }
+    .axis-title { font-family: 'Fira Code', monospace; font-size: 11px; fill: var(--text-muted); font-weight: 600; }
+
+    .pt { stroke: white; stroke-width: 1.5; }
+    .pt.dog { fill: #1d4ed8; }
+    .pt.cat { fill: #b91c1c; }
+    .pt.wrong { stroke: #fbbf24; stroke-width: 3.5; }
+    .pt.test { stroke-width: 2.5; stroke-dasharray: 3 2; }
+    .pt.test.dog { fill: #1d4ed8; stroke: var(--purple); }
+    .pt.test.cat { fill: #b91c1c; stroke: var(--purple); }
+
+    .boundary {
+      stroke: var(--purple);
+      stroke-width: 2.5;
+      stroke-dasharray: 5 4;
+      fill: none;
+    }
+    .boundary-label {
+      fill: var(--purple);
+      font-family: 'Fira Code', monospace;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .action-btn {
+      padding: 0.55rem 1.1rem;
+      border: none;
+      border-radius: 999px;
+      background: var(--purple);
+      color: white;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      align-self: flex-start;
+    }
+    .action-btn:hover:not(:disabled) { background: #4c1d95; transform: translateY(-1px); }
+    .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Right column cards */
+    .info-stack { display: flex; flex-direction: column; gap: 0.8rem; }
+    .info-card {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.15rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+    .info-card.train { border-color: #fbbf24; }
+    .info-card.test  { border-color: #86efac; opacity: 0.4; transition: opacity 0.4s; }
+    .info-card.test.revealed { opacity: 1; }
+
+    .info-badge {
+      align-self: flex-start;
+      padding: 0.25rem 0.8rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .train .info-badge { background: #fef3c7; color: #92400e; border: 1px solid #fbbf24; }
+    .test  .info-badge { background: var(--green-lt); color: var(--green); border: 1px solid #86efac; }
+
+    .info-headline {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .metric {
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'Fira Code', monospace;
+    }
+    .metric-label {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+    }
+    .metric-value {
+      font-size: 1.35rem;
+      font-weight: 800;
+    }
+    .train .metric-value { color: #b45309; }
+    .test  .metric-value { color: var(--green); }
+    .metric-formula {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-left: 0.5rem;
+    }
+
+    .info-note {
+      font-size: 0.87rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+    .info-note strong { color: var(--text); }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Aprendizado Supervisionado</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 2 · Slide 03 / 03</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Generalização</h1>
+        <p class="slide-subtitle">
+          O que importa é acertar em <strong>dados novos</strong>, nunca vistos. Nem sempre é possível — nem desejável — acertar 100% do treino.
+        </p>
+      </div>
+
+      <div class="main-split">
+
+        <!-- LEFT: interactive plot -->
+        <div class="plot-card">
+          <div class="plot-card-header">
+            <span class="plot-title">🐶🐱 Dataset de treino (12 instâncias)</span>
+            <span class="plot-legend">
+              <span><span class="swatch dog"></span>cachorro</span>
+              <span><span class="swatch cat"></span>gato</span>
+              <span id="legend-test" style="display:none;"><span class="swatch test"></span>teste (novo)</span>
+            </span>
+          </div>
+
+          <div class="plot-wrap">
+            <svg class="plot-svg" viewBox="0 0 380 320" xmlns="http://www.w3.org/2000/svg" id="svg">
+              <g id="grid"></g>
+              <line class="axis-line" x1="42" y1="280" x2="365" y2="280"/>
+              <line class="axis-line" x1="42" y1="15" x2="42" y2="280"/>
+              <text class="axis-title" x="180" y="305">peso (kg)</text>
+              <text class="axis-title" x="14" y="150" transform="rotate(-90, 14, 150)">altura (cm)</text>
+
+              <!-- Boundary -->
+              <line id="boundary" class="boundary" x1="0" y1="0" x2="0" y2="0"/>
+              <text id="boundary-label" class="boundary-label"></text>
+
+              <!-- Training points -->
+              <g id="train-pts"></g>
+              <!-- Test points -->
+              <g id="test-pts"></g>
+            </svg>
+          </div>
+
+          <button class="action-btn" id="reveal-btn" onclick="revealTest()">🔍 Testar em dados novos (nunca vistos)</button>
+        </div>
+
+        <!-- RIGHT: info cards -->
+        <div class="info-stack">
+
+          <div class="info-card train">
+            <span class="info-badge">Fase de treino</span>
+            <div class="info-headline">Modelo aprendeu com 12 exemplos</div>
+            <div class="metric">
+              <div>
+                <div class="metric-label">Taxa de acerto</div>
+                <div class="metric-value">83,3%</div>
+              </div>
+              <div class="metric-formula">= 10 / 12</div>
+            </div>
+            <p class="info-note">
+              O modelo <strong>não conseguiu separar perfeitamente</strong> os 12 exemplos de treino — 2 pontos ficam do lado "errado" da fronteira (marcados com <span style="color:#fbbf24;font-weight:700">⬤</span> na plotagem).
+              Isso <strong>não significa que o modelo é ruim</strong> — dados reais têm ruído, sobreposição e exceções que <em>nenhuma</em> fronteira simples resolve.
+            </p>
+          </div>
+
+          <div class="info-card test" id="test-card">
+            <span class="info-badge">Fase de teste</span>
+            <div class="info-headline">Modelo aplicado a 4 exemplos novos</div>
+            <div class="metric">
+              <div>
+                <div class="metric-label">Taxa de acerto</div>
+                <div class="metric-value" id="test-acc-val">—</div>
+              </div>
+              <div class="metric-formula" id="test-acc-formula"></div>
+            </div>
+            <p class="info-note" id="test-note">
+              Clique em <em>"Testar em dados novos"</em> para ver como o modelo se comporta em exemplos que ele <strong>nunca viu antes</strong>.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">📏</span>
+        <div class="i-text">
+          A <strong>taxa de acerto</strong> (accuracy) é uma primeira forma de avaliar um modelo — e nunca precisa ser 100%. Um modelo que acerta <em>menos</em> no treino pode acertar <em>mais</em> em dados novos, porque não decorou o treino. O objetivo do aprendizado é <strong>generalizar</strong>, não memorizar. Vamos ver métricas mais sofisticadas nas próximas aulas.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b2-s02.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <a class="btn-nav disabled" href="#">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+
+  <script>
+    // Training data (12 points, 2 will be misclassified by boundary at peso=7.5)
+    const trainDogs = [
+      {p:10,a:25},{p:12,a:30},{p:14,a:27},{p:15,a:32},{p:11,a:28},{p:9,a:22},
+      {p:7,a:30},  // ← misclassified (below boundary)
+    ];
+    const trainCats = [
+      {p:5,a:27},{p:4,a:30},{p:6,a:24},{p:3,a:22},
+      {p:8,a:29},  // ← misclassified (above boundary)
+    ];
+    // Test data (4 new points, all correctly classified by same boundary)
+    const testDogs = [{p:12,a:27},{p:14,a:30}];
+    const testCats = [{p:4,a:27},{p:5,a:24}];
+
+    const BOUNDARY = 7.5;
+    const XMIN=0, XMAX=20, YMIN=15, YMAX=40;
+    const PX_L=42, PX_R=365, PY_T=15, PY_B=280;
+    const sx = x => PX_L + (x - XMIN) / (XMAX - XMIN) * (PX_R - PX_L);
+    const sy = y => PY_B - (y - YMIN) / (YMAX - YMIN) * (PY_B - PY_T);
+
+    // Grid
+    const grid = document.getElementById('grid');
+    for (let x = 4; x <= 20; x += 4) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('class', 'grid-line');
+      line.setAttribute('x1', sx(x)); line.setAttribute('x2', sx(x));
+      line.setAttribute('y1', PY_T); line.setAttribute('y2', PY_B);
+      grid.appendChild(line);
+      const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      lbl.setAttribute('class', 'axis-label');
+      lbl.setAttribute('x', sx(x) - 5); lbl.setAttribute('y', PY_B + 12);
+      lbl.textContent = x;
+      grid.appendChild(lbl);
+    }
+    for (let y = 20; y <= 40; y += 5) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('class', 'grid-line');
+      line.setAttribute('x1', PX_L); line.setAttribute('x2', PX_R);
+      line.setAttribute('y1', sy(y)); line.setAttribute('y2', sy(y));
+      grid.appendChild(line);
+      const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      lbl.setAttribute('class', 'axis-label');
+      lbl.setAttribute('x', 20); lbl.setAttribute('y', sy(y) + 3);
+      lbl.textContent = y;
+      grid.appendChild(lbl);
+    }
+
+    // Boundary
+    const bLine = document.getElementById('boundary');
+    bLine.setAttribute('x1', sx(BOUNDARY)); bLine.setAttribute('x2', sx(BOUNDARY));
+    bLine.setAttribute('y1', PY_T); bLine.setAttribute('y2', PY_B);
+    const bLbl = document.getElementById('boundary-label');
+    bLbl.setAttribute('x', sx(BOUNDARY) + 5);
+    bLbl.setAttribute('y', PY_T + 12);
+    bLbl.textContent = 'fronteira';
+
+    // Draw training points with error highlighting
+    function drawTrain() {
+      const g = document.getElementById('train-pts');
+      trainDogs.forEach(p => {
+        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        let cls = 'pt dog';
+        if (p.p <= BOUNDARY) cls += ' wrong';  // dog predicted as cat
+        c.setAttribute('class', cls);
+        c.setAttribute('cx', sx(p.p));
+        c.setAttribute('cy', sy(p.a));
+        c.setAttribute('r', 7);
+        g.appendChild(c);
+      });
+      trainCats.forEach(p => {
+        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        let cls = 'pt cat';
+        if (p.p > BOUNDARY) cls += ' wrong';  // cat predicted as dog
+        c.setAttribute('class', cls);
+        c.setAttribute('cx', sx(p.p));
+        c.setAttribute('cy', sy(p.a));
+        c.setAttribute('r', 7);
+        g.appendChild(c);
+      });
+    }
+    drawTrain();
+
+    let testRevealed = false;
+    function revealTest() {
+      if (testRevealed) return;
+      testRevealed = true;
+      const btn = document.getElementById('reveal-btn');
+      btn.disabled = true;
+      btn.innerHTML = '✓ Teste realizado';
+
+      // Draw test points (with staggered animation)
+      const g = document.getElementById('test-pts');
+      const allTest = [
+        ...testDogs.map(p => ({...p, label:'dog'})),
+        ...testCats.map(p => ({...p, label:'cat'}))
+      ];
+      allTest.forEach((p, i) => {
+        setTimeout(() => {
+          const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          c.setAttribute('class', 'pt test ' + p.label);
+          c.setAttribute('cx', sx(p.p));
+          c.setAttribute('cy', sy(p.a));
+          c.setAttribute('r', 8);
+          g.appendChild(c);
+        }, i * 200);
+      });
+
+      // Reveal test legend
+      document.getElementById('legend-test').style.display = 'inline';
+
+      // Reveal test card
+      setTimeout(() => {
+        document.getElementById('test-card').classList.add('revealed');
+        document.getElementById('test-acc-val').textContent = '100%';
+        document.getElementById('test-acc-formula').textContent = '= 4 / 4';
+        document.getElementById('test-note').innerHTML = 'Todos os <strong>4 pontos novos</strong> caíram do lado correto da fronteira — mesmo com 83% de acerto no treino, o modelo <strong>generaliza perfeitamente</strong> para dados que nunca viu.<br><br>É por isso que a taxa de acerto no <em>teste</em> importa muito mais que no <em>treino</em>.';
+      }, 900);
+    }
+  </script>
+</body>
+</html>

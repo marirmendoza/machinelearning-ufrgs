@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tipos de Atributos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .example-panel {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.3rem 1.4rem;
+      box-shadow: var(--shadow);
+    }
+    .panel-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.9rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .panel-heading-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--teal);
+    }
+    .panel-heading-hint {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      font-family: 'Fira Code', monospace;
+    }
+
+    /* Sample dataset table */
+    .sample-table {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 2px;
+      background: var(--border2);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.83rem;
+    }
+    .sample-table .cell {
+      background: var(--bg2);
+      padding: 0.5rem 0.6rem;
+      text-align: center;
+      transition: background 0.15s;
+    }
+    .sample-table .type-badge-cell {
+      background: var(--bg3);
+      padding: 0.4rem 0.5rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      text-align: center;
+      color: var(--text-dim);
+      border-bottom: 1px dashed var(--border);
+    }
+    .sample-table .col-header {
+      background: var(--bg3);
+      font-weight: 700;
+      color: var(--text);
+      padding: 0.55rem 0.5rem;
+      font-size: 0.85rem;
+    }
+    .sample-table .col-header.target {
+      color: var(--pink);
+      position: relative;
+    }
+    .sample-table .col-header.target::after {
+      content: '🎯';
+      position: absolute;
+      right: 4px;
+      top: 3px;
+      font-size: 0.75rem;
+    }
+
+    /* Type-based highlighting on hover */
+    .sample-table[data-hl="nominal"]   .col-nominal   { background: var(--orange-lt); color: var(--orange); font-weight: 700; }
+    .sample-table[data-hl="ordinal"]   .col-ordinal   { background: var(--blue-lt);   color: var(--blue);   font-weight: 700; }
+    .sample-table[data-hl="discreto"]  .col-discreto  { background: var(--green-lt);  color: var(--green);  font-weight: 700; }
+    .sample-table[data-hl="continuo"]  .col-continuo  { background: var(--purple-lt); color: var(--purple); font-weight: 700; }
+
+    .type-badge {
+      display: inline-block;
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: white;
+    }
+    .type-badge.nominal  { background: var(--orange); }
+    .type-badge.ordinal  { background: var(--blue); }
+    .type-badge.discreto { background: var(--green); }
+    .type-badge.continuo { background: var(--purple); }
+
+    /* Types cards */
+    .types-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.85rem;
+    }
+    .type-card {
+      background: var(--bg2);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      transition: all 0.2s;
+      cursor: default;
+    }
+    .type-card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(15,23,36,0.10); }
+    .type-card.qn { border-color: #fdba74; }
+    .type-card.qo { border-color: #93c5fd; }
+    .type-card.qd { border-color: #86efac; }
+    .type-card.qc { border-color: #c4b5fd; }
+    .type-card.qn:hover { border-color: var(--orange); }
+    .type-card.qo:hover { border-color: var(--blue); }
+    .type-card.qd:hover { border-color: var(--green); }
+    .type-card.qc:hover { border-color: var(--purple); }
+
+    .type-family {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+    .qn .type-family, .qo .type-family { color: var(--orange); }
+    .qd .type-family, .qc .type-family { color: var(--purple); }
+
+    .type-name {
+      font-size: 1.1rem;
+      font-weight: 800;
+    }
+    .qn .type-name { color: var(--orange); }
+    .qo .type-name { color: var(--blue); }
+    .qd .type-name { color: var(--green); }
+    .qc .type-name { color: var(--purple); }
+
+    .type-def {
+      font-size: 0.87rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .type-examples {
+      background: var(--bg3);
+      border-radius: 6px;
+      padding: 0.5rem 0.7rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.78rem;
+      color: var(--text);
+      line-height: 1.5;
+      margin-top: auto;
+    }
+    .type-examples .ex-lbl {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.66rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      display: block;
+      margin-bottom: 0.2rem;
+    }
+
+    .target-note {
+      background: linear-gradient(135deg, var(--teal-lt), var(--purple-lt));
+      border: 1.5px solid #c4b5fd;
+      border-radius: var(--radius);
+      padding: 1rem 1.3rem;
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 0.9rem;
+      align-items: center;
+    }
+    .target-note .tn-icon { font-size: 1.6rem; }
+    .target-note .tn-text {
+      font-size: 0.95rem;
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .target-note .tn-text .row {
+      display: inline-flex;
+      gap: 0.4rem;
+      align-items: center;
+      margin-right: 1rem;
+    }
+    .target-note .tn-text strong.a { color: var(--orange); }
+    .target-note .tn-text strong.b { color: var(--purple); }
+    .arrow-mini { color: var(--text-dim); font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Fundamentos de AM</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 1 · Slide 04 / 04</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Tipos de Atributos</h1>
+        <p class="slide-subtitle">
+          Cada coluna tem um <strong>tipo</strong> — e o tipo determina o que os algoritmos podem (ou não) fazer com ela.
+        </p>
+      </div>
+
+      <!-- Sample dataset with mixed types -->
+      <div class="example-panel">
+        <div class="panel-heading">
+          <span class="panel-heading-title">💳 Exemplo — análise de concessão de crédito</span>
+          <span class="panel-heading-hint">passe o mouse nos cards abaixo para destacar as colunas do tipo correspondente ↓</span>
+        </div>
+
+        <div class="sample-table" id="sample-table">
+          <!-- Type badges row -->
+          <div class="type-badge-cell col-nominal"><span class="type-badge nominal">Nom.</span></div>
+          <div class="type-badge-cell col-ordinal"><span class="type-badge ordinal">Ord.</span></div>
+          <div class="type-badge-cell col-discreto"><span class="type-badge discreto">Disc.</span></div>
+          <div class="type-badge-cell col-continuo"><span class="type-badge continuo">Cont.</span></div>
+          <div class="type-badge-cell col-nominal"><span class="type-badge nominal">Nom.</span></div>
+          <!-- Header row -->
+          <div class="cell col-header col-nominal">Estado_civil</div>
+          <div class="cell col-header col-ordinal">Escolaridade</div>
+          <div class="cell col-header col-discreto">Filhos</div>
+          <div class="cell col-header col-continuo">Renda_mensal</div>
+          <div class="cell col-header col-nominal target">Aprovado</div>
+          <!-- Data rows -->
+          <div class="cell col-nominal">Solteiro</div>   <div class="cell col-ordinal">Superior</div>    <div class="cell col-discreto">0</div>  <div class="cell col-continuo">4500.50</div>  <div class="cell col-nominal">Sim</div>
+          <div class="cell col-nominal">Casado</div>     <div class="cell col-ordinal">Médio</div>       <div class="cell col-discreto">2</div>  <div class="cell col-continuo">3200.00</div>  <div class="cell col-nominal">Não</div>
+          <div class="cell col-nominal">Divorciado</div> <div class="cell col-ordinal">Superior</div>    <div class="cell col-discreto">1</div>  <div class="cell col-continuo">5800.00</div>  <div class="cell col-nominal">Sim</div>
+          <div class="cell col-nominal">Solteiro</div>   <div class="cell col-ordinal">Fundamental</div> <div class="cell col-discreto">0</div>  <div class="cell col-continuo">1900.00</div>  <div class="cell col-nominal">Não</div>
+          <div class="cell col-nominal">Casado</div>     <div class="cell col-ordinal">Superior</div>    <div class="cell col-discreto">3</div>  <div class="cell col-continuo">8950.30</div>  <div class="cell col-nominal">Sim</div>
+        </div>
+      </div>
+
+      <!-- Types cards (interactive on hover) -->
+      <div class="types-grid" id="types-grid">
+        <div class="type-card qn" data-type="nominal">
+          <span class="type-family">🏷️ Qualitativo</span>
+          <span class="type-name">Nominal</span>
+          <p class="type-def">Categorias <em>sem ordem</em> — só se pode dizer "igual" ou "diferente".</p>
+          <div class="type-examples">
+            <span class="ex-lbl">Exemplos</span>
+            sexo {M, F} · país {BR, AR, UY} · cor {🔴, 🟢, 🔵}
+          </div>
+        </div>
+
+        <div class="type-card qo" data-type="ordinal">
+          <span class="type-family">🏷️ Qualitativo</span>
+          <span class="type-name">Ordinal</span>
+          <p class="type-def">Categorias <em>com ordem natural</em> — pode-se ranquear, mas a "distância" entre elas é indefinida.</p>
+          <div class="type-examples">
+            <span class="ex-lbl">Exemplos</span>
+            tamanho {P, M, G} · escolaridade {fund, méd, sup} · satisfação {1..5}
+          </div>
+        </div>
+
+        <div class="type-card qd" data-type="discreto">
+          <span class="type-family">🔢 Quantitativo</span>
+          <span class="type-name">Discreto</span>
+          <p class="type-def">Valores numéricos <em>enumeráveis</em> — geralmente inteiros, resultado de contagem.</p>
+          <div class="type-examples">
+            <span class="ex-lbl">Exemplos</span>
+            nº de filhos {0, 1, 2, ...} · idade em anos · nº de acessos ao site
+          </div>
+        </div>
+
+        <div class="type-card qc" data-type="continuo">
+          <span class="type-family">🔢 Quantitativo</span>
+          <span class="type-name">Contínuo</span>
+          <p class="type-def">Valores numéricos <em>reais</em> — resultado de medição, tantos decimais quanto se queira.</p>
+          <div class="type-examples">
+            <span class="ex-lbl">Exemplos</span>
+            peso (kg) · temperatura (°C) · Radius (WDBC) · salário
+          </div>
+        </div>
+      </div>
+
+      <div class="target-note">
+        <span class="tn-icon">🎯</span>
+        <div class="tn-text">
+          <strong>O tipo do atributo alvo define o tipo de tarefa.</strong>
+          <span class="row"><strong class="a">alvo qualitativo</strong> <span class="arrow-mini">→</span> tarefa de <strong class="a">classificação</strong> (ex.: <em>Aprovado</em> = Sim/Não)</span>
+          <span class="row"><strong class="b">alvo quantitativo</strong> <span class="arrow-mini">→</span> tarefa de <strong class="b">regressão</strong> (ex.: <em>Renda</em> = 4500.50)</span>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b1-s03.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <a class="btn-nav" href="b2-s01.html">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+
+  <script>
+    // Hover em um card → destaca as colunas do tipo correspondente na tabela
+    const table = document.getElementById('sample-table');
+    document.querySelectorAll('.type-card').forEach(card => {
+      card.addEventListener('mouseenter', () => {
+        table.dataset.hl = card.dataset.type;
+      });
+      card.addEventListener('mouseleave', () => {
+        delete table.dataset.hl;
+      });
+    });
+  </script>
+</body>
+</html>

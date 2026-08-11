@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Por que Normalizar?</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .cards-split { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+    .side-card {
+      background: var(--bg2);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.1rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+    .side-card.bad { border-color: #fca5a5; }
+    .side-card.good { border-color: #86efac; }
+
+    .side-badge {
+      align-self: flex-start;
+      padding: 0.28rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .bad  .side-badge { background: var(--red-lt); color: var(--red); border: 1px solid #fca5a5; }
+    .good .side-badge { background: var(--green-lt); color: var(--green); border: 1px solid #86efac; }
+
+    .side-name { font-size: 1.05rem; font-weight: 800; line-height: 1.25; }
+    .bad  .side-name { color: var(--red); }
+    .good .side-name { color: var(--green); }
+
+    .plot-wrap { background: var(--bg3); border-radius: 8px; padding: 0.4rem; }
+    .plot-svg { width: 100%; height: auto; display: block; }
+    .axis-line { stroke: var(--text-dim); stroke-width: 1; }
+    .grid-line { stroke: var(--border2); stroke-width: 0.5; }
+    .axis-label { font-family: 'Fira Code', monospace; font-size: 9px; fill: var(--text-dim); }
+    .axis-title { font-family: 'Fira Code', monospace; font-size: 10px; fill: var(--text-muted); font-weight: 600; }
+
+    .pt { stroke: white; stroke-width: 1.5; }
+    .pt.est { fill: #0e7490; }
+    .pt.eng { fill: #b91c1c; }
+    .pt.neighbor { stroke-width: 3.5; }
+    .bad  .pt.neighbor { stroke: var(--red); }
+    .good .pt.neighbor { stroke: var(--green); }
+    .neighbor-line { stroke-width: 1.5; stroke-dasharray: 3 3; opacity: 0.7; }
+    .bad  .neighbor-line { stroke: var(--red); }
+    .good .neighbor-line { stroke: var(--green); }
+    .query-pt { fill: white; stroke: var(--blue); stroke-width: 3; }
+
+    /* Distance calc */
+    .dist-calc {
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 0.65rem 0.85rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.83rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .dist-calc .lbl {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 700;
+      display: block;
+      margin-bottom: 0.35rem;
+    }
+    .dist-calc .term {
+      display: inline-block;
+      padding: 0.05rem 0.35rem;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+    .term.age  { background: rgba(29,78,216,0.15); color: var(--blue); }
+    .term.sal  { background: rgba(194,65,12,0.15); color: var(--orange); }
+
+    /* Contribution bar */
+    .contrib-bar {
+      display: flex;
+      height: 24px;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-top: 0.35rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: white;
+    }
+    .contrib-age { background: var(--blue); display: flex; align-items: center; justify-content: center; }
+    .contrib-sal { background: var(--orange); display: flex; align-items: center; justify-content: center; }
+
+    /* Prediction */
+    .prediction-strip {
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 0.6rem 0.9rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+    }
+    .prediction-strip .lbl {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+    }
+    .prediction-strip .val { font-weight: 700; font-size: 1rem; }
+    .prediction-strip .val.est { color: #0e7490; }
+    .prediction-strip .val.eng { color: #b91c1c; }
+
+    .plot-legend {
+      display: flex;
+      gap: 0.7rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      justify-content: center;
+    }
+    .plot-legend .swatch {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 0.3rem;
+    }
+    .swatch.est { background: #0e7490; }
+    .swatch.eng { background: #b91c1c; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">K-Nearest Neighbors</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 3 · Slide 01 / 02</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Por que Normalizar?</h1>
+        <p class="slide-subtitle">
+          Sem normalização, o atributo de <strong>maior escala</strong> vira o único critério de "proximidade" — como se o modelo dissesse "só ele importa".
+        </p>
+      </div>
+
+      <div class="highlight-box orange" style="justify-content:center;">
+        <span class="icon">👤</span>
+        <p>
+          <strong>Cenário:</strong> classificar um novo indivíduo com <span class="term age">idade = 25</span> e <span class="term sal">salário = R$ 5.000</span> como <span class="text-teal" style="font-weight:700;">estudante</span> ou <span class="text-red" style="font-weight:700;">engenheiro</span>, usando k = 3.
+        </p>
+      </div>
+
+      <div class="cards-split">
+
+        <!-- LEFT: WITHOUT normalization -->
+        <div class="side-card bad">
+          <span class="side-badge">Sem normalização</span>
+          <div class="side-name">Salário domina — idade vira quase irrelevante</div>
+
+          <div class="plot-wrap">
+            <svg class="plot-svg" viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg" id="svg-bad">
+              <g id="grid-bad"></g>
+              <line class="axis-line" x1="42" y1="205" x2="305" y2="205"/>
+              <line class="axis-line" x1="42" y1="12" x2="42" y2="205"/>
+              <text class="axis-title" x="170" y="228">idade (anos)</text>
+              <text class="axis-title" x="12" y="110" transform="rotate(-90, 12, 110)">salário (R$)</text>
+              <g id="lines-bad"></g>
+              <g id="points-bad"></g>
+              <g id="query-bad"></g>
+            </svg>
+          </div>
+          <div class="plot-legend">
+            <span><span class="swatch est"></span>estudante</span>
+            <span><span class="swatch eng"></span>engenheiro</span>
+          </div>
+
+          <div class="dist-calc">
+            <span class="lbl">Distância até o vizinho mais próximo</span>
+            d = <span class="term age">|25−45| = 20</span> + <span class="term sal">|5000−6500| = 1500</span> = <strong>1520</strong>
+            <div class="contrib-bar">
+              <div class="contrib-age" style="width: 1.3%;"></div>
+              <div class="contrib-sal" style="width: 98.7%;">salário contribui com 98,7%</div>
+            </div>
+          </div>
+
+          <div class="prediction-strip">
+            <span class="lbl">k=3 → predição</span>
+            <span class="val eng">🔴 engenheiro</span>
+          </div>
+        </div>
+
+        <!-- RIGHT: WITH normalization -->
+        <div class="side-card good">
+          <span class="side-badge">Com normalização (min-max)</span>
+          <div class="side-name">Ambas features contribuem — idade volta a importar</div>
+
+          <div class="plot-wrap">
+            <svg class="plot-svg" viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg" id="svg-good">
+              <g id="grid-good"></g>
+              <line class="axis-line" x1="42" y1="205" x2="305" y2="205"/>
+              <line class="axis-line" x1="42" y1="12" x2="42" y2="205"/>
+              <text class="axis-title" x="170" y="228">idade (normalizada)</text>
+              <text class="axis-title" x="12" y="110" transform="rotate(-90, 12, 110)">salário (normalizado)</text>
+              <g id="lines-good"></g>
+              <g id="points-good"></g>
+              <g id="query-good"></g>
+            </svg>
+          </div>
+          <div class="plot-legend">
+            <span><span class="swatch est"></span>estudante</span>
+            <span><span class="swatch eng"></span>engenheiro</span>
+          </div>
+
+          <div class="dist-calc">
+            <span class="lbl">Distância até o vizinho mais próximo (agora outro!)</span>
+            d = <span class="term age">|0,16−0,16| = 0,00</span> + <span class="term sal">|0,65−0,08| = 0,57</span> = <strong>0,57</strong>
+            <div class="contrib-bar">
+              <div class="contrib-age" style="width: 45%;">45%</div>
+              <div class="contrib-sal" style="width: 55%;">55%</div>
+            </div>
+            <div style="font-size:0.72rem; margin-top:0.35rem; color:var(--text-dim);">↑ contribuição média entre os 3 vizinhos</div>
+          </div>
+
+          <div class="prediction-strip">
+            <span class="lbl">k=3 → predição</span>
+            <span class="val est">🔵 estudante</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">⚠️</span>
+        <div class="i-text">
+          Sem normalização, você está <strong>implicitamente dizendo ao modelo</strong> que o atributo de maior escala é o único que importa. Se salário varia de R$ 800 a R$ 7.000 e idade de 19 a 45, uma variação de 1 ano vale <em>1000× menos</em> que uma variação de R$ 1.000 no cálculo de distância — a idade é praticamente ignorada. Normalização (min-max, z-score) coloca todos os atributos numéricos na <strong>mesma escala</strong> antes do treino.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b2-s02.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b3-s02.html">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+
+  <script>
+    // Dataset: 4 estudantes + 4 engenheiros
+    const points = [
+      {age:20, sal:1000, label:'est'},
+      {age:22, sal:1200, label:'est'},
+      {age:24, sal:900,  label:'est'},
+      {age:25, sal:1400, label:'est'},
+      {age:45, sal:6500, label:'eng'},
+      {age:48, sal:7000, label:'eng'},
+      {age:50, sal:6800, label:'eng'},
+      {age:52, sal:7200, label:'eng'},
+    ];
+    const query = {age:25, sal:5000};
+    const K = 3;
+
+    // Ranges for normalization
+    const AGE_MIN = 20, AGE_MAX = 52;
+    const SAL_MIN = 900, SAL_MAX = 7200;
+    const norm = p => ({age: (p.age-AGE_MIN)/(AGE_MAX-AGE_MIN), sal: (p.sal-SAL_MIN)/(SAL_MAX-SAL_MIN)});
+
+    // ============ Plot BAD (unnormalized) ============
+    // Axes: age 15-55, salary 500-8000 for visual context
+    const BAD_AGE_MIN = 15, BAD_AGE_MAX = 55;
+    const BAD_SAL_MIN = 500, BAD_SAL_MAX = 8000;
+    const PX_L = 42, PX_R = 305, PY_T = 12, PY_B = 205;
+    const sxBad = a => PX_L + (a - BAD_AGE_MIN) / (BAD_AGE_MAX - BAD_AGE_MIN) * (PX_R - PX_L);
+    const syBad = s => PY_B - (s - BAD_SAL_MIN) / (BAD_SAL_MAX - BAD_SAL_MIN) * (PY_B - PY_T);
+
+    // ============ Plot GOOD (normalized) ============
+    const sxGood = a => PX_L + a * (PX_R - PX_L);
+    const syGood = s => PY_B - s * (PY_B - PY_T);
+
+    // Grid
+    function drawGridBad(gid) {
+      const g = document.getElementById(gid);
+      for (let a = 20; a <= 55; a += 10) {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('class', 'grid-line');
+        line.setAttribute('x1', sxBad(a)); line.setAttribute('x2', sxBad(a));
+        line.setAttribute('y1', PY_T); line.setAttribute('y2', PY_B);
+        g.appendChild(line);
+        const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        lbl.setAttribute('class', 'axis-label');
+        lbl.setAttribute('x', sxBad(a) - 6); lbl.setAttribute('y', PY_B + 11);
+        lbl.textContent = a;
+        g.appendChild(lbl);
+      }
+      for (let s = 1000; s <= 8000; s += 2000) {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('class', 'grid-line');
+        line.setAttribute('x1', PX_L); line.setAttribute('x2', PX_R);
+        line.setAttribute('y1', syBad(s)); line.setAttribute('y2', syBad(s));
+        g.appendChild(line);
+        const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        lbl.setAttribute('class', 'axis-label');
+        lbl.setAttribute('x', 20); lbl.setAttribute('y', syBad(s) + 3);
+        lbl.textContent = (s/1000) + 'k';
+        g.appendChild(lbl);
+      }
+    }
+    function drawGridGood(gid) {
+      const g = document.getElementById(gid);
+      for (let x = 0; x <= 1; x += 0.2) {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('class', 'grid-line');
+        line.setAttribute('x1', sxGood(x)); line.setAttribute('x2', sxGood(x));
+        line.setAttribute('y1', PY_T); line.setAttribute('y2', PY_B);
+        g.appendChild(line);
+        const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        lbl.setAttribute('class', 'axis-label');
+        lbl.setAttribute('x', sxGood(x) - 7); lbl.setAttribute('y', PY_B + 11);
+        lbl.textContent = x.toFixed(1);
+        g.appendChild(lbl);
+      }
+      for (let y = 0; y <= 1; y += 0.2) {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('class', 'grid-line');
+        line.setAttribute('x1', PX_L); line.setAttribute('x2', PX_R);
+        line.setAttribute('y1', syGood(y)); line.setAttribute('y2', syGood(y));
+        g.appendChild(line);
+        const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        lbl.setAttribute('class', 'axis-label');
+        lbl.setAttribute('x', 20); lbl.setAttribute('y', syGood(y) + 3);
+        lbl.textContent = y.toFixed(1);
+        g.appendChild(lbl);
+      }
+    }
+    drawGridBad('grid-bad');
+    drawGridGood('grid-good');
+
+    // Compute nearest neighbors under each metric
+    function distBad(p) { return Math.abs(p.age - query.age) + Math.abs(p.sal - query.sal); }
+    function distGood(p) {
+      const pn = norm(p), qn = norm(query);
+      return Math.abs(pn.age - qn.age) + Math.abs(pn.sal - qn.sal);
+    }
+
+    const neighBad = points.map((p,i) => ({...p, i, d: distBad(p)})).sort((a,b) => a.d - b.d).slice(0, K);
+    const neighGood = points.map((p,i) => ({...p, i, d: distGood(p)})).sort((a,b) => a.d - b.d).slice(0, K);
+    const neighBadIdx = new Set(neighBad.map(n => n.i));
+    const neighGoodIdx = new Set(neighGood.map(n => n.i));
+
+    // Draw BAD panel
+    function drawPanel(prefix, sx, sy, neighIdx) {
+      const pg = document.getElementById('points-' + prefix);
+      pg.innerHTML = '';
+      points.forEach((p, i) => {
+        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        let cls = 'pt ' + p.label;
+        if (neighIdx.has(i)) cls += ' neighbor';
+        c.setAttribute('class', cls);
+        const x = prefix === 'bad' ? sxBad(p.age) : sxGood(norm(p).age);
+        const y = prefix === 'bad' ? syBad(p.sal) : syGood(norm(p).sal);
+        c.setAttribute('cx', x); c.setAttribute('cy', y);
+        c.setAttribute('r', 6);
+        pg.appendChild(c);
+      });
+
+      const lg = document.getElementById('lines-' + prefix);
+      lg.innerHTML = '';
+      const neighList = prefix === 'bad' ? neighBad : neighGood;
+      neighList.forEach(n => {
+        const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        l.setAttribute('class', 'neighbor-line');
+        const qx = prefix === 'bad' ? sxBad(query.age) : sxGood(norm(query).age);
+        const qy = prefix === 'bad' ? syBad(query.sal) : syGood(norm(query).sal);
+        l.setAttribute('x1', qx); l.setAttribute('y1', qy);
+        const nx = prefix === 'bad' ? sxBad(n.age) : sxGood(norm(n).age);
+        const ny = prefix === 'bad' ? syBad(n.sal) : syGood(norm(n).sal);
+        l.setAttribute('x2', nx); l.setAttribute('y2', ny);
+        lg.appendChild(l);
+      });
+
+      const qg = document.getElementById('query-' + prefix);
+      qg.innerHTML = '';
+      const q = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      q.setAttribute('class', 'query-pt');
+      const qx = prefix === 'bad' ? sxBad(query.age) : sxGood(norm(query).age);
+      const qy = prefix === 'bad' ? syBad(query.sal) : syGood(norm(query).sal);
+      q.setAttribute('cx', qx); q.setAttribute('cy', qy);
+      q.setAttribute('r', 8);
+      qg.appendChild(q);
+    }
+    drawPanel('bad', null, null, neighBadIdx);
+    drawPanel('good', null, null, neighGoodIdx);
+  </script>
+</body>
+</html>
