@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Precisão</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Métricas de Avaliação</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 1 · Slide 05 / 06</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Precisão</h1>
+        <p class="slide-subtitle">
+          <strong>Dos casos preditos como positivos</strong>, quantos são realmente positivos? Crucial quando "falso alarme" é caro.
+        </p>
+      </div>
+
+      <div class="content-split">
+
+        <div class="cm-panel">
+          <div class="cm-title">🟣 Células usadas na precisão</div>
+          <div class="cm-subtitle">Percorre a <strong>coluna esquerda</strong> — os casos <em>preditos</em> como positivos. Numerador: <strong class="text-purple">VP</strong>. Denominador: <strong class="text-purple">VP + FP</strong>.</div>
+          <div class="cm-grid" data-highlight="precisao">
+            <div class="cm-corner"></div>
+            <div class="cm-pred-header">Predição do modelo</div>
+            <div class="cm-pred-pos">Maligno (+)</div>
+            <div class="cm-pred-neg">Benigno (−)</div>
+            <div class="cm-real-header">Classe real</div>
+            <div class="cm-real-pos">Maligno (+)</div>
+            <div class="cm-cell vp"><span class="cell-code">VP</span><span class="cell-value">45</span><span class="cell-desc">acerto positivo</span></div>
+            <div class="cm-cell fn"><span class="cell-code">FN</span><span class="cell-value">5</span><span class="cell-desc">malignos ignorados</span></div>
+            <div class="cm-real-neg">Benigno (−)</div>
+            <div class="cm-cell fp"><span class="cell-code">FP</span><span class="cell-value">10</span><span class="cell-desc">falso alarme</span></div>
+            <div class="cm-cell vn"><span class="cell-code">VN</span><span class="cell-value">40</span><span class="cell-desc">acerto negativo</span></div>
+          </div>
+        </div>
+
+        <div class="formula-panel precisao">
+          <div class="metric-name">Precisão (precision, VPP)</div>
+          <p style="font-size:0.9rem; color:var(--text-muted); line-height:1.5;">"Quando o modelo diz que <em>o paciente tem câncer</em>, com que frequência ele está certo?"</p>
+          <div class="formula">
+            Precisão = <span class="vp">VP</span> <span class="op">/</span> ( <span class="vp">VP</span> <span class="op">+</span> <span class="fp">FP</span> )
+          </div>
+          <div class="calc">
+            <span class="lbl">Aplicando aos dados</span>
+            = <strong style="color:var(--purple);">45</strong> / ( <strong style="color:var(--purple);">45</strong> + <strong style="color:var(--purple);">10</strong> )
+            <br>= <strong>45 / 55</strong>
+            <br><span class="result">≈ 81,8%</span>
+          </div>
+          <div class="interp">
+            <strong>Interpretação:</strong> quando o modelo diz "essa biópsia é maligna", ele acerta em <em>81,8%</em> das vezes. Os outros <em>18,2%</em> são falsos alarmes: pacientes saudáveis que passariam por exames adicionais desnecessários, muitas vezes invasivos e caros.
+          </div>
+        </div>
+
+      </div>
+
+      <div class="highlight-box orange" style="justify-content:center;">
+        <span class="icon">⚠️</span>
+        <p>
+          Precisão é <strong>crítica</strong> quando o <em>falso positivo</em> é o erro mais caro. Em spam (marcar e-mail legítimo como spam), moderação de conteúdo, recomendações — <em>gerar alarmes falsos</em> tem custo alto (perda de confiança, ruído no sistema).
+        </p>
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">🎯</span>
+        <div class="i-text">
+          <strong>Trade-off inevitável entre precisão e sensibilidade:</strong> aumentar uma geralmente diminui a outra. Um modelo <em>conservador</em> (só prediz positivo quando muito seguro) tem alta precisão mas baixa sensibilidade — pode perder casos verdadeiros. Um modelo <em>agressivo</em> (prediz positivo com pouca evidência) tem alta sensibilidade mas baixa precisão — cheio de falsos alarmes. O <strong>F1</strong> (próximo slide) tenta equilibrar as duas em uma única métrica.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b1-s04.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b1-s06.html">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+</body>
+</html>

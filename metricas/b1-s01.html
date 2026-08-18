@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Matriz de Confusão</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .main-split-cm { display: grid; grid-template-columns: 1.1fr 1fr; gap: 1.3rem; }
+
+    .def-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.65rem;
+    }
+    .def-card {
+      background: var(--bg2);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 0.75rem 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .def-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(15,23,36,0.10); }
+    .def-card.vp { border-color: #86efac; }
+    .def-card.fn { border-color: #fca5a5; }
+    .def-card.fp { border-color: #fcd34d; }
+    .def-card.vn { border-color: #93c5fd; }
+    .def-card .code {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      letter-spacing: 0.08em;
+    }
+    .def-card .name {
+      font-size: 0.98rem;
+      font-weight: 800;
+      line-height: 1.15;
+    }
+    .def-card.vp .name { color: var(--green); }
+    .def-card.fn .name { color: var(--red); }
+    .def-card.fp .name { color: var(--yellow); }
+    .def-card.vn .name { color: var(--blue); }
+    .def-card .desc {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+    .def-card .example {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.7rem;
+      background: var(--bg3);
+      padding: 0.35rem 0.5rem;
+      border-radius: 5px;
+      color: var(--text);
+      margin-top: auto;
+    }
+
+    /* Hover on def-card highlights matching cm cell */
+    .cm-grid[data-hover="vp"] .cm-cell.vp { background: var(--green-lt); border-color: var(--green); transform: scale(1.03); }
+    .cm-grid[data-hover="fn"] .cm-cell.fn { background: var(--red-lt); border-color: var(--red); transform: scale(1.03); }
+    .cm-grid[data-hover="fp"] .cm-cell.fp { background: var(--yellow-lt); border-color: var(--yellow); transform: scale(1.03); }
+    .cm-grid[data-hover="vn"] .cm-cell.vn { background: var(--blue-lt); border-color: var(--blue); transform: scale(1.03); }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Métricas de Avaliação</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 1 · Slide 01 / 06</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Matriz de Confusão</h1>
+        <p class="slide-subtitle">
+          A tabela 2×2 que resume <strong>tudo</strong> o que um classificador binário fez de certo e errado — a base de <em>todas</em> as métricas de classificação.
+        </p>
+      </div>
+
+      <div class="highlight-box indigo" style="justify-content:center;">
+        <span class="icon">🔬</span>
+        <p>
+          <strong>Cenário:</strong> um modelo KNN treinado para prever se uma biópsia é <span class="text-red" style="font-weight:700;">maligna (+)</span> ou <span class="text-teal" style="font-weight:700;">benigna (−)</span>. Avaliamos em <strong>100 pacientes de teste</strong>: 50 malignos e 50 benignos reais. A matriz abaixo mostra como o modelo se saiu.
+        </p>
+      </div>
+
+      <div class="main-split-cm">
+
+        <div class="cm-panel">
+          <div class="cm-title">📊 Matriz de confusão</div>
+          <div class="cm-grid" id="cm-grid" data-highlight="none">
+            <div class="cm-corner"></div>
+            <div class="cm-pred-header">Predição do modelo</div>
+            <div class="cm-pred-pos">Maligno (+)</div>
+            <div class="cm-pred-neg">Benigno (−)</div>
+            <div class="cm-real-header">Classe real</div>
+            <div class="cm-real-pos">Maligno (+)</div>
+            <div class="cm-cell vp">
+              <span class="cell-code">VP</span>
+              <span class="cell-value">45</span>
+              <span class="cell-desc">acerto positivo</span>
+            </div>
+            <div class="cm-cell fn">
+              <span class="cell-code">FN</span>
+              <span class="cell-value">5</span>
+              <span class="cell-desc">malignos ignorados</span>
+            </div>
+            <div class="cm-real-neg">Benigno (−)</div>
+            <div class="cm-cell fp">
+              <span class="cell-code">FP</span>
+              <span class="cell-value">10</span>
+              <span class="cell-desc">falso alarme</span>
+            </div>
+            <div class="cm-cell vn">
+              <span class="cell-code">VN</span>
+              <span class="cell-value">40</span>
+              <span class="cell-desc">acerto negativo</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:0.6rem;">
+          <div style="font-size:0.72rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.08em; font-weight:700;">
+            📖 Passe o mouse sobre cada definição
+          </div>
+          <div class="def-grid">
+            <div class="def-card vp" onmouseover="highlight('vp')" onmouseout="highlight(null)">
+              <span class="code">VP · verdadeiro positivo</span>
+              <span class="name">Acerto na classe positiva</span>
+              <p class="desc">O modelo previu <strong>maligno</strong> e a biópsia era realmente maligna.</p>
+              <span class="example">✓ Detecção correta</span>
+            </div>
+            <div class="def-card fn" onmouseover="highlight('fn')" onmouseout="highlight(null)">
+              <span class="code">FN · falso negativo</span>
+              <span class="name">Erro na classe positiva</span>
+              <p class="desc">O modelo previu <strong>benigno</strong>, mas era maligno. <em>Erro perigoso — o câncer passou despercebido.</em></p>
+              <span class="example">⚠️ Detecção perdida</span>
+            </div>
+            <div class="def-card fp" onmouseover="highlight('fp')" onmouseout="highlight(null)">
+              <span class="code">FP · falso positivo</span>
+              <span class="name">Erro na classe negativa</span>
+              <p class="desc">O modelo previu <strong>maligno</strong>, mas era benigno. Falso alarme — paciente terá exames adicionais desnecessários.</p>
+              <span class="example">⚠️ Alarme falso</span>
+            </div>
+            <div class="def-card vn" onmouseover="highlight('vn')" onmouseout="highlight(null)">
+              <span class="code">VN · verdadeiro negativo</span>
+              <span class="name">Acerto na classe negativa</span>
+              <p class="desc">O modelo previu <strong>benigno</strong> e a biópsia era realmente benigna.</p>
+              <span class="example">✓ Rejeição correta</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">🧭</span>
+        <div class="i-text">
+          Toda métrica de classificação — acurácia, sensibilidade, precisão, F1 e muitas outras — é apenas uma <strong>razão diferente</strong> entre essas 4 células. Nos próximos slides, vamos "colorir" a matriz para cada métrica e mostrar <em>quais</em> células ela usa. A <strong>escolha</strong> da métrica depende do problema: quanto custa cada tipo de erro? Falsos negativos (deixar câncer passar) são bem piores que falsos positivos em diagnóstico médico.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav disabled" href="#">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b1-s02.html">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+
+  <script>
+    function highlight(cell) {
+      const g = document.getElementById('cm-grid');
+      if (cell) g.dataset.hover = cell;
+      else delete g.dataset.hover;
+    }
+  </script>
+</body>
+</html>

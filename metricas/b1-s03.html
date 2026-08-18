@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sensibilidade (Recall)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Métricas de Avaliação</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 1 · Slide 03 / 06</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Sensibilidade (Recall)</h1>
+        <p class="slide-subtitle">
+          <strong>Dos casos positivos reais</strong>, quantos o modelo conseguiu identificar? Crucial quando "deixar passar" é caro.
+        </p>
+      </div>
+
+      <div class="content-split">
+
+        <div class="cm-panel">
+          <div class="cm-title">🔵 Células usadas na sensibilidade</div>
+          <div class="cm-subtitle">Percorre a <strong>linha superior</strong> — os casos que <em>realmente</em> são positivos. Numerador: <strong class="text-blue">VP</strong>. Denominador: <strong class="text-blue">VP + FN</strong>.</div>
+          <div class="cm-grid" data-highlight="sensibilidade">
+            <div class="cm-corner"></div>
+            <div class="cm-pred-header">Predição do modelo</div>
+            <div class="cm-pred-pos">Maligno (+)</div>
+            <div class="cm-pred-neg">Benigno (−)</div>
+            <div class="cm-real-header">Classe real</div>
+            <div class="cm-real-pos">Maligno (+)</div>
+            <div class="cm-cell vp"><span class="cell-code">VP</span><span class="cell-value">45</span><span class="cell-desc">acerto positivo</span></div>
+            <div class="cm-cell fn"><span class="cell-code">FN</span><span class="cell-value">5</span><span class="cell-desc">malignos ignorados</span></div>
+            <div class="cm-real-neg">Benigno (−)</div>
+            <div class="cm-cell fp"><span class="cell-code">FP</span><span class="cell-value">10</span><span class="cell-desc">falso alarme</span></div>
+            <div class="cm-cell vn"><span class="cell-code">VN</span><span class="cell-value">40</span><span class="cell-desc">acerto negativo</span></div>
+          </div>
+        </div>
+
+        <div class="formula-panel sensibilidade">
+          <div class="metric-name">Sensibilidade (recall, TVP)</div>
+          <p style="font-size:0.9rem; color:var(--text-muted); line-height:1.5;">"Entre todos os pacientes que <em>realmente</em> têm câncer, quantos eu detectei?"</p>
+          <div class="formula">
+            Sensibilidade = <span class="vp">VP</span> <span class="op">/</span> ( <span class="vp">VP</span> <span class="op">+</span> <span class="fn">FN</span> )
+          </div>
+          <div class="calc">
+            <span class="lbl">Aplicando aos dados</span>
+            = <strong style="color:var(--blue);">45</strong> / ( <strong style="color:var(--blue);">45</strong> + <strong style="color:var(--blue);">5</strong> )
+            <br>= <strong>45 / 50</strong>
+            <br><span class="result">= 90,0%</span>
+          </div>
+          <div class="interp">
+            <strong>Interpretação:</strong> de cada 100 pacientes que <em>realmente</em> têm câncer, o modelo detecta <em>90</em>. Os outros <em>10</em> (falsos negativos) recebem falsamente a boa notícia de que estão bem — enquanto na verdade têm um câncer não diagnosticado.
+          </div>
+        </div>
+
+      </div>
+
+      <div class="highlight-box red" style="justify-content:center;">
+        <span class="icon">🚨</span>
+        <p>
+          Sensibilidade é <strong>crítica</strong> quando o <em>falso negativo</em> é o erro mais caro. Em diagnóstico médico, fraude financeira, detecção de vazamento — <em>perder</em> um caso positivo tem consequências muito piores que gerar um alarme falso.
+        </p>
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">🔍</span>
+        <div class="i-text">
+          A sensibilidade também é chamada de <strong>recall</strong>, <em>true positive rate</em> (TVP) ou <em>hit rate</em>. Todos os nomes se referem ao mesmo cálculo. Um modelo pode <strong>maximizar sensibilidade trivialmente</strong>: sempre predizer "positivo" para tudo. Nesse caso, sensibilidade = 100%, mas a precisão (próximo slide) despenca. Essa tensão entre <em>sensibilidade</em> e <em>precisão</em> é a razão de existir da métrica <strong>F1</strong>.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b1-s02.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b1-s04.html">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+</body>
+</html>

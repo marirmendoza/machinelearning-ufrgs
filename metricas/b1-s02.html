@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Acurácia</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .imbalance-panel {
+      background: linear-gradient(135deg, var(--red-lt), var(--orange-lt));
+      border: 1.5px solid #fca5a5;
+      border-radius: var(--radius);
+      padding: 0.9rem 1.2rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      font-size: 0.9rem;
+      color: var(--text);
+      line-height: 1.55;
+    }
+    .imbalance-panel .icon { font-size: 1.4rem; flex-shrink: 0; }
+    .imbalance-panel strong { color: var(--red); }
+    .imbalance-panel .mono {
+      font-family: 'Fira Code', monospace;
+      background: rgba(255,255,255,0.6);
+      padding: 0.05rem 0.35rem;
+      border-radius: 4px;
+      font-size: 0.82rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Métricas de Avaliação</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 1 · Slide 02 / 06</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Acurácia</h1>
+        <p class="slide-subtitle">
+          A métrica mais intuitiva: <strong>proporção de acertos</strong> — soma dos verdadeiros positivos e verdadeiros negativos sobre o total.
+        </p>
+      </div>
+
+      <div class="content-split">
+
+        <div class="cm-panel">
+          <div class="cm-title">🟢 Células usadas na acurácia</div>
+          <div class="cm-subtitle">Numerador: <strong class="text-green">VP + VN</strong> (a diagonal — os acertos). Denominador: <strong class="text-green">todas as 4 células</strong> (o total).</div>
+          <div class="cm-grid" data-highlight="acuracia">
+            <div class="cm-corner"></div>
+            <div class="cm-pred-header">Predição do modelo</div>
+            <div class="cm-pred-pos">Maligno (+)</div>
+            <div class="cm-pred-neg">Benigno (−)</div>
+            <div class="cm-real-header">Classe real</div>
+            <div class="cm-real-pos">Maligno (+)</div>
+            <div class="cm-cell vp"><span class="cell-code">VP</span><span class="cell-value">45</span><span class="cell-desc">acerto positivo</span></div>
+            <div class="cm-cell fn"><span class="cell-code">FN</span><span class="cell-value">5</span><span class="cell-desc">malignos ignorados</span></div>
+            <div class="cm-real-neg">Benigno (−)</div>
+            <div class="cm-cell fp"><span class="cell-code">FP</span><span class="cell-value">10</span><span class="cell-desc">falso alarme</span></div>
+            <div class="cm-cell vn"><span class="cell-code">VN</span><span class="cell-value">40</span><span class="cell-desc">acerto negativo</span></div>
+          </div>
+        </div>
+
+        <div class="formula-panel acuracia">
+          <div class="metric-name">Acurácia (accuracy)</div>
+          <p style="font-size:0.9rem; color:var(--text-muted); line-height:1.5;">"De todas as predições que fiz, <em>quantas eu acertei?</em>"</p>
+          <div class="formula">
+            Acurácia = ( <span class="vp">VP</span> <span class="op">+</span> <span class="vn">VN</span> ) <span class="op">/</span> ( <span class="vp">VP</span> <span class="op">+</span> <span class="fn">FN</span> <span class="op">+</span> <span class="fp">FP</span> <span class="op">+</span> <span class="vn">VN</span> )
+          </div>
+          <div class="calc">
+            <span class="lbl">Aplicando aos dados</span>
+            = ( <strong style="color:var(--green);">45</strong> + <strong style="color:var(--green);">40</strong> ) / ( 45 + 5 + 10 + 40 )
+            <br>= <strong>85 / 100</strong>
+            <br><span class="result">= 85,0%</span>
+          </div>
+          <div class="interp">
+            <strong>Interpretação:</strong> de cada 100 biópsias avaliadas, o modelo classificou corretamente <em>85</em>. Métrica simples e intuitiva — e sempre o ponto de partida.
+          </div>
+        </div>
+
+      </div>
+
+      <div class="imbalance-panel">
+        <span class="icon">⚠️</span>
+        <div>
+          <strong>Cuidado com a "armadilha da acurácia":</strong> em datasets <em>desbalanceados</em>, a acurácia pode enganar. Se apenas 1% dos pacientes têm câncer, um modelo trivial que sempre prediz <span class="mono">"benigno"</span> alcança <strong>99% de acurácia</strong> — sem detectar um único caso maligno. Nessas situações, sensibilidade e precisão importam muito mais (próximos slides).
+        </div>
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">🎯</span>
+        <div class="i-text">
+          A acurácia trata <strong>todos os erros como iguais</strong>: um falso negativo (deixar câncer passar) conta o mesmo que um falso positivo (falso alarme). No mundo real, esses erros raramente têm o mesmo custo — por isso, quase sempre reportamos acurácia <strong>junto</strong> com outras métricas que separam os dois tipos de erro.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b1-s01.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b1-s03.html">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+</body>
+</html>

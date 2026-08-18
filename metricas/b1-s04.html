@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Especificidade</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Métricas de Avaliação</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 1 · Slide 04 / 06</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Especificidade</h1>
+        <p class="slide-subtitle">
+          <strong>Dos casos negativos reais</strong>, quantos o modelo reconheceu corretamente? O "espelho" da sensibilidade, focado na classe negativa.
+        </p>
+      </div>
+
+      <div class="content-split">
+
+        <div class="cm-panel">
+          <div class="cm-title">🟦 Células usadas na especificidade</div>
+          <div class="cm-subtitle">Percorre a <strong>linha inferior</strong> — os casos que <em>realmente</em> são negativos. Numerador: <strong class="text-teal">VN</strong>. Denominador: <strong class="text-teal">VN + FP</strong>.</div>
+          <div class="cm-grid" data-highlight="especificidade">
+            <div class="cm-corner"></div>
+            <div class="cm-pred-header">Predição do modelo</div>
+            <div class="cm-pred-pos">Maligno (+)</div>
+            <div class="cm-pred-neg">Benigno (−)</div>
+            <div class="cm-real-header">Classe real</div>
+            <div class="cm-real-pos">Maligno (+)</div>
+            <div class="cm-cell vp"><span class="cell-code">VP</span><span class="cell-value">45</span><span class="cell-desc">acerto positivo</span></div>
+            <div class="cm-cell fn"><span class="cell-code">FN</span><span class="cell-value">5</span><span class="cell-desc">malignos ignorados</span></div>
+            <div class="cm-real-neg">Benigno (−)</div>
+            <div class="cm-cell fp"><span class="cell-code">FP</span><span class="cell-value">10</span><span class="cell-desc">falso alarme</span></div>
+            <div class="cm-cell vn"><span class="cell-code">VN</span><span class="cell-value">40</span><span class="cell-desc">acerto negativo</span></div>
+          </div>
+        </div>
+
+        <div class="formula-panel especificidade">
+          <div class="metric-name">Especificidade (specificity, TVN)</div>
+          <p style="font-size:0.9rem; color:var(--text-muted); line-height:1.5;">"Entre todos os pacientes que <em>realmente</em> não têm câncer, quantos foram corretamente descartados?"</p>
+          <div class="formula">
+            Especificidade = <span class="vn">VN</span> <span class="op">/</span> ( <span class="vn">VN</span> <span class="op">+</span> <span class="fp">FP</span> )
+          </div>
+          <div class="calc">
+            <span class="lbl">Aplicando aos dados</span>
+            = <strong style="color:var(--teal);">40</strong> / ( <strong style="color:var(--teal);">40</strong> + <strong style="color:var(--teal);">10</strong> )
+            <br>= <strong>40 / 50</strong>
+            <br><span class="result">= 80,0%</span>
+          </div>
+          <div class="interp">
+            <strong>Interpretação:</strong> de cada 100 pacientes que <em>realmente</em> não têm câncer, o modelo identifica corretamente <em>80</em>. Os outros <em>20</em> (falsos positivos) recebem um alarme falso e precisarão passar por exames adicionais, que podem ser invasivos e caros.
+          </div>
+        </div>
+
+      </div>
+
+      <div class="highlight-box teal" style="justify-content:center; background: var(--teal-lt); border: 1.5px solid #a5f3fc; color: var(--teal);">
+        <span class="icon">🔎</span>
+        <p>
+          A <strong>sensibilidade</strong> e a <strong>especificidade</strong> são <em>complementares</em>: uma cobre a linha superior (positivos reais), a outra cobre a linha inferior (negativos reais). Juntas, respondem <em>"o modelo é bom detectando cada uma das classes?"</em>. Ambas ignoram o desbalanceamento — cada linha é normalizada individualmente.
+        </p>
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">⚖️</span>
+        <div class="i-text">
+          <strong>Trade-off entre sensibilidade e especificidade:</strong> ajustar o limiar de decisão (por exemplo, a probabilidade acima da qual o modelo prediz "maligno") <em>troca</em> uma pela outra. Baixar o limiar aumenta a sensibilidade (detecta mais positivos) mas reduz a especificidade (mais falsos alarmes). A curva <strong>ROC</strong> — que veremos em uma aula futura — plota exatamente esse trade-off para todos os limiares possíveis.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b1-s03.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b1-s05.html">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+</body>
+</html>

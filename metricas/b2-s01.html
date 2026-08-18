@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MAE e MSE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .main-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.3rem; }
+
+    .plot-card {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .plot-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--indigo);
+    }
+    .plot-legend {
+      display: flex;
+      gap: 0.65rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      align-items: center;
+    }
+    .plot-legend .swatch {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 0.3rem;
+    }
+    .swatch.actual { background: #0e7490; }
+    .swatch.line { background: var(--indigo); border-radius: 0; height: 2px; width: 16px; }
+    .swatch.res-mae { background: white; border: 2px solid var(--blue); border-radius: 0; height: 8px; width: 3px; margin: 0 3px; }
+    .swatch.res-mse { background: rgba(194,65,12,0.35); border: 1.5px solid var(--orange); border-radius: 0; height: 10px; width: 10px; }
+
+    .plot-wrap { background: var(--bg3); border-radius: 8px; padding: 0.5rem; }
+    .plot-svg { width: 100%; height: auto; display: block; }
+    .axis-line { stroke: var(--text-dim); stroke-width: 1; }
+    .grid-line { stroke: var(--border2); stroke-width: 0.5; }
+    .axis-label { font-family: 'Fira Code', monospace; font-size: 10px; fill: var(--text-dim); }
+    .axis-title { font-family: 'Fira Code', monospace; font-size: 11px; fill: var(--text-muted); font-weight: 600; }
+    .regr-line { stroke: var(--indigo); stroke-width: 2.5; fill: none; }
+    .actual-pt { fill: #0e7490; stroke: white; stroke-width: 1.5; transition: fill 0.3s; }
+    .actual-pt.outlier { fill: var(--red); }
+    .resid-line { stroke: var(--blue); stroke-width: 2; stroke-dasharray: 3 2; transition: all 0.35s; }
+    .resid-sq { fill: rgba(194,65,12,0.35); stroke: var(--orange); stroke-width: 1.5; transition: all 0.35s; }
+
+    /* Toggle */
+    .toggle-row { display: flex; justify-content: center; align-items: center; gap: 0.5rem; }
+    .toggle-group {
+      display: inline-flex;
+      background: var(--bg3);
+      border: 1.5px solid var(--border);
+      border-radius: 999px;
+      padding: 3px;
+    }
+    .toggle-btn {
+      background: transparent;
+      border: none;
+      padding: 0.45rem 1rem;
+      border-radius: 999px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.87rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
+    .toggle-btn.active[data-mode="mae"] { background: var(--blue); color: white; }
+    .toggle-btn.active[data-mode="mse"] { background: var(--orange); color: white; }
+
+    /* Right side */
+    .side-stack { display: flex; flex-direction: column; gap: 0.75rem; }
+    .metric-card {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 0.95rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      transition: all 0.2s;
+    }
+    .metric-card.active { box-shadow: 0 4px 16px rgba(15,23,36,0.10); }
+    .metric-card.mae { border-color: #93c5fd; }
+    .metric-card.mse { border-color: #fdba74; }
+    .metric-card.mae.active { border-width: 2.5px; }
+    .metric-card.mse.active { border-width: 2.5px; }
+
+    .metric-title {
+      font-size: 1rem;
+      font-weight: 800;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+    }
+    .metric-card.mae .metric-title { color: var(--blue); }
+    .metric-card.mse .metric-title { color: var(--orange); }
+    .metric-title .metric-val {
+      font-family: 'Fira Code', monospace;
+      font-size: 1.4rem;
+      font-weight: 800;
+    }
+    .metric-formula {
+      background: #0f1724;
+      color: #e2e8f0;
+      padding: 0.55rem 0.75rem;
+      border-radius: 6px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+      text-align: center;
+    }
+    .metric-formula .op { color: #c4b5fd; }
+    .metric-desc {
+      font-size: 0.83rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+    .metric-desc strong { color: var(--text); }
+    .metric-desc .unit {
+      font-family: 'Fira Code', monospace;
+      background: var(--bg3);
+      padding: 0.05rem 0.3rem;
+      border-radius: 4px;
+      font-size: 0.78rem;
+    }
+
+    .action-btn {
+      background: var(--indigo);
+      color: white;
+      border: none;
+      padding: 0.6rem 1.1rem;
+      border-radius: 999px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .action-btn:hover { background: #312e81; }
+    .action-btn.active { background: var(--red); }
+    .action-btn.active:hover { background: #7f1d1d; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Métricas de Avaliação</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 2 · Slide 01 / 01</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">MAE e MSE</h1>
+        <p class="slide-subtitle">
+          Em regressão, o erro tem <strong>magnitude</strong>. Duas formas comuns de agregar os erros: <em>média absoluta</em> ou <em>média quadrática</em>.
+        </p>
+      </div>
+
+      <div class="highlight-box indigo" style="justify-content:center;">
+        <span class="icon">🏠</span>
+        <p>
+          <strong>Cenário:</strong> um modelo prediz o preço de imóveis (R$ mil) a partir do tamanho (m²). Temos 9 imóveis no conjunto de teste. As linhas tracejadas mostram os <em>resíduos</em>: a diferença entre o valor real e o predito.
+        </p>
+      </div>
+
+      <div class="toggle-row">
+        <span style="font-family:'Fira Code',monospace; font-size:0.85rem; color:var(--text-muted); font-weight:600;">Ver resíduos como:</span>
+        <div class="toggle-group">
+          <button class="toggle-btn active" data-mode="mae" onclick="setMode('mae')">|erro| — MAE</button>
+          <button class="toggle-btn" data-mode="mse" onclick="setMode('mse')">erro² — MSE</button>
+        </div>
+      </div>
+
+      <div class="main-grid">
+
+        <div class="plot-card">
+          <div style="display:flex; justify-content:space-between; align-items:baseline; gap:1rem; flex-wrap:wrap;">
+            <span class="plot-title" id="plot-title">📊 Resíduos absolutos (para MAE)</span>
+            <span class="plot-legend">
+              <span><span class="swatch actual"></span>valor real</span>
+              <span><span class="swatch line"></span>predição</span>
+              <span id="leg-mae"><span class="swatch res-mae"></span>|erro|</span>
+              <span id="leg-mse" style="display:none;"><span class="swatch res-mse"></span>erro²</span>
+            </span>
+          </div>
+          <div class="plot-wrap">
+            <svg class="plot-svg" viewBox="0 0 420 320" xmlns="http://www.w3.org/2000/svg" id="svg">
+              <g id="grid"></g>
+              <line class="axis-line" x1="52" y1="280" x2="405" y2="280"/>
+              <line class="axis-line" x1="52" y1="15" x2="52" y2="280"/>
+              <text class="axis-title" x="215" y="305">tamanho (m²)</text>
+              <text class="axis-title" x="12" y="150" transform="rotate(-90, 12, 150)">preço (R$ mil)</text>
+              <line id="regr-line" class="regr-line" x1="0" y1="0" x2="0" y2="0"/>
+              <g id="resids"></g>
+              <g id="points"></g>
+            </svg>
+          </div>
+        </div>
+
+        <div class="side-stack">
+          <div class="metric-card mae active" id="card-mae">
+            <div class="metric-title">
+              <span>MAE — Mean Absolute Error</span>
+              <span class="metric-val" id="mae-val">—</span>
+            </div>
+            <div class="metric-formula">
+              MAE = ( 1<span class="op">/</span>n ) · Σ <span class="op">|</span> y<sub>i</sub> <span class="op">−</span> ŷ<sub>i</sub> <span class="op">|</span>
+            </div>
+            <p class="metric-desc" id="mae-desc">
+              <strong>Média dos erros absolutos.</strong> Trata todos os erros <em>na mesma escala do erro em si</em> — 5 mil e 15 mil contribuem em proporção. Unidade: <span class="unit">R$ mil</span> (mesma do alvo).
+            </p>
+          </div>
+
+          <div class="metric-card mse" id="card-mse">
+            <div class="metric-title">
+              <span>MSE — Mean Squared Error</span>
+              <span class="metric-val" id="mse-val">—</span>
+            </div>
+            <div class="metric-formula">
+              MSE = ( 1<span class="op">/</span>n ) · Σ ( y<sub>i</sub> <span class="op">−</span> ŷ<sub>i</sub> )²
+            </div>
+            <p class="metric-desc" id="mse-desc">
+              <strong>Média dos erros ao quadrado.</strong> Erros grandes contam <em>desproporcionalmente</em> mais — dobrar o erro <em>quadruplica</em> a contribuição. Unidade: <span class="unit">(R$ mil)²</span>.
+              Para voltar à escala original: <strong>RMSE = √MSE</strong> ≈ <span id="rmse-val">—</span>.
+            </p>
+          </div>
+
+          <button class="action-btn" id="outlier-btn" onclick="toggleOutlier()">➕ Adicionar outlier (imóvel superestimado)</button>
+        </div>
+
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">🎯</span>
+        <div class="i-text">
+          <strong>Quando usar cada uma?</strong> <span class="mono">MAE</span> é mais robusto a <em>outliers</em> e fácil de interpretar (mesma unidade do alvo). <span class="mono">MSE/RMSE</span> penaliza erros grandes mais fortemente — útil quando erros extremos são <em>especialmente</em> ruins (ex.: previsão de demanda hospitalar, controle de estoque). Ambas <em>são sempre positivas</em> e <em>menor é melhor</em>. Sempre reporte na unidade original — dizer "RMSE = 12,9 mil reais" é muito mais informativo que apenas "RMSE = 12,9".
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b1-s06.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+      </div>
+      <a class="btn-nav disabled" href="#">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+
+  <script>
+    // Dataset base — 9 imóveis (mesmo do slide de regressão em supervisionado)
+    // Reta aprendida: y = 3x + 50
+    const baseData = [
+      { x:40,  actual:180, predicted:170 },   // residuo +10
+      { x:55,  actual:200, predicted:215 },   // -15
+      { x:65,  actual:260, predicted:245 },   // +15
+      { x:75,  actual:270, predicted:275 },   // -5
+      { x:90,  actual:340, predicted:320 },   // +20
+      { x:105, actual:355, predicted:365 },   // -10
+      { x:120, actual:425, predicted:410 },   // +15
+      { x:135, actual:445, predicted:455 },   // -10
+      { x:150, actual:510, predicted:500 },   // +10
+    ];
+    // Outlier (opcional): imóvel muito superestimado
+    const outlier = { x:100, actual:750, predicted:350 };  // resíduo +400
+
+    let mode = 'mae';
+    let hasOutlier = false;
+
+    // Coord system
+    const XMIN=20, XMAX=170, YMIN=100, YMAX=800;
+    const PX_L=52, PX_R=405, PY_T=15, PY_B=280;
+    const sx = x => PX_L + (x - XMIN) / (XMAX - XMIN) * (PX_R - PX_L);
+    const sy = y => PY_B - (y - YMIN) / (YMAX - YMIN) * (PY_B - PY_T);
+
+    // Grid
+    const grid = document.getElementById('grid');
+    for (let x = 40; x <= 160; x += 30) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('class', 'grid-line');
+      line.setAttribute('x1', sx(x)); line.setAttribute('x2', sx(x));
+      line.setAttribute('y1', PY_T); line.setAttribute('y2', PY_B);
+      grid.appendChild(line);
+      const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      lbl.setAttribute('class', 'axis-label');
+      lbl.setAttribute('x', sx(x) - 7); lbl.setAttribute('y', PY_B + 12);
+      lbl.textContent = x;
+      grid.appendChild(lbl);
+    }
+    for (let y = 150; y <= 750; y += 150) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('class', 'grid-line');
+      line.setAttribute('x1', PX_L); line.setAttribute('x2', PX_R);
+      line.setAttribute('y1', sy(y)); line.setAttribute('y2', sy(y));
+      grid.appendChild(line);
+      const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      lbl.setAttribute('class', 'axis-label');
+      lbl.setAttribute('x', 20); lbl.setAttribute('y', sy(y) + 3);
+      lbl.textContent = y;
+      grid.appendChild(lbl);
+    }
+
+    // Regression line: y = 3x + 50
+    const line = document.getElementById('regr-line');
+    line.setAttribute('x1', sx(XMIN)); line.setAttribute('y1', sy(3*XMIN + 50));
+    line.setAttribute('x2', sx(XMAX)); line.setAttribute('y2', sy(3*XMAX + 50));
+
+    function computeMetrics(data) {
+      const errors = data.map(d => Math.abs(d.actual - d.predicted));
+      const sqerrors = data.map(d => (d.actual - d.predicted) ** 2);
+      const mae = errors.reduce((a,b) => a+b, 0) / data.length;
+      const mse = sqerrors.reduce((a,b) => a+b, 0) / data.length;
+      const rmse = Math.sqrt(mse);
+      return { mae, mse, rmse };
+    }
+
+    function render() {
+      const data = hasOutlier ? [...baseData, outlier] : baseData;
+      const { mae, mse, rmse } = computeMetrics(data);
+
+      // Update metrics
+      const fmt = v => (v >= 1000 ? Math.round(v).toLocaleString('pt-BR') : v.toFixed(1).replace('.', ','));
+      document.getElementById('mae-val').textContent = fmt(mae) + ' mil';
+      document.getElementById('mse-val').textContent = fmt(mse) + ' mil²';
+      document.getElementById('rmse-val').textContent = fmt(rmse) + ' mil';
+
+      // Update panel highlight
+      document.getElementById('card-mae').classList.toggle('active', mode === 'mae');
+      document.getElementById('card-mse').classList.toggle('active', mode === 'mse');
+      document.getElementById('leg-mae').style.display = mode === 'mae' ? '' : 'none';
+      document.getElementById('leg-mse').style.display = mode === 'mse' ? '' : 'none';
+      document.getElementById('plot-title').textContent = mode === 'mae'
+        ? '📊 Resíduos absolutos (para MAE)'
+        : '📊 Resíduos ao quadrado (para MSE)';
+
+      // Draw residuals
+      const resG = document.getElementById('resids');
+      resG.innerHTML = '';
+      const ptG = document.getElementById('points');
+      ptG.innerHTML = '';
+
+      data.forEach((d, i) => {
+        const px = sx(d.x);
+        const pyActual = sy(d.actual);
+        const pyPred = sy(d.predicted);
+        const err = d.actual - d.predicted;
+        const absErr = Math.abs(err);
+        const isOutlier = i === data.length - 1 && hasOutlier;
+
+        if (mode === 'mae') {
+          // Vertical dashed line from actual to predicted
+          const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          l.setAttribute('class', 'resid-line');
+          l.setAttribute('x1', px); l.setAttribute('x2', px);
+          l.setAttribute('y1', pyActual); l.setAttribute('y2', pyPred);
+          resG.appendChild(l);
+        } else {
+          // Square with side proportional to |error|; centered around the midpoint
+          // Scale: absErr in R$ mil → pixels
+          const pxSide = Math.min(80, Math.abs(pyActual - pyPred));
+          const cx = px;
+          const cy = (pyActual + pyPred) / 2;
+          const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          rect.setAttribute('class', 'resid-sq');
+          rect.setAttribute('x', cx - pxSide/2);
+          rect.setAttribute('y', cy - pxSide/2);
+          rect.setAttribute('width', pxSide);
+          rect.setAttribute('height', pxSide);
+          resG.appendChild(rect);
+        }
+
+        // Actual point
+        const cA = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        cA.setAttribute('class', 'actual-pt' + (isOutlier ? ' outlier' : ''));
+        cA.setAttribute('cx', px); cA.setAttribute('cy', pyActual); cA.setAttribute('r', isOutlier ? 6 : 5);
+        ptG.appendChild(cA);
+      });
+    }
+
+    function setMode(m) {
+      mode = m;
+      document.querySelectorAll('.toggle-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.mode === m);
+      });
+      render();
+    }
+
+    function toggleOutlier() {
+      hasOutlier = !hasOutlier;
+      const btn = document.getElementById('outlier-btn');
+      if (hasOutlier) {
+        btn.classList.add('active');
+        btn.innerHTML = '✗ Remover outlier';
+      } else {
+        btn.classList.remove('active');
+        btn.innerHTML = '➕ Adicionar outlier (imóvel superestimado)';
+      }
+      render();
+    }
+
+    render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>F1</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .harmonic-viz {
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 0.8rem 1rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+    }
+    .harmonic-viz .harmonic-title {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 700;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+    .harmonic-viz .bar-row {
+      display: grid;
+      grid-template-columns: 105px 1fr 55px;
+      align-items: center;
+      gap: 0.6rem;
+      margin: 0.35rem 0;
+    }
+    .harmonic-viz .bar-label {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-align: right;
+    }
+    .harmonic-viz .bar-visual {
+      background: white;
+      border-radius: 3px;
+      overflow: hidden;
+      height: 14px;
+    }
+    .harmonic-viz .bar-fill {
+      height: 100%;
+      border-radius: 3px;
+    }
+    .harmonic-viz .bar-fill.p  { background: var(--purple); }
+    .harmonic-viz .bar-fill.s  { background: var(--blue); }
+    .harmonic-viz .bar-fill.f1 { background: linear-gradient(90deg, var(--purple), var(--blue)); }
+    .harmonic-viz .bar-value {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text);
+      text-align: right;
+    }
+
+    .compare-row {
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+      display: flex;
+      gap: 0.6rem;
+      align-items: flex-start;
+    }
+    .compare-row .icon { font-size: 1.25rem; flex-shrink: 0; }
+    .compare-row strong { color: var(--text); }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Métricas de Avaliação</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 1 · Slide 06 / 06</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">F1</h1>
+        <p class="slide-subtitle">
+          Uma única métrica que <strong>combina precisão e sensibilidade</strong> — média harmônica que "pune" desequilíbrios entre as duas.
+        </p>
+      </div>
+
+      <div class="content-split">
+
+        <div class="cm-panel">
+          <div class="cm-title">🟠 Células usadas no F1</div>
+          <div class="cm-subtitle">Usa <strong class="text-orange">VP</strong>, <strong class="text-orange">FP</strong> e <strong class="text-orange">FN</strong> — ignora <strong>VN</strong>. Faz sentido: em datasets desbalanceados, os verdadeiros negativos podem ser abundantes e enviesar outras métricas.</div>
+          <div class="cm-grid" data-highlight="f1">
+            <div class="cm-corner"></div>
+            <div class="cm-pred-header">Predição do modelo</div>
+            <div class="cm-pred-pos">Maligno (+)</div>
+            <div class="cm-pred-neg">Benigno (−)</div>
+            <div class="cm-real-header">Classe real</div>
+            <div class="cm-real-pos">Maligno (+)</div>
+            <div class="cm-cell vp"><span class="cell-code">VP</span><span class="cell-value">45</span><span class="cell-desc">acerto positivo</span></div>
+            <div class="cm-cell fn"><span class="cell-code">FN</span><span class="cell-value">5</span><span class="cell-desc">malignos ignorados</span></div>
+            <div class="cm-real-neg">Benigno (−)</div>
+            <div class="cm-cell fp"><span class="cell-code">FP</span><span class="cell-value">10</span><span class="cell-desc">falso alarme</span></div>
+            <div class="cm-cell vn"><span class="cell-code">VN</span><span class="cell-value">40</span><span class="cell-desc">acerto negativo</span></div>
+          </div>
+        </div>
+
+        <div class="formula-panel f1">
+          <div class="metric-name">F1 score</div>
+          <p style="font-size:0.9rem; color:var(--text-muted); line-height:1.5;">Média <em>harmônica</em> entre precisão e sensibilidade. Alto só quando <em>ambas</em> são altas.</p>
+          <div class="formula">
+            F<sub>1</sub> = <span class="op">2 ·</span> ( P <span class="op">·</span> S ) <span class="op">/</span> ( P <span class="op">+</span> S )
+          </div>
+          <div class="formula" style="margin-top:-0.35rem; font-size:0.82rem;">
+            ou, em termos das células: F<sub>1</sub> = <span class="op">2 ·</span> <span class="vp">VP</span> <span class="op">/</span> ( <span class="op">2 ·</span> <span class="vp">VP</span> <span class="op">+</span> <span class="fp">FP</span> <span class="op">+</span> <span class="fn">FN</span> )
+          </div>
+          <div class="calc">
+            <span class="lbl">Aplicando aos dados</span>
+            = 2 · <strong style="color:var(--orange);">45</strong> / ( 2 · <strong style="color:var(--orange);">45</strong> + <strong style="color:var(--orange);">10</strong> + <strong style="color:var(--orange);">5</strong> )
+            <br>= <strong>90 / 105</strong>
+            <br><span class="result">≈ 85,7%</span>
+          </div>
+          <div class="harmonic-viz">
+            <span class="harmonic-title">Componentes vs. F1</span>
+            <div class="bar-row">
+              <span class="bar-label"><span class="text-purple">Precisão</span></span>
+              <div class="bar-visual"><div class="bar-fill p" style="width: 81.8%"></div></div>
+              <span class="bar-value">81,8%</span>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label"><span class="text-blue">Sensibilidade</span></span>
+              <div class="bar-visual"><div class="bar-fill s" style="width: 90%"></div></div>
+              <span class="bar-value">90,0%</span>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label"><strong>F1</strong></span>
+              <div class="bar-visual"><div class="bar-fill f1" style="width: 85.7%"></div></div>
+              <span class="bar-value"><strong>85,7%</strong></span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="compare-row">
+        <span class="icon">🔀</span>
+        <div>
+          <strong>Por que média <em>harmônica</em> em vez de média simples?</strong> Se precisão = 90% e sensibilidade = 10%, a média simples seria 50% — parece razoável, mas o modelo é claramente péssimo (perde 90% dos positivos). Já a média harmônica dá F1 ≈ 18%, muito mais próxima do desempenho real. A média harmônica <em>penaliza</em> valores muito baixos em qualquer uma das duas parcelas.
+        </div>
+      </div>
+
+      <div class="insight-box" style="flex-direction:column; align-items:stretch;">
+        <div style="display:flex; gap:0.85rem; align-items:flex-start;">
+          <span class="i-icon">⚖️</span>
+          <div class="i-text">
+            F1 é útil quando precisão e sensibilidade têm <strong>importância comparável</strong>. Se elas têm pesos diferentes no seu problema, use a forma generalizada <strong>F<sub>β</sub></strong>, onde <em>β</em> controla quanta importância a <em>sensibilidade</em> tem em relação à <em>precisão</em>.
+          </div>
+        </div>
+        <div style="background:#0f1724; color:#e2e8f0; padding:0.75rem 1rem; border-radius:8px; font-family:'Fira Code',monospace; font-size:0.95rem; text-align:center; margin-top:0.7rem;">
+          F<sub>β</sub> = ( 1 + <span style="color:#fbbf24;">β²</span> ) · ( P · S ) / ( <span style="color:#fbbf24;">β²</span> · P + S )
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:0.55rem; margin-top:0.55rem; font-family:'Fira Code',monospace; font-size:0.82rem;">
+          <div style="background:rgba(255,255,255,0.55); border-radius:6px; padding:0.55rem 0.7rem;">
+            <div style="font-family:'Inter',sans-serif; font-size:0.68rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.06em; font-weight:700;">β = 0,5</div>
+            <div style="color:var(--purple); font-weight:700;">Prioriza precisão</div>
+            <div style="color:var(--text-muted); font-size:0.78rem; margin-top:0.2rem; font-family:'Inter',sans-serif;">útil quando falsos positivos custam muito (ex.: sistemas de recomendação)</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.55); border-radius:6px; padding:0.55rem 0.7rem;">
+            <div style="font-family:'Inter',sans-serif; font-size:0.68rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.06em; font-weight:700;">β = 1</div>
+            <div style="color:var(--orange); font-weight:700;">Equilibra P e S</div>
+            <div style="color:var(--text-muted); font-size:0.78rem; margin-top:0.2rem; font-family:'Inter',sans-serif;">o F1 clássico — reduz para 2·P·S / (P+S)</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.55); border-radius:6px; padding:0.55rem 0.7rem;">
+            <div style="font-family:'Inter',sans-serif; font-size:0.68rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.06em; font-weight:700;">β = 2</div>
+            <div style="color:var(--blue); font-weight:700;">Prioriza sensibilidade</div>
+            <div style="color:var(--text-muted); font-size:0.78rem; margin-top:0.2rem; font-family:'Inter',sans-serif;">útil quando falsos negativos custam muito (ex.: diagnóstico de doenças)</div>
+          </div>
+        </div>
+        <div style="font-size:0.83rem; color:var(--text); line-height:1.55; margin-top:0.6rem;">
+          Em problemas <em>multiclasse</em>, F<sub>β</sub> pode ainda ser calculado por classe e agregado (macro, micro, weighted) — cada agregação responde uma pergunta diferente.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b1-s05.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <a class="btn-nav" href="b2-s01.html">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+</body>
+</html>
