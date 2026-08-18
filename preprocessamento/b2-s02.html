@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alta Cardinalidade: Top-K + Outros</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      gap: 1.3rem;
+    }
+
+    .chart-card {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.15rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+    .chart-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--orange);
+    }
+    .bars-container {
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 0.7rem 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      max-height: 380px;
+      overflow-y: auto;
+    }
+    .bar-row {
+      display: grid;
+      grid-template-columns: 110px 1fr 55px;
+      align-items: center;
+      gap: 0.5rem;
+      height: 20px;
+    }
+    .bar-name {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-align: right;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .bar-row.top .bar-name { color: var(--orange); font-weight: 700; }
+    .bar-row.outros .bar-name { color: var(--text-dim); font-style: italic; }
+    .bar-visual {
+      background: white;
+      border-radius: 3px;
+      overflow: hidden;
+      height: 14px;
+      position: relative;
+    }
+    .bar-fill {
+      height: 100%;
+      transition: width 0.35s ease, background 0.35s ease;
+      border-radius: 3px;
+    }
+    .bar-row.top .bar-fill { background: var(--orange); }
+    .bar-row.gray .bar-fill { background: var(--text-dim); opacity: 0.5; }
+    .bar-row.outros .bar-fill { background: linear-gradient(90deg, var(--purple), var(--blue)); }
+    .bar-value {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    .side-stack { display: flex; flex-direction: column; gap: 0.75rem; }
+    .k-card {
+      background: linear-gradient(135deg, var(--orange-lt), var(--yellow-lt));
+      border: 1.5px solid #fdba74;
+      border-radius: 12px;
+      padding: 1rem 1.15rem;
+    }
+    .k-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.55rem;
+    }
+    .k-label {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+    }
+    .k-val {
+      font-family: 'Fira Code', monospace;
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--orange);
+    }
+    input[type="range"] { width: 100%; accent-color: var(--orange); }
+    .k-ticks {
+      display: flex;
+      justify-content: space-between;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+    }
+
+    .stats-tiles {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+    }
+    .stat-tile {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 0.65rem 0.85rem;
+      text-align: center;
+    }
+    .stat-tile .lbl {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 700;
+    }
+    .stat-tile .val {
+      font-family: 'Fira Code', monospace;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .stat-tile.cov .val { color: var(--green); }
+    .stat-tile.cov.low .val { color: var(--orange); }
+    .stat-tile.cols .val { color: var(--blue); }
+
+    .compare-note {
+      background: var(--bg3);
+      border-left: 3px solid var(--orange);
+      border-radius: 6px;
+      padding: 0.6rem 0.85rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Pré-processamento de Dados</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 2 · Slide 02 / 02</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Alta Cardinalidade: Top-K + Outros</h1>
+        <p class="slide-subtitle">
+          Um atributo com <strong>centenas de categorias</strong> vira centenas de colunas. Solução prática: manter só as K mais frequentes.
+        </p>
+      </div>
+
+      <div class="highlight-box orange" style="justify-content:center;">
+        <span class="icon">🌍</span>
+        <p>
+          <strong>Cenário:</strong> uma coluna <em>país</em> num dataset de e-commerce global — <strong>195 categorias</strong> possíveis. One-hot puro cria 195 colunas novas, mas <em>a maioria vai estar quase sempre zerada</em> (dados esparsos). Vamos ver como escolher <em>K</em> resolve o problema.
+        </p>
+      </div>
+
+      <div class="main-grid">
+
+        <div class="chart-card">
+          <span class="chart-title">📊 Distribuição de frequências (top-K destacado)</span>
+          <div class="bars-container" id="bars"></div>
+        </div>
+
+        <div class="side-stack">
+          <div class="k-card">
+            <div class="k-header">
+              <span class="k-label">Top-K categorias mais frequentes</span>
+              <span class="k-val">K = <span id="k-val">5</span></span>
+            </div>
+            <input type="range" id="k-slider" min="1" max="20" step="1" value="5" />
+            <div class="k-ticks"><span>1</span><span>5</span><span>10</span><span>15</span><span>20</span></div>
+          </div>
+
+          <div class="stats-tiles">
+            <div class="stat-tile cols">
+              <div class="lbl">Colunas após one-hot</div>
+              <div class="val" id="s-cols">6</div>
+            </div>
+            <div class="stat-tile cov" id="cov-tile">
+              <div class="lbl">Cobertura dos dados</div>
+              <div class="val" id="s-cov">67%</div>
+            </div>
+          </div>
+
+          <div class="compare-note">
+            <strong>Comparação:</strong> sem top-K seriam <strong>195 colunas</strong>. Com K=<span id="k-cmp">5</span>, ficamos com <span id="k-plus-cmp">6</span> colunas — <strong id="reduction">97% menos</strong>.
+          </div>
+
+          <div class="compare-note">
+            <strong>Quando compensa?</strong> Quando a distribuição é <em>pareto</em> (poucas categorias dominam) e as raras contribuem pouco. Cuidado se as categorias raras <em>forem informativas</em> — nesse caso, considere target encoding.
+          </div>
+        </div>
+
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">🎯</span>
+        <div class="i-text">
+          Além de <strong>top-K + "Outros"</strong>, outras alternativas para lidar com alta cardinalidade incluem: <span class="mono">frequency encoding</span> (substituir a categoria pela sua frequência), <span class="mono">target encoding</span> (substituir pela média do alvo), <span class="mono">hashing</span> (mapear categorias para um número fixo de <em>buckets</em> via função hash) e <span class="mono">embeddings</span> aprendidos (usado em redes neurais). Cada abordagem tem trade-offs entre simplicidade, informação preservada e complexidade de implementação.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b2-s01.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <a class="btn-nav disabled" href="#">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+
+  <script>
+    // Distribuição sintética (pareto-ish): 20 países + resto agrupado
+    const countries = [
+      { name: 'USA',       count: 3500 },
+      { name: 'Brasil',    count: 2800 },
+      { name: 'Índia',     count: 1900 },
+      { name: 'China',     count: 1500 },
+      { name: 'México',    count: 1100 },
+      { name: 'Alemanha',  count: 900  },
+      { name: 'França',    count: 750  },
+      { name: 'Reino Un.', count: 600  },
+      { name: 'Japão',     count: 500  },
+      { name: 'Canadá',    count: 400  },
+      { name: 'Argentina', count: 350  },
+      { name: 'Espanha',   count: 300  },
+      { name: 'Itália',    count: 250  },
+      { name: 'Rússia',    count: 200  },
+      { name: 'Austrália', count: 180  },
+      { name: 'Coréia S.', count: 150  },
+      { name: 'Indonésia', count: 130  },
+      { name: 'Colômbia',  count: 110  },
+      { name: 'Turquia',   count: 100  },
+      { name: 'Chile',     count: 90   },
+    ];
+    // ~175 outros países com ~3000 registros no total (estimativa)
+    const OTHERS_COUNT = 2790;
+    const TOTAL_COUNT = countries.reduce((s, c) => s + c.count, 0) + OTHERS_COUNT;
+    const MAX_COUNT = countries[0].count;
+
+    function render(K) {
+      const barsEl = document.getElementById('bars');
+      barsEl.innerHTML = '';
+
+      // Top K com barra colorida (top)
+      // Restantes (K+1..20) com barra cinza
+      // Última linha: "Outros" agregando (K+1..20) + os 175 países implícitos
+      let othersCount = OTHERS_COUNT;
+      countries.forEach((c, i) => {
+        const isTop = i < K;
+        if (!isTop) othersCount += c.count;
+        const isGrayed = !isTop;
+        barsEl.innerHTML += `
+          <div class="bar-row ${isTop ? 'top' : 'gray'}">
+            <span class="bar-name">${c.name}</span>
+            <div class="bar-visual"><div class="bar-fill" style="width: ${(c.count / MAX_COUNT) * 100}%"></div></div>
+            <span class="bar-value">${c.count.toLocaleString('pt-BR')}</span>
+          </div>
+        `;
+      });
+      // Linha de outros
+      barsEl.innerHTML += `
+        <div class="bar-row outros">
+          <span class="bar-name">Outros</span>
+          <div class="bar-visual"><div class="bar-fill" style="width: ${(othersCount / MAX_COUNT) * 100}%"></div></div>
+          <span class="bar-value">${othersCount.toLocaleString('pt-BR')}</span>
+        </div>
+      `;
+
+      // Stats
+      const topCount = countries.slice(0, K).reduce((s, c) => s + c.count, 0);
+      const coverage = topCount / TOTAL_COUNT * 100;
+      const cols = K + 1;
+      const reduction = Math.round((195 - cols) / 195 * 100);
+      document.getElementById('s-cols').textContent = cols;
+      document.getElementById('s-cov').textContent = coverage.toFixed(0) + '%';
+      document.getElementById('k-cmp').textContent = K;
+      document.getElementById('k-plus-cmp').textContent = cols;
+      document.getElementById('reduction').textContent = reduction + '% menos';
+      const covTile = document.getElementById('cov-tile');
+      covTile.classList.toggle('low', coverage < 50);
+    }
+
+    document.getElementById('k-slider').addEventListener('input', e => {
+      const K = parseInt(e.target.value);
+      document.getElementById('k-val').textContent = K;
+      render(K);
+    });
+
+    render(5);
+  </script>
+</body>
+</html>

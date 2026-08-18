@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Min-Max vs. Standard Scaler</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .formulas-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .formula-card {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 0.9rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .formula-card.minmax { border-color: #93c5fd; }
+    .formula-card.std    { border-color: #c4b5fd; }
+    .fname {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .minmax .fname { color: var(--blue); }
+    .std    .fname { color: var(--purple); }
+    .fdesc { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
+    .fexpr {
+      background: #0f1724;
+      color: #e2e8f0;
+      padding: 0.65rem 0.9rem;
+      border-radius: 8px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+    .fexpr .var { color: #fbbf24; }
+    .fexpr .op  { color: #c4b5fd; }
+
+    .toggle-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .toggle-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .toggle-group {
+      display: inline-flex;
+      background: var(--bg3);
+      border: 1.5px solid var(--border);
+      border-radius: 999px;
+      padding: 3px;
+    }
+    .toggle-btn {
+      background: transparent;
+      border: none;
+      padding: 0.45rem 1rem;
+      border-radius: 999px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
+    .toggle-btn.active {
+      color: white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .toggle-btn.active[data-mode="raw"]      { background: var(--orange); }
+    .toggle-btn.active[data-mode="minmax"]   { background: var(--blue); }
+    .toggle-btn.active[data-mode="standard"] { background: var(--purple); }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 1.3rem;
+    }
+    .plot-card {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+    .plot-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--orange);
+    }
+    .plot-wrap { background: var(--bg3); border-radius: 8px; padding: 0.5rem; }
+    .plot-svg { width: 100%; height: auto; display: block; }
+    .axis-line { stroke: var(--text-dim); stroke-width: 1; }
+    .grid-line { stroke: var(--border2); stroke-width: 0.5; }
+    .axis-label { font-family: 'Fira Code', monospace; font-size: 9px; fill: var(--text-dim); }
+    .axis-title { font-family: 'Fira Code', monospace; font-size: 10px; fill: var(--text-muted); font-weight: 600; }
+    .pt {
+      stroke: white;
+      stroke-width: 1.5;
+      transition: cx 0.5s ease, cy 0.5s ease;
+    }
+    .pt.raw      { fill: var(--orange); }
+    .pt.minmax   { fill: var(--blue); }
+    .pt.standard { fill: var(--purple); }
+    .origin-line { stroke: var(--text-dim); stroke-width: 1; stroke-dasharray: 3 3; opacity: 0.6; }
+
+    .stats-card {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.15rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+    .stats-card-header {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: auto repeat(4, 1fr);
+      gap: 3px;
+      background: var(--border2);
+      border-radius: 6px;
+      overflow: hidden;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+    }
+    .stats-grid .cell {
+      background: var(--bg2);
+      padding: 0.4rem 0.5rem;
+      text-align: center;
+    }
+    .stats-grid .cell.header {
+      background: var(--bg3);
+      font-weight: 700;
+      color: var(--text-dim);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .stats-grid .cell.rowlabel {
+      background: var(--bg3);
+      color: var(--orange);
+      font-weight: 700;
+    }
+
+    .compare-note {
+      background: var(--bg3);
+      border-left: 3px solid var(--orange);
+      border-radius: 6px;
+      padding: 0.65rem 0.85rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+    .compare-note strong { color: var(--text); }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Pré-processamento de Dados</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 1 · Slide 02 / 03</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Min-Max vs. Standard Scaler</h1>
+        <p class="slide-subtitle">
+          Duas técnicas para colocar tudo na mesma escala — <strong>fórmulas simples</strong>, geometrias diferentes.
+        </p>
+      </div>
+
+      <div class="formulas-row">
+        <div class="formula-card minmax">
+          <span class="fname">📏 Normalização Min-Max</span>
+          <p class="fdesc">Transforma os valores para o intervalo <strong>[0, 1]</strong>. Usa o menor e o maior valor observados.</p>
+          <div class="fexpr">x' = ( <span class="var">x</span> <span class="op">−</span> min ) / ( max <span class="op">−</span> min )</div>
+        </div>
+        <div class="formula-card std">
+          <span class="fname">📊 Padronização (Z-score)</span>
+          <p class="fdesc">Transforma para <strong>média 0 e desvio padrão 1</strong>. Usa a média e o desvio padrão da amostra.</p>
+          <div class="fexpr">x' = ( <span class="var">x</span> <span class="op">−</span> μ ) / σ</div>
+        </div>
+      </div>
+
+      <div class="toggle-row">
+        <span class="toggle-label">Ver dados como:</span>
+        <div class="toggle-group">
+          <button class="toggle-btn active" data-mode="raw" onclick="setMode('raw')">Original</button>
+          <button class="toggle-btn" data-mode="minmax" onclick="setMode('minmax')">Min-Max</button>
+          <button class="toggle-btn" data-mode="standard" onclick="setMode('standard')">Standard</button>
+        </div>
+      </div>
+
+      <div class="main-grid">
+
+        <div class="plot-card">
+          <span class="plot-title">📈 Idade × Salário — 15 pessoas</span>
+          <div class="plot-wrap">
+            <svg class="plot-svg" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" id="svg">
+              <g id="grid"></g>
+              <line class="axis-line" x1="52" y1="260" x2="380" y2="260"/>
+              <line class="axis-line" x1="52" y1="15" x2="52" y2="260"/>
+              <text class="axis-title" x="200" y="286" id="x-title">idade (anos)</text>
+              <text class="axis-title" x="10" y="140" transform="rotate(-90, 10, 140)" id="y-title">salário (R$)</text>
+              <line id="origin-x" class="origin-line" x1="0" y1="0" x2="0" y2="0" style="display:none"/>
+              <line id="origin-y" class="origin-line" x1="0" y1="0" x2="0" y2="0" style="display:none"/>
+              <g id="points"></g>
+            </svg>
+          </div>
+        </div>
+
+        <div class="stats-card">
+          <div class="stats-card-header">📐 Estatísticas resumidas</div>
+          <div class="stats-grid">
+            <div class="cell header"></div>
+            <div class="cell header">min</div>
+            <div class="cell header">max</div>
+            <div class="cell header">média</div>
+            <div class="cell header">desvio</div>
+            <div class="cell rowlabel">idade</div>
+            <div class="cell" id="s-a-min">22</div>
+            <div class="cell" id="s-a-max">65</div>
+            <div class="cell" id="s-a-mean">40,3</div>
+            <div class="cell" id="s-a-std">12,1</div>
+            <div class="cell rowlabel">salário</div>
+            <div class="cell" id="s-s-min">2.500</div>
+            <div class="cell" id="s-s-max">18.000</div>
+            <div class="cell" id="s-s-mean">7.920</div>
+            <div class="cell" id="s-s-std">4.489</div>
+          </div>
+
+          <div class="compare-note" id="note">
+            <strong>Dados originais</strong>: escalas muito diferentes — salário tem mais de <strong>300×</strong> a magnitude da idade. Isso quebra qualquer algoritmo que use distância.
+          </div>
+        </div>
+
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">🎯</span>
+        <div class="i-text">
+          <strong>Qual escolher?</strong> Na prática, teste ambos e compare o desempenho — o custo é baixo. <strong>Min-Max</strong> preserva a distribuição original mas é sensível a outliers (um valor extremo esmaga todos os outros). <strong>Standard</strong> é mais robusto e tende a funcionar bem quando os dados são aproximadamente normais. Existe ainda <span class="mono">RobustScaler</span> (usa mediana e IQR), útil quando há muitos outliers.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b1-s01.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b1-s03.html">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+
+  <script>
+    // Dataset: 15 pessoas com idade e salário
+    const data = [
+      {age: 22, sal: 2500},
+      {age: 25, sal: 3000},
+      {age: 28, sal: 3800},
+      {age: 30, sal: 4500},
+      {age: 32, sal: 5000},
+      {age: 35, sal: 5500},
+      {age: 38, sal: 6200},
+      {age: 40, sal: 7000},
+      {age: 42, sal: 7800},
+      {age: 45, sal: 8500},
+      {age: 48, sal: 9200},
+      {age: 50, sal: 10000},
+      {age: 55, sal: 12000},
+      {age: 60, sal: 15000},
+      {age: 65, sal: 18000},
+    ];
+
+    // Compute stats
+    const ages = data.map(d => d.age);
+    const sals = data.map(d => d.sal);
+    const AGE_MIN = Math.min(...ages), AGE_MAX = Math.max(...ages);
+    const SAL_MIN = Math.min(...sals), SAL_MAX = Math.max(...sals);
+    const AGE_MEAN = ages.reduce((a,b) => a+b, 0) / ages.length;
+    const SAL_MEAN = sals.reduce((a,b) => a+b, 0) / sals.length;
+    const AGE_STD = Math.sqrt(ages.map(a => (a-AGE_MEAN)**2).reduce((a,b) => a+b, 0) / ages.length);
+    const SAL_STD = Math.sqrt(sals.map(s => (s-SAL_MEAN)**2).reduce((a,b) => a+b, 0) / sals.length);
+
+    // Transformations
+    function transform(mode) {
+      if (mode === 'raw') return data.map(d => ({x: d.age, y: d.sal}));
+      if (mode === 'minmax') return data.map(d => ({
+        x: (d.age - AGE_MIN) / (AGE_MAX - AGE_MIN),
+        y: (d.sal - SAL_MIN) / (SAL_MAX - SAL_MIN),
+      }));
+      if (mode === 'standard') return data.map(d => ({
+        x: (d.age - AGE_MEAN) / AGE_STD,
+        y: (d.sal - SAL_MEAN) / SAL_STD,
+      }));
+    }
+
+    // Plot config depending on mode
+    const modeConfig = {
+      raw: {
+        xmin: 15, xmax: 70, ymin: 0, ymax: 20000,
+        xTicks: [20, 30, 40, 50, 60, 70],
+        yTicks: [0, 5000, 10000, 15000, 20000],
+        xTitle: 'idade (anos)', yTitle: 'salário (R$)',
+      },
+      minmax: {
+        xmin: -0.1, xmax: 1.1, ymin: -0.1, ymax: 1.1,
+        xTicks: [0, 0.25, 0.5, 0.75, 1.0],
+        yTicks: [0, 0.25, 0.5, 0.75, 1.0],
+        xTitle: 'idade (normalizada)', yTitle: 'salário (normalizado)',
+      },
+      standard: {
+        xmin: -3, xmax: 3, ymin: -3, ymax: 3,
+        xTicks: [-3, -2, -1, 0, 1, 2, 3],
+        yTicks: [-3, -2, -1, 0, 1, 2, 3],
+        xTitle: 'idade (Z-score)', yTitle: 'salário (Z-score)',
+      },
+    };
+
+    const PX_L=52, PX_R=380, PY_T=15, PY_B=260;
+
+    function renderPlot(mode) {
+      const cfg = modeConfig[mode];
+      const sx = x => PX_L + (x - cfg.xmin) / (cfg.xmax - cfg.xmin) * (PX_R - PX_L);
+      const sy = y => PY_B - (y - cfg.ymin) / (cfg.ymax - cfg.ymin) * (PY_B - PY_T);
+
+      // Grid
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      cfg.xTicks.forEach(x => {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('class', 'grid-line');
+        line.setAttribute('x1', sx(x)); line.setAttribute('x2', sx(x));
+        line.setAttribute('y1', PY_T); line.setAttribute('y2', PY_B);
+        grid.appendChild(line);
+        const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        lbl.setAttribute('class', 'axis-label');
+        lbl.setAttribute('x', sx(x) - 8); lbl.setAttribute('y', PY_B + 12);
+        lbl.textContent = mode === 'raw' && x >= 1000 ? (x/1000)+'k' : x;
+        grid.appendChild(lbl);
+      });
+      cfg.yTicks.forEach(y => {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('class', 'grid-line');
+        line.setAttribute('x1', PX_L); line.setAttribute('x2', PX_R);
+        line.setAttribute('y1', sy(y)); line.setAttribute('y2', sy(y));
+        grid.appendChild(line);
+        const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        lbl.setAttribute('class', 'axis-label');
+        lbl.setAttribute('x', 20); lbl.setAttribute('y', sy(y) + 3);
+        lbl.textContent = mode === 'raw' && y >= 1000 ? (y/1000)+'k' : y;
+        grid.appendChild(lbl);
+      });
+
+      // Update axis titles
+      document.getElementById('x-title').textContent = cfg.xTitle;
+      document.getElementById('y-title').textContent = cfg.yTitle;
+
+      // Origin lines (for standard mode)
+      const ox = document.getElementById('origin-x');
+      const oy = document.getElementById('origin-y');
+      if (mode === 'standard' || mode === 'minmax') {
+        ox.setAttribute('x1', sx(0)); ox.setAttribute('x2', sx(0));
+        ox.setAttribute('y1', PY_T); ox.setAttribute('y2', PY_B);
+        ox.style.display = '';
+        oy.setAttribute('y1', sy(0)); oy.setAttribute('y2', sy(0));
+        oy.setAttribute('x1', PX_L); oy.setAttribute('x2', PX_R);
+        oy.style.display = '';
+      } else {
+        ox.style.display = 'none';
+        oy.style.display = 'none';
+      }
+
+      // Points
+      const points = transform(mode);
+      const pg = document.getElementById('points');
+      pg.innerHTML = '';
+      points.forEach(p => {
+        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        c.setAttribute('class', 'pt ' + mode);
+        c.setAttribute('cx', sx(p.x));
+        c.setAttribute('cy', sy(p.y));
+        c.setAttribute('r', 5);
+        pg.appendChild(c);
+      });
+    }
+
+    function updateStats(mode) {
+      const fmt = (v) => {
+        if (Math.abs(v) < 10) return v.toFixed(2).replace('.', ',');
+        return Math.round(v).toLocaleString('pt-BR');
+      };
+      if (mode === 'raw') {
+        document.getElementById('s-a-min').textContent = AGE_MIN;
+        document.getElementById('s-a-max').textContent = AGE_MAX;
+        document.getElementById('s-a-mean').textContent = fmt(AGE_MEAN);
+        document.getElementById('s-a-std').textContent = fmt(AGE_STD);
+        document.getElementById('s-s-min').textContent = SAL_MIN.toLocaleString('pt-BR');
+        document.getElementById('s-s-max').textContent = SAL_MAX.toLocaleString('pt-BR');
+        document.getElementById('s-s-mean').textContent = fmt(SAL_MEAN);
+        document.getElementById('s-s-std').textContent = fmt(SAL_STD);
+        document.getElementById('note').innerHTML = '<strong>Dados originais</strong>: escalas muito diferentes — salário tem mais de <strong>300×</strong> a magnitude da idade. Isso quebra qualquer algoritmo que use distância.';
+      } else if (mode === 'minmax') {
+        document.getElementById('s-a-min').textContent = '0,00';
+        document.getElementById('s-a-max').textContent = '1,00';
+        document.getElementById('s-a-mean').textContent = fmt((AGE_MEAN - AGE_MIN) / (AGE_MAX - AGE_MIN));
+        document.getElementById('s-a-std').textContent = fmt(AGE_STD / (AGE_MAX - AGE_MIN));
+        document.getElementById('s-s-min').textContent = '0,00';
+        document.getElementById('s-s-max').textContent = '1,00';
+        document.getElementById('s-s-mean').textContent = fmt((SAL_MEAN - SAL_MIN) / (SAL_MAX - SAL_MIN));
+        document.getElementById('s-s-std').textContent = fmt(SAL_STD / (SAL_MAX - SAL_MIN));
+        document.getElementById('note').innerHTML = '<strong>Após Min-Max</strong>: <span class="mono">min = 0</span>, <span class="mono">max = 1</span> para ambos os atributos. Escalas idênticas — a distância agora respeita as duas dimensões.';
+      } else {
+        document.getElementById('s-a-min').textContent = fmt((AGE_MIN - AGE_MEAN) / AGE_STD);
+        document.getElementById('s-a-max').textContent = fmt((AGE_MAX - AGE_MEAN) / AGE_STD);
+        document.getElementById('s-a-mean').textContent = '0,00';
+        document.getElementById('s-a-std').textContent = '1,00';
+        document.getElementById('s-s-min').textContent = fmt((SAL_MIN - SAL_MEAN) / SAL_STD);
+        document.getElementById('s-s-max').textContent = fmt((SAL_MAX - SAL_MEAN) / SAL_STD);
+        document.getElementById('s-s-mean').textContent = '0,00';
+        document.getElementById('s-s-std').textContent = '1,00';
+        document.getElementById('note').innerHTML = '<strong>Após Standard (Z-score)</strong>: <span class="mono">média = 0</span>, <span class="mono">desvio = 1</span> para ambos. Os pontos ficam centrados na origem — a maioria dentro do intervalo [−2, 2].';
+      }
+    }
+
+    function setMode(mode) {
+      document.querySelectorAll('.toggle-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.mode === mode);
+      });
+      renderPlot(mode);
+      updateStats(mode);
+    }
+
+    setMode('raw');
+  </script>
+</body>
+</html>

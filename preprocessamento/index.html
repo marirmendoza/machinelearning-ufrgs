@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pré-processamento — Índice dos Slides</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f8f9fb; --bg2: #ffffff; --bg3: #f0f2f6;
+      --border: #c7d0e0; --border2: #d1d9e8;
+      --text: #0f1724; --text-muted: #3d4f6e; --text-dim: #6b7fa3;
+      --orange: #c2410c; --grad: linear-gradient(135deg, #c2410c, #854d0e);
+    }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 3rem 1.5rem;
+    }
+    .hero { text-align: center; margin-bottom: 3rem; max-width: 640px; }
+    .badge {
+      display: inline-block;
+      padding: 0.3rem 1rem;
+      border-radius: 999px;
+      background: rgba(194,65,12,0.08);
+      border: 1px solid rgba(194,65,12,0.25);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--orange);
+      margin-bottom: 1.2rem;
+    }
+    h1 {
+      font-size: 2.4rem;
+      font-weight: 800;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.75rem;
+    }
+    .prof-name {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      margin: 0.5rem 0 0.7rem 0;
+    }
+    .hero-sub {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      max-width: 560px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 1.2rem;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      text-decoration: none;
+      font-family: 'Fira Code', monospace;
+    }
+    .back-link:hover { color: var(--orange); }
+
+    .blocks { display: flex; flex-direction: column; gap: 2rem; max-width: 900px; width: 100%; }
+    .block-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--orange);
+      margin-bottom: 1rem;
+      padding-left: 0.5rem;
+      border-left: 3px solid var(--orange);
+    }
+    .slides-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1rem;
+    }
+    .slide-link {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 1.1rem 1.25rem;
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      text-decoration: none;
+      color: var(--text);
+      transition: all 0.2s;
+      box-shadow: 0 1px 4px rgba(15,23,36,0.07);
+    }
+    .slide-link:hover {
+      border-color: var(--orange);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(194,65,12,0.12);
+    }
+    .sl-num { font-family: 'Fira Code', monospace; font-size: 0.7rem; color: var(--text-dim); }
+    .sl-icon { font-size: 1.5rem; }
+    .sl-title { font-size: 0.95rem; font-weight: 600; line-height: 1.3; color: var(--text); }
+    .sl-desc { font-size: 0.78rem; color: var(--text-muted); line-height: 1.45; }
+    .sl-tag {
+      align-self: flex-start;
+      padding: 0.15rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      background: rgba(194,65,12,0.08);
+      border: 1px solid rgba(194,65,12,0.2);
+      color: var(--orange);
+    }
+    footer {
+      margin-top: 3rem;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      text-align: center;
+      font-family: 'Fira Code', monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <a href="../index.html" class="back-link">← Todas as aulas</a>
+    <div class="badge">UFRGS · Aprendizado de Máquina</div>
+    <h1>Pré-processamento de Dados</h1>
+    <div class="prof-name">Profa. Mariana Recamonde-Mendoza</div>
+    <p class="hero-sub">Preparar dados é o passo que consome mais tempo em qualquer projeto de AM. Normalização, padronização e codificação de atributos categóricos — os cuidados que fazem seu algoritmo funcionar (ou não).</p>
+  </div>
+
+  <div class="blocks">
+
+    <div class="block-section">
+      <div class="block-title">Bloco 1 — Normalização e Padronização</div>
+      <div class="slides-grid">
+        <a href="b1-s01.html" class="slide-link">
+          <div class="sl-num">Slide 01</div>
+          <div class="sl-icon">⚖️</div>
+          <div class="sl-title">Por que Normalizar?</div>
+          <div class="sl-desc">Duas features na mesma tabela, escalas muito diferentes — veja como o atributo de maior escala domina o cálculo de distância sem normalização.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="b1-s02.html" class="slide-link">
+          <div class="sl-num">Slide 02</div>
+          <div class="sl-icon">📏</div>
+          <div class="sl-title">Min-Max vs. Standard Scaler</div>
+          <div class="sl-desc">Duas técnicas, duas fórmulas, duas geometrias. Aplique cada uma ao mesmo dataset e veja o resultado lado a lado.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="b1-s03.html" class="slide-link">
+          <div class="sl-num">Slide 03</div>
+          <div class="sl-icon">🎯</div>
+          <div class="sl-title">Quando (Não) Normalizar?</div>
+          <div class="sl-desc">KNN, regressão logística, redes neurais — precisam. Árvores de decisão, random forest — não precisam. Regra prática.</div>
+          <div class="sl-tag">referência</div>
+        </a>
+      </div>
+    </div>
+
+    <div class="block-section">
+      <div class="block-title">Bloco 2 — Codificação de Atributos Categóricos</div>
+      <div class="slides-grid">
+        <a href="b2-s01.html" class="slide-link">
+          <div class="sl-num">Slide 01</div>
+          <div class="sl-icon">🏷️</div>
+          <div class="sl-title">Nominal vs. Ordinal: escolha da codificação</div>
+          <div class="sl-desc">One-hot para categorias sem ordem, ordinal para categorias com ordem. Veja o erro clássico de introduzir ordem onde ela não existe.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="b2-s02.html" class="slide-link">
+          <div class="sl-num">Slide 02</div>
+          <div class="sl-icon">📊</div>
+          <div class="sl-title">Alta Cardinalidade: top-K + Outros</div>
+          <div class="sl-desc">Um atributo com centenas de categorias vira centenas de colunas. Explore a estratégia "top-K + outros" para lidar com isso.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    UFRGS · Aprendizado de Máquina · Profa. Mariana Recamonde-Mendoza
+  </footer>
+</body>
+</html>

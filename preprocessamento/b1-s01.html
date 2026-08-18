@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Por que Normalizar?</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .demo-table {
+      display: grid;
+      grid-template-columns: auto repeat(4, 1fr);
+      gap: 2px;
+      background: var(--border2);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.92rem;
+    }
+    .demo-table .cell {
+      background: var(--bg2);
+      padding: 0.55rem 0.7rem;
+      text-align: center;
+    }
+    .demo-table .cell.header {
+      background: var(--bg3);
+      font-weight: 700;
+      color: var(--text);
+      font-size: 0.82rem;
+    }
+    .demo-table .cell.rowlabel {
+      background: var(--bg3);
+      font-weight: 700;
+      color: var(--orange);
+    }
+    .demo-table .cell.hi { background: rgba(194,65,12,0.12); color: var(--orange); font-weight: 700; }
+
+    .dist-panel {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.2rem 1.4rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+    .dist-panel-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--orange);
+      border-bottom: 2px solid var(--orange-lt);
+      padding-bottom: 0.5rem;
+    }
+
+    .calc-line {
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 0.8rem 1rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.95rem;
+      line-height: 1.65;
+      color: var(--text-muted);
+    }
+    .calc-line .lbl {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 700;
+      display: block;
+      margin-bottom: 0.4rem;
+    }
+    .term { display: inline-block; padding: 0.08rem 0.4rem; border-radius: 4px; font-weight: 700; }
+    .term.age { background: rgba(29,78,216,0.15); color: var(--blue); }
+    .term.sal { background: rgba(194,65,12,0.15); color: var(--orange); }
+
+    .contrib-bar {
+      display: flex;
+      height: 26px;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: white;
+    }
+    .contrib-age { background: var(--blue); display: flex; align-items: center; justify-content: center; }
+    .contrib-sal { background: var(--orange); display: flex; align-items: center; justify-content: center; }
+
+    .verdict {
+      background: var(--red-lt);
+      border-left: 4px solid var(--red);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.9rem;
+      color: var(--text);
+      line-height: 1.55;
+    }
+    .verdict strong { color: var(--red); }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Pré-processamento de Dados</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 1 · Slide 01 / 03</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Por que Normalizar?</h1>
+        <p class="slide-subtitle">
+          Quando atributos numéricos têm <strong>escalas muito diferentes</strong>, o de maior escala domina todo o cálculo — como se dissesse ao modelo "só eu importo".
+        </p>
+      </div>
+
+      <div class="highlight-box orange" style="justify-content:center;">
+        <span class="icon">👥</span>
+        <p>
+          <strong>Cenário:</strong> temos duas pessoas descritas por <em>idade</em> e <em>salário</em>. Um algoritmo baseado em distância (KNN, k-means, regressão logística...) precisa medir o quão "próximas" elas são.
+        </p>
+      </div>
+
+      <div class="demo-table">
+        <div class="cell header"></div>
+        <div class="cell header">Estudante</div>
+        <div class="cell header">Mulher</div>
+        <div class="cell header">Idade</div>
+        <div class="cell header">Salário (R$)</div>
+        <div class="cell rowlabel">x<sub>i</sub></div>
+        <div class="cell">1</div>
+        <div class="cell">1</div>
+        <div class="cell hi">19</div>
+        <div class="cell hi">800</div>
+        <div class="cell rowlabel">x<sub>j</sub></div>
+        <div class="cell">0</div>
+        <div class="cell">1</div>
+        <div class="cell hi">24</div>
+        <div class="cell hi">5.700</div>
+      </div>
+
+      <div class="content-split">
+
+        <div class="dist-panel">
+          <div class="dist-panel-title">🚫 Sem normalização — distância bruta</div>
+          <div class="calc-line">
+            <span class="lbl">Cálculo (Manhattan)</span>
+            d(x<sub>i</sub>, x<sub>j</sub>) = <span class="term age">|19−24| = 5</span> + <span class="term sal">|800−5700| = 4.900</span>
+            <br>
+            <strong style="color:var(--text);">= 4.905</strong>
+            <div class="contrib-bar">
+              <div class="contrib-age" style="width: 0.1%;"></div>
+              <div class="contrib-sal" style="width: 99.9%;">99,9% salário</div>
+            </div>
+          </div>
+          <div class="verdict">
+            <strong>Consequência:</strong> a idade contribui com <em>apenas 0,1%</em> da distância — para o algoritmo, é como se ela nem existisse. A "similaridade" vira apenas "quem ganha parecido".
+          </div>
+        </div>
+
+        <div class="dist-panel" style="border-color: #86efac;">
+          <div class="dist-panel-title" style="color: var(--green); border-color: var(--green-lt);">✓ Com normalização — escala unificada</div>
+          <div class="calc-line">
+            <span class="lbl">Após min-max (assumindo idade [18-60], salário [500-10000])</span>
+            d(x<sub>i</sub>, x<sub>j</sub>) = <span class="term age">|0,024−0,143| = 0,119</span> + <span class="term sal">|0,032−0,547| = 0,516</span>
+            <br>
+            <strong style="color:var(--text);">≈ 0,635</strong>
+            <div class="contrib-bar">
+              <div class="contrib-age" style="width: 18.7%;">19% idade</div>
+              <div class="contrib-sal" style="width: 81.3%;">81% salário</div>
+            </div>
+          </div>
+          <div class="verdict" style="background: var(--green-lt); border-left-color: var(--green);">
+            <strong style="color: var(--green);">Consequência:</strong> ambos os atributos contribuem <em>proporcionalmente ao que representam</em>. Agora "similaridade" considera <strong>as duas dimensões</strong>.
+          </div>
+        </div>
+
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">⚖️</span>
+        <div class="i-text">
+          <strong>Regra prática</strong>: se seu algoritmo usa distância (KNN, k-means), gradiente (regressão logística, redes neurais) ou pesos multiplicativos, os atributos <em>precisam</em> estar em escalas comparáveis. <strong>Árvores de decisão são exceção</strong> — elas fazem cortes por atributo independente, sem misturar escalas. Vamos ver os dois métodos mais comuns nos próximos slides.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav disabled" href="#">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b1-s02.html">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+</body>
+</html>

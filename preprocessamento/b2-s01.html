@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nominal vs. Ordinal: escolha da codificação</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .types-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .type-card {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 0.95rem 1.15rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .type-card.nom { border-color: #fdba74; }
+    .type-card.ord { border-color: #93c5fd; }
+
+    .type-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .type-icon { font-size: 1.5rem; }
+    .type-name {
+      font-size: 1.05rem;
+      font-weight: 800;
+    }
+    .nom .type-name { color: var(--orange); }
+    .ord .type-name { color: var(--blue); }
+
+    .type-def { font-size: 0.87rem; color: var(--text-muted); line-height: 1.5; }
+    .type-examples {
+      background: var(--bg3);
+      border-radius: 6px;
+      padding: 0.5rem 0.7rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+      color: var(--text);
+    }
+    .type-encoding {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 0.5rem 0.85rem;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .nom .type-encoding { background: var(--orange-lt); color: var(--orange); }
+    .ord .type-encoding { background: var(--blue-lt); color: var(--blue); }
+
+    .toggle-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .toggle-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .toggle-group {
+      display: inline-flex;
+      background: var(--bg3);
+      border: 1.5px solid var(--border);
+      border-radius: 999px;
+      padding: 3px;
+    }
+    .toggle-btn {
+      background: transparent;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 999px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
+    .toggle-btn.active[data-mode="wrong"] { background: var(--red); color: white; }
+    .toggle-btn.active[data-mode="right"] { background: var(--green); color: white; }
+
+    .table-panel {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.25rem;
+      box-shadow: var(--shadow);
+    }
+    .encoded-table {
+      display: grid;
+      gap: 2px;
+      background: var(--border2);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      margin: 0.7rem 0;
+    }
+    .encoded-table .cell {
+      background: var(--bg2);
+      padding: 0.4rem 0.55rem;
+      text-align: center;
+    }
+    .encoded-table .cell.header {
+      background: var(--bg3);
+      font-weight: 700;
+      color: var(--text-dim);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .encoded-table .cell.header.nom  { color: var(--orange); }
+    .encoded-table .cell.header.ord  { color: var(--blue); }
+    .encoded-table .cell.wrong { background: rgba(185,28,28,0.10); color: var(--red); font-weight: 700; }
+    .encoded-table .cell.right { background: rgba(22,101,52,0.10); color: var(--green); font-weight: 700; }
+
+    .verdict {
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.9rem;
+      color: var(--text);
+      line-height: 1.55;
+      display: flex;
+      gap: 0.65rem;
+      align-items: flex-start;
+    }
+    .verdict.bad { background: var(--red-lt); border-left: 4px solid var(--red); }
+    .verdict.good { background: var(--green-lt); border-left: 4px solid var(--green); }
+    .verdict .v-icon { font-size: 1.2rem; flex-shrink: 0; }
+    .verdict strong { color: var(--text); }
+
+    /* Motivation panel */
+    .motivation-panel {
+      background: linear-gradient(135deg, var(--orange-lt), var(--yellow-lt));
+      border: 1.5px solid #fdba74;
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+    .mp-what {
+      display: flex;
+      gap: 0.65rem;
+      align-items: flex-start;
+      font-size: 0.97rem;
+      line-height: 1.55;
+      color: var(--text);
+    }
+    .mp-what .mp-icon { font-size: 1.5rem; flex-shrink: 0; }
+    .mp-what strong { color: var(--orange); }
+    .mp-reasons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.7rem;
+    }
+    .mp-reason {
+      background: rgba(255,255,255,0.55);
+      border-radius: 8px;
+      padding: 0.6rem 0.8rem;
+      display: flex;
+      gap: 0.55rem;
+      align-items: flex-start;
+      font-size: 0.84rem;
+      line-height: 1.5;
+      color: var(--text-muted);
+    }
+    .mp-reason .reason-icon { font-size: 1.15rem; flex-shrink: 0; }
+    .mp-reason strong { color: var(--text); }
+    .mp-reason .mono {
+      background: rgba(0,0,0,0.05);
+      padding: 0.05rem 0.3rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+    @media (max-width: 900px) {
+      .mp-reasons { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Pré-processamento de Dados</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 2 · Slide 01 / 02</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Nominal vs. Ordinal: escolha da codificação</h1>
+        <p class="slide-subtitle">
+          Categorias precisam virar números — mas <strong>a estratégia certa depende do tipo</strong>.
+        </p>
+      </div>
+
+      <div class="motivation-panel">
+        <div class="mp-what">
+          <span class="mp-icon">📖</span>
+          <div>
+            <strong>Codificar</strong> = converter valores categóricos (strings, símbolos) em valores numéricos, para que algoritmos e bibliotecas de AM possam processá-los.
+          </div>
+        </div>
+        <div class="mp-reasons">
+          <div class="mp-reason">
+            <span class="reason-icon">🧮</span>
+            <div>
+              <strong>Matemática dos algoritmos.</strong> KNN calcula distâncias, regressão logística faz produtos internos, redes neurais fazem multiplicações matriciais. Nenhuma dessas operações faz sentido com strings — <em>"Vermelho − Azul"</em> é indefinido; <em>"1 − 0"</em> não.
+            </div>
+          </div>
+          <div class="mp-reason">
+            <span class="reason-icon">📦</span>
+            <div>
+              <strong>Restrição das bibliotecas.</strong> Pacotes como <span class="mono">scikit-learn</span> não aceitam strings nas features de entrada — passar categorias sem codificar gera <span class="mono">ValueError</span>. Toda a etapa de pré-processamento tem que produzir uma matriz numérica.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="types-row">
+        <div class="type-card nom">
+          <div class="type-header">
+            <span class="type-icon">🎨</span>
+            <span class="type-name">Nominal</span>
+          </div>
+          <p class="type-def">Categorias <em>sem ordem natural</em>. Só se pode dizer "igual" ou "diferente" — não faz sentido dizer que uma é "maior" que outra.</p>
+          <div class="type-examples">Exemplos: cor {🔴, 🟢, 🔵}, sexo {M, F}, país {BR, AR, UY}</div>
+          <div class="type-encoding">✓ Use One-hot encoding</div>
+        </div>
+        <div class="type-card ord">
+          <div class="type-header">
+            <span class="type-icon">📏</span>
+            <span class="type-name">Ordinal</span>
+          </div>
+          <p class="type-def">Categorias <em>com ordem natural</em>. Pode-se ranquear, mesmo que a "distância" entre categorias seja indefinida.</p>
+          <div class="type-examples">Exemplos: tamanho {P, M, G}, escolaridade {fund, méd, sup}, satisfação {1..5}</div>
+          <div class="type-encoding">✓ Use Ordinal encoding</div>
+        </div>
+      </div>
+
+      <div class="toggle-row">
+        <span class="toggle-label">Ver codificação:</span>
+        <div class="toggle-group">
+          <button class="toggle-btn active" data-mode="wrong" onclick="setMode('wrong')">❌ Errada (tudo ordinal)</button>
+          <button class="toggle-btn" data-mode="right" onclick="setMode('right')">✅ Correta (one-hot p/ Cor)</button>
+        </div>
+      </div>
+
+      <div class="table-panel" id="table-panel">
+        <!-- populated by JS -->
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">⚠️</span>
+        <div class="i-text">
+          Aplicar <strong>Ordinal encoding em atributo nominal</strong> introduz uma <em>relação de ordem que não existe</em>. Para o algoritmo, <span class="mono">Vermelho=0, Verde=1, Azul=2</span> significa que "Azul está mais longe de Vermelho do que Verde está de Vermelho" — o que é matematicamente absurdo. Já <strong>Ordinal encoding em atributo ordinal</strong> é <em>correto</em> — a ordem é real e informativa.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b1-s03.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b2-s02.html">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+
+  <script>
+    // Dataset baseado no exemplo da aula
+    const rows = [
+      { tamanho: 'M', cor: 'Azul' },
+      { tamanho: 'P', cor: 'Verde' },
+      { tamanho: 'M', cor: 'Vermelho' },
+      { tamanho: 'G', cor: 'Vermelho' },
+      { tamanho: 'P', cor: 'Azul' },
+    ];
+    const tamMap = { 'P': 0, 'M': 1, 'G': 2 };
+    const corMap = { 'Vermelho': 0, 'Verde': 1, 'Azul': 2 }; // ordem "errada" imposta
+
+    function renderWrong() {
+      const html = `
+        <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:0.4rem; gap:0.6rem; flex-wrap:wrap;">
+          <span style="font-family:'Fira Code',monospace; font-size:0.75rem; color:var(--red); font-weight:700; text-transform:uppercase; letter-spacing:0.06em;">🔴 OrdinalEncoder aplicado a tudo (Errado para Cor)</span>
+          <span style="font-family:'Fira Code',monospace; font-size:0.75rem; color:var(--text-dim);">2 colunas resultantes</span>
+        </div>
+        <div class="encoded-table" style="grid-template-columns: repeat(4, 1fr);">
+          <div class="cell header">Original: Tamanho</div>
+          <div class="cell header">Original: Cor</div>
+          <div class="cell header ord">Tamanho (codif.)</div>
+          <div class="cell header nom">Cor (codif.)</div>
+          ${rows.map(r => `
+            <div class="cell">${r.tamanho}</div>
+            <div class="cell">${r.cor}</div>
+            <div class="cell right">${tamMap[r.tamanho]}</div>
+            <div class="cell wrong">${corMap[r.cor]}</div>
+          `).join('')}
+        </div>
+        <div class="verdict bad">
+          <span class="v-icon">🚨</span>
+          <div>
+            <strong>O que dá errado:</strong> ao codificar <strong>Cor</strong> como {Vermelho=0, Verde=1, Azul=2}, o modelo passa a "acreditar" que <em>Verde está no meio entre Vermelho e Azul</em>, e que <em>Azul está 2× mais distante de Vermelho do que Verde está</em>. Uma ordenação inventada — e o modelo vai usá-la em cálculos de distância, gradiente e pesos.
+          </div>
+        </div>
+      `;
+      document.getElementById('table-panel').innerHTML = html;
+    }
+
+    function renderRight() {
+      const html = `
+        <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:0.4rem; gap:0.6rem; flex-wrap:wrap;">
+          <span style="font-family:'Fira Code',monospace; font-size:0.75rem; color:var(--green); font-weight:700; text-transform:uppercase; letter-spacing:0.06em;">✅ OrdinalEncoder para Tamanho + OneHotEncoder para Cor</span>
+          <span style="font-family:'Fira Code',monospace; font-size:0.75rem; color:var(--text-dim);">5 colunas resultantes</span>
+        </div>
+        <div class="encoded-table" style="grid-template-columns: repeat(6, 1fr);">
+          <div class="cell header">Tamanho</div>
+          <div class="cell header">Cor</div>
+          <div class="cell header ord">Tamanho</div>
+          <div class="cell header nom">Azul</div>
+          <div class="cell header nom">Verde</div>
+          <div class="cell header nom">Vermelho</div>
+          ${rows.map(r => `
+            <div class="cell">${r.tamanho}</div>
+            <div class="cell">${r.cor}</div>
+            <div class="cell right">${tamMap[r.tamanho]}</div>
+            <div class="cell right">${r.cor === 'Azul' ? 1 : 0}</div>
+            <div class="cell right">${r.cor === 'Verde' ? 1 : 0}</div>
+            <div class="cell right">${r.cor === 'Vermelho' ? 1 : 0}</div>
+          `).join('')}
+        </div>
+        <div class="verdict good">
+          <span class="v-icon">✓</span>
+          <div>
+            <strong>Correto:</strong> Cor vira 3 colunas binárias — nenhuma cor é "maior" ou "menor" que outra, todas são igualmente distantes. Já Tamanho preserva a ordem P → M → G, que <em>é</em> informativa. Nas próximas seções você pode ver que uma variável nominal com muitas categorias vira <em>muitas</em> colunas — o próximo slide fala disso.
+          </div>
+        </div>
+      `;
+      document.getElementById('table-panel').innerHTML = html;
+    }
+
+    function setMode(mode) {
+      document.querySelectorAll('.toggle-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.mode === mode);
+      });
+      if (mode === 'wrong') renderWrong();
+      else renderRight();
+    }
+
+    setMode('wrong');
+  </script>
+</body>
+</html>

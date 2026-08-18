@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quando (Não) Normalizar?</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .cards-split { display: grid; grid-template-columns: 1fr 1fr; gap: 1.3rem; }
+    .algo-card {
+      background: var(--bg2);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.2rem 1.3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      box-shadow: var(--shadow);
+    }
+    .algo-card.need { border-color: #fdba74; }
+    .algo-card.no-need { border-color: #86efac; }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+    }
+    .card-icon-big { font-size: 1.9rem; }
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+    .need .card-title { color: var(--orange); }
+    .no-need .card-title { color: var(--green); }
+
+    .why {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 0.65rem 0.85rem;
+    }
+    .why strong { color: var(--text); }
+
+    .algo-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+    .algo-item {
+      background: white;
+      border: 1.5px solid var(--border2);
+      border-radius: 8px;
+      padding: 0.55rem 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.87rem;
+    }
+    .algo-item .icon { font-size: 1.1rem; }
+    .algo-item .name { color: var(--text); font-weight: 700; flex: 1; }
+    .algo-item .note {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+    }
+
+    .rule-of-thumb {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.2rem;
+      display: flex;
+      gap: 0.8rem;
+      align-items: flex-start;
+    }
+    .rule-of-thumb .rot-icon { font-size: 1.6rem; flex-shrink: 0; }
+    .rule-of-thumb strong { color: var(--orange); }
+    .rule-of-thumb .rot-text { font-size: 0.97rem; line-height: 1.55; color: var(--text); }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Pré-processamento de Dados</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 1 · Slide 03 / 03</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Quando (Não) Normalizar?</h1>
+        <p class="slide-subtitle">
+          Regra prática: se o algoritmo <strong>usa distância, gradiente ou soma ponderada</strong>, normalize. Se ele faz cortes por atributo independente, não precisa.
+        </p>
+      </div>
+
+      <div class="cards-split">
+
+        <div class="algo-card need">
+          <div class="card-header">
+            <span class="card-icon-big">🔺</span>
+            <span class="card-title">Sim, normalize</span>
+          </div>
+          <div class="why">
+            <strong>Por quê:</strong> esses algoritmos <em>combinam</em> os atributos matematicamente — em distâncias, produtos internos ou pesos. Se as escalas forem muito diferentes, o atributo de maior magnitude vai dominar.
+          </div>
+          <div class="algo-list">
+            <div class="algo-item"><span class="icon">📍</span><span class="name">KNN</span><span class="note">distância</span></div>
+            <div class="algo-item"><span class="icon">🎯</span><span class="name">k-means</span><span class="note">distância</span></div>
+            <div class="algo-item"><span class="icon">📈</span><span class="name">Regressão Logística / Linear</span><span class="note">gradiente</span></div>
+            <div class="algo-item"><span class="icon">🔲</span><span class="name">SVM (RBF, polinomial)</span><span class="note">kernel</span></div>
+            <div class="algo-item"><span class="icon">🕸️</span><span class="name">Redes Neurais</span><span class="note">pesos</span></div>
+            <div class="algo-item"><span class="icon">🔬</span><span class="name">PCA</span><span class="note">variância</span></div>
+          </div>
+        </div>
+
+        <div class="algo-card no-need">
+          <div class="card-header">
+            <span class="card-icon-big">✅</span>
+            <span class="card-title">Não precisa</span>
+          </div>
+          <div class="why">
+            <strong>Por quê:</strong> esses algoritmos fazem <em>cortes</em> em cada atributo <strong>independentemente</strong> ("se peso &gt; 5, então..."). A escala de um atributo não afeta o corte no outro.
+          </div>
+          <div class="algo-list">
+            <div class="algo-item"><span class="icon">🌳</span><span class="name">Árvore de Decisão</span><span class="note">cortes</span></div>
+            <div class="algo-item"><span class="icon">🌲</span><span class="name">Random Forest</span><span class="note">ensemble de árvores</span></div>
+            <div class="algo-item"><span class="icon">⚡</span><span class="name">XGBoost / LightGBM</span><span class="note">gradient boosting</span></div>
+            <div class="algo-item"><span class="icon">🎲</span><span class="name">Naïve Bayes (versões básicas)</span><span class="note">probabilidades</span></div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="rule-of-thumb">
+        <span class="rot-icon">🧭</span>
+        <div class="rot-text">
+          <strong>Regra prática se estiver em dúvida:</strong> normalize. Para os algoritmos da coluna direita, normalizar é <em>inofensivo</em> (não muda os resultados). Para os da coluna esquerda, é <em>essencial</em>. Custo baixo, benefício garantido em metade dos casos e neutro na outra metade.
+        </div>
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">💡</span>
+        <div class="i-text">
+          Em modelos <strong>ensemble mistos</strong> (ex.: stacking com regressão + árvore), normalize os dados apenas para os componentes que precisam. Alguns pipelines do scikit-learn (<span class="mono">ColumnTransformer</span>, <span class="mono">Pipeline</span>) facilitam isso — aplicando o scaler somente às features numéricas e apenas para o componente que precisa.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b1-s02.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <a class="btn-nav" href="b2-s01.html">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+</body>
+</html>
