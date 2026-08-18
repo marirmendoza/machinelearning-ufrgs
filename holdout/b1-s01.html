@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Por que Avaliar em Dados Novos?</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .cards-split { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+    .side-card {
+      background: var(--bg2);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.15rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+    .side-card.bad  { border-color: #fca5a5; }
+    .side-card.good { border-color: #86efac; }
+
+    .side-badge {
+      align-self: flex-start;
+      padding: 0.28rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .bad  .side-badge { background: var(--red-lt); color: var(--red); border: 1px solid #fca5a5; }
+    .good .side-badge { background: var(--green-lt); color: var(--green); border: 1px solid #86efac; }
+
+    .side-headline {
+      font-size: 1.05rem;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+    .bad  .side-headline { color: var(--red); }
+    .good .side-headline { color: var(--green); }
+
+    .side-caption { font-size: 0.87rem; color: var(--text-muted); line-height: 1.5; }
+
+    .plot-wrap { background: var(--bg3); border-radius: 8px; padding: 0.4rem; }
+    .plot-svg { width: 100%; height: auto; display: block; }
+    .axis-line { stroke: var(--text-dim); stroke-width: 1; }
+    .grid-line { stroke: var(--border2); stroke-width: 0.5; }
+    .axis-label { font-family: 'Fira Code', monospace; font-size: 9px; fill: var(--text-dim); }
+    .axis-title { font-family: 'Fira Code', monospace; font-size: 10px; fill: var(--text-muted); font-weight: 600; }
+
+    .pt { stroke: white; stroke-width: 1.5; }
+    .pt.aprov { fill: #0e7490; }
+    .pt.repr  { fill: #b91c1c; }
+    .pt.test { stroke-width: 2.5; stroke-dasharray: 3 2; stroke: var(--pink); }
+    .pt.error { stroke: #fbbf24; stroke-width: 3; }
+
+    .accuracy-badge {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 0.65rem 0.9rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+    }
+    .accuracy-badge .lbl {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 700;
+    }
+    .accuracy-badge .val {
+      font-weight: 800;
+      font-size: 1.2rem;
+    }
+    .bad  .accuracy-badge .val { color: var(--red); }
+    .good .accuracy-badge .val { color: var(--green); }
+
+    .verdict {
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 0.7rem 0.9rem;
+      font-size: 0.86rem;
+      color: var(--text);
+      line-height: 1.55;
+    }
+    .bad .verdict { background: var(--red-lt); border-left: 3px solid var(--red); }
+    .good .verdict { background: var(--green-lt); border-left: 3px solid var(--green); }
+    .verdict strong { color: var(--text); }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Avaliação de Modelos: Holdout</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 1 · Slide 01 / 02</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Por que Avaliar em Dados Novos?</h1>
+        <p class="slide-subtitle">
+          Um modelo pode acertar <strong>100% no treino</strong> e falhar completamente em dados novos. Avaliar é <em>testar em dados que o modelo nunca viu</em>.
+        </p>
+      </div>
+
+      <div class="highlight-box orange" style="justify-content:center;">
+        <span class="icon">📚</span>
+        <p>
+          <strong>Cenário:</strong> temos 12 alunos rotulados (aprovado/reprovado). Vamos treinar um KNN <span class="mono">k=1</span> — o mais "memorizador" possível. Compare duas formas de avaliar o modelo.
+        </p>
+      </div>
+
+      <div class="cards-split">
+
+        <div class="side-card bad">
+          <span class="side-badge">❌ Avaliar no próprio treino</span>
+          <div class="side-headline">Testar nos mesmos 12 alunos do treino</div>
+          <div class="side-caption">Usamos <em>os mesmos dados</em> para treinar e avaliar. Para o KNN k=1, o vizinho mais próximo de cada aluno... é ele mesmo.</div>
+
+          <div class="plot-wrap">
+            <svg class="plot-svg" viewBox="0 0 340 260" xmlns="http://www.w3.org/2000/svg" id="svg-bad">
+              <g id="grid-bad"></g>
+              <line class="axis-line" x1="42" y1="225" x2="325" y2="225"/>
+              <line class="axis-line" x1="42" y1="12" x2="42" y2="225"/>
+              <text class="axis-title" x="150" y="248">horas de estudo</text>
+              <g id="points-bad"></g>
+            </svg>
+          </div>
+
+          <div class="accuracy-badge">
+            <span class="lbl">Acurácia "medida"</span>
+            <span class="val">100%</span>
+            <span style="font-family:'Fira Code',monospace; color:var(--text-muted);">= 12 / 12</span>
+          </div>
+
+          <div class="verdict">
+            <strong>Enganoso.</strong> A acurácia de 100% não diz <em>nada</em> sobre generalização — só confirma que o modelo memorizou o treino. Um algoritmo "burro" que retorne o rótulo de cada instância vista também teria 100%.
+          </div>
+        </div>
+
+        <div class="side-card good">
+          <span class="side-badge">✅ Avaliar em dados novos</span>
+          <div class="side-headline">Testar em 5 alunos que o modelo NÃO viu</div>
+          <div class="side-caption">Reservamos 5 alunos <em>antes</em> do treino. O modelo treina só nos 12 restantes, e prevemos para os 5 novos.</div>
+
+          <div class="plot-wrap">
+            <svg class="plot-svg" viewBox="0 0 340 260" xmlns="http://www.w3.org/2000/svg" id="svg-good">
+              <g id="grid-good"></g>
+              <line class="axis-line" x1="42" y1="225" x2="325" y2="225"/>
+              <line class="axis-line" x1="42" y1="12" x2="42" y2="225"/>
+              <text class="axis-title" x="150" y="248">horas de estudo</text>
+              <g id="points-good"></g>
+            </svg>
+          </div>
+
+          <div class="accuracy-badge">
+            <span class="lbl">Acurácia (dados novos)</span>
+            <span class="val">80%</span>
+            <span style="font-family:'Fira Code',monospace; color:var(--text-muted);">= 4 / 5</span>
+          </div>
+
+          <div class="verdict">
+            <strong>Estimativa honesta.</strong> Reflete o que o modelo vai fazer em produção — em dados que ele nunca viu. Um erro (aluno borderline) é esperado; o modelo generaliza razoavelmente bem.
+          </div>
+        </div>
+
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">🎯</span>
+        <div class="i-text">
+          Este é o <strong>ponto de partida</strong> de toda avaliação em AM: acurácia de treino é (quase) irrelevante — o que importa é a <strong>capacidade de generalização</strong>, medida em dados novos. Nos próximos slides veremos como fazer isso de forma sistemática (<em>holdout</em>) e como o mesmo princípio explica <em>overfitting</em> e <em>underfitting</em>.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav disabled" href="#">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b1-s02.html">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+
+  <script>
+    // Mesmo dataset do KNN b4-s01 (continuidade)
+    const trainAprov = [
+      {x:7,  y:8},  {x:8, y:9},  {x:10, y:10}, {x:12, y:8},
+      {x:9,  y:10}, {x:13, y:6}
+    ];
+    const trainRepr = [
+      {x:3, y:2},   {x:4, y:3},   {x:5, y:4},   {x:5, y:2},
+      {x:4, y:4},   {x:10, y:8.5}
+    ];
+    const testSet = [
+      {x:10,  y:9,   label:'aprov'},
+      {x:7,   y:6,   label:'aprov'},
+      {x:11,  y:8,   label:'aprov'},
+      {x:4,   y:3.5, label:'repr'},
+      {x:5,   y:3,   label:'repr'},
+    ];
+
+    const XMIN=0, XMAX=15, YMIN=1, YMAX=11;
+    const PX_L=42, PX_R=325, PY_T=12, PY_B=225;
+    const sx = x => PX_L + (x - XMIN) / (XMAX - XMIN) * (PX_R - PX_L);
+    const sy = y => PY_B - (y - YMIN) / (YMAX - YMIN) * (PY_B - PY_T);
+
+    function drawGrid(gid) {
+      const g = document.getElementById(gid);
+      for (let x = 3; x <= 15; x += 3) {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('class', 'grid-line');
+        line.setAttribute('x1', sx(x)); line.setAttribute('x2', sx(x));
+        line.setAttribute('y1', PY_T); line.setAttribute('y2', PY_B);
+        g.appendChild(line);
+      }
+      for (let y = 2; y <= 10; y += 2) {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('class', 'grid-line');
+        line.setAttribute('x1', PX_L); line.setAttribute('x2', PX_R);
+        line.setAttribute('y1', sy(y)); line.setAttribute('y2', sy(y));
+        g.appendChild(line);
+      }
+    }
+    drawGrid('grid-bad');
+    drawGrid('grid-good');
+
+    // LEFT: só pontos de treino (usados como treino E teste — resultado 100%)
+    const gBad = document.getElementById('points-bad');
+    [...trainAprov, ...trainRepr].forEach(p => {
+      const isAprov = trainAprov.includes(p);
+      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      c.setAttribute('class', 'pt ' + (isAprov ? 'aprov' : 'repr'));
+      c.setAttribute('cx', sx(p.x)); c.setAttribute('cy', sy(p.y)); c.setAttribute('r', 6);
+      gBad.appendChild(c);
+    });
+
+    // RIGHT: treino + teste (com marca)
+    const gGood = document.getElementById('points-good');
+    trainAprov.forEach(p => {
+      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      c.setAttribute('class', 'pt aprov');
+      c.setAttribute('cx', sx(p.x)); c.setAttribute('cy', sy(p.y)); c.setAttribute('r', 6);
+      gGood.appendChild(c);
+    });
+    trainRepr.forEach(p => {
+      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      c.setAttribute('class', 'pt repr');
+      c.setAttribute('cx', sx(p.x)); c.setAttribute('cy', sy(p.y)); c.setAttribute('r', 6);
+      gGood.appendChild(c);
+    });
+    // Test points (dashed border + optional error marker for the borderline one)
+    testSet.forEach((t, i) => {
+      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      let cls = 'pt test ' + t.label;
+      // point index 1 = (7, 6) borderline aprovado — o k=1 erra (outlier próximo)
+      if (i === 0) cls += ' error';  // (10, 9) — k=1 wrong via outlier
+      c.setAttribute('class', cls);
+      c.setAttribute('cx', sx(t.x)); c.setAttribute('cy', sy(t.y)); c.setAttribute('r', 7);
+      gGood.appendChild(c);
+    });
+  </script>
+</body>
+</html>

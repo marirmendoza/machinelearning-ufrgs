@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Train / Validation / Test</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .cards-split { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+    .side-card {
+      background: var(--bg2);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.05rem 1.15rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+    .side-card.bad  { border-color: #fca5a5; }
+    .side-card.good { border-color: #86efac; }
+
+    .side-badge {
+      align-self: flex-start;
+      padding: 0.28rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .bad  .side-badge { background: var(--red-lt); color: var(--red); border: 1px solid #fca5a5; }
+    .good .side-badge { background: var(--green-lt); color: var(--green); border: 1px solid #86efac; }
+
+    .side-headline {
+      font-size: 1.05rem;
+      font-weight: 800;
+      line-height: 1.25;
+    }
+    .bad  .side-headline { color: var(--red); }
+    .good .side-headline { color: var(--green); }
+
+    /* Split bar visual */
+    .split-bar {
+      display: flex;
+      height: 32px;
+      border-radius: 8px;
+      overflow: hidden;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: white;
+    }
+    .split-bar .train { background: var(--purple); flex: 7; display: flex; align-items: center; justify-content: center; }
+    .split-bar .val   { background: var(--blue);   flex: 2; display: flex; align-items: center; justify-content: center; }
+    .split-bar .test  { background: var(--pink);   flex: 2; display: flex; align-items: center; justify-content: center; }
+    .split-bar.two .train { flex: 7; }
+    .split-bar.two .test  { flex: 3; }
+
+    /* Tables */
+    .model-table {
+      display: grid;
+      gap: 2px;
+      background: var(--border2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+    }
+    .model-table .cell {
+      background: var(--bg2);
+      padding: 0.4rem 0.5rem;
+      text-align: center;
+    }
+    .model-table .cell.header {
+      background: var(--bg3);
+      font-weight: 700;
+      color: var(--text-dim);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .model-table .cell.best-val { background: rgba(29,78,216,0.15); color: var(--blue); font-weight: 700; }
+    .model-table .cell.best-test { background: rgba(157,23,77,0.15); color: var(--pink); font-weight: 700; }
+    .model-table .cell.chosen-test { background: rgba(22,101,52,0.15); color: var(--green); font-weight: 700; }
+
+    .flow-arrow {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 0.6rem 0.85rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+    }
+    .flow-arrow .icon { font-size: 1.15rem; }
+    .flow-arrow .text { color: var(--text); flex: 1; }
+    .flow-arrow strong.big { font-size: 1.1rem; }
+    .bad  .flow-arrow strong.big { color: var(--red); }
+    .good .flow-arrow strong.big { color: var(--green); }
+
+    .verdict {
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 0.65rem 0.85rem;
+      font-size: 0.85rem;
+      line-height: 1.55;
+      color: var(--text);
+    }
+    .bad .verdict { background: var(--red-lt); border-left: 3px solid var(--red); }
+    .good .verdict { background: var(--green-lt); border-left: 3px solid var(--green); }
+    .verdict strong { color: var(--text); }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Avaliação de Modelos: Holdout</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 3 · Slide 01 / 01</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Train / Validation / Test</h1>
+        <p class="slide-subtitle">
+          Se você usa o <strong>teste</strong> para escolher o melhor modelo, ele deixa de ser teste. Introdução ao holdout de <strong>3 vias</strong>.
+        </p>
+      </div>
+
+      <div class="highlight-box orange" style="justify-content:center;">
+        <span class="icon">🎯</span>
+        <p>
+          <strong>Cenário:</strong> comparamos KNN com <span class="mono">k</span> = 1, 3, 5, 7, 9. Queremos escolher o melhor <span class="mono">k</span> <em>e</em> reportar uma estimativa honesta do desempenho final. Compare as duas metodologias.
+        </p>
+      </div>
+
+      <div class="cards-split">
+
+        <div class="side-card bad">
+          <span class="side-badge">❌ Errado — 2 vias (uso o teste para escolher)</span>
+          <div class="side-headline">Escolho o k pelo melhor desempenho em teste, reporto esse desempenho</div>
+
+          <div class="split-bar two">
+            <div class="train">TREINO 70%</div>
+            <div class="test">TESTE 30%</div>
+          </div>
+
+          <div class="model-table" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="cell header">Modelo</div>
+            <div class="cell header">Treino</div>
+            <div class="cell header">Teste</div>
+            <div class="cell">k=1</div>  <div class="cell">100%</div> <div class="cell">74%</div>
+            <div class="cell">k=3</div>  <div class="cell">95%</div>  <div class="cell">80%</div>
+            <div class="cell">k=5</div>  <div class="cell">92%</div>  <div class="cell">82%</div>
+            <div class="cell">k=7</div>  <div class="cell">90%</div>  <div class="cell best-test">87%</div>
+            <div class="cell">k=9</div>  <div class="cell">88%</div>  <div class="cell">83%</div>
+          </div>
+
+          <div class="flow-arrow">
+            <span class="icon">👉</span>
+            <span class="text">Escolho <strong>k=7</strong> por ter o melhor desempenho em teste (87%). Reporto: <strong class="big">87%</strong></span>
+          </div>
+
+          <div class="verdict">
+            <strong>Estimativa otimista (enviesada).</strong> Ao testar 5 modelos e escolher o melhor <em>naquele teste específico</em>, você está aproveitando sorte estatística — o próximo dataset novo provavelmente terá desempenho <em>menor</em> que 87%. O teste virou parte do <em>tuning</em>.
+          </div>
+        </div>
+
+        <div class="side-card good">
+          <span class="side-badge">✅ Correto — 3 vias (validação p/ escolher, teste p/ final)</span>
+          <div class="side-headline">Escolho o k pelo melhor desempenho em validação, reporto o desempenho em teste desse k</div>
+
+          <div class="split-bar">
+            <div class="train">TREINO 60%</div>
+            <div class="val">VALIDAÇÃO 20%</div>
+            <div class="test">TESTE 20%</div>
+          </div>
+
+          <div class="model-table" style="grid-template-columns: repeat(4, 1fr);">
+            <div class="cell header">Modelo</div>
+            <div class="cell header">Treino</div>
+            <div class="cell header">Validação</div>
+            <div class="cell header">Teste</div>
+            <div class="cell">k=1</div>  <div class="cell">100%</div> <div class="cell">76%</div> <div class="cell">74%</div>
+            <div class="cell">k=3</div>  <div class="cell">95%</div>  <div class="cell">82%</div> <div class="cell">80%</div>
+            <div class="cell">k=5</div>  <div class="cell">92%</div>  <div class="cell best-val">88%</div> <div class="cell chosen-test">82%</div>
+            <div class="cell">k=7</div>  <div class="cell">90%</div>  <div class="cell">87%</div> <div class="cell">87%</div>
+            <div class="cell">k=9</div>  <div class="cell">88%</div>  <div class="cell">84%</div> <div class="cell">83%</div>
+          </div>
+
+          <div class="flow-arrow">
+            <span class="icon">👉</span>
+            <span class="text">Escolho <strong>k=5</strong> pelo melhor desempenho em validação (88%). Reporto o desempenho em teste: <strong class="big">82%</strong></span>
+          </div>
+
+          <div class="verdict">
+            <strong>Estimativa honesta.</strong> O teste foi "tocado" <em>uma única vez</em>, apenas no final, para avaliar o modelo já escolhido. É uma boa aproximação do que o modelo fará em produção. Note que 82% é <em>menor</em> que o 87% enganoso — e é o que você deve reportar.
+          </div>
+        </div>
+
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">🔒</span>
+        <div class="i-text">
+          <strong>A regra sagrada:</strong> o conjunto de teste é <em>tocado uma única vez</em>, no fim. Toda decisão sobre modelo/hiperparâmetros deve ser feita com <strong>validação</strong>. Se você "der uma olhada" no teste durante o tuning — mesmo indiretamente — a estimativa fica <em>contaminada</em>. Em datasets pequenos, essa disciplina custa dados preciosos; a solução é <strong>k-fold cross-validation</strong>, que veremos em uma aula futura.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b2-s02.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+      </div>
+      <a class="btn-nav disabled" href="#">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+</body>
+</html>

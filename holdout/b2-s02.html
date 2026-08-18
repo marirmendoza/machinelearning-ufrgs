@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Variabilidade do Split</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.3rem; }
+
+    .plot-card, .history-card {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.15rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+    .plot-title, .history-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--pink);
+    }
+
+    .plot-wrap { background: var(--bg3); border-radius: 8px; padding: 0.5rem; }
+    .plot-svg { width: 100%; height: auto; display: block; }
+    .axis-line { stroke: var(--text-dim); stroke-width: 1; }
+    .grid-line { stroke: var(--border2); stroke-width: 0.5; }
+    .axis-label { font-family: 'Fira Code', monospace; font-size: 9px; fill: var(--text-dim); }
+    .pt { stroke: white; stroke-width: 1.5; transition: cx 0.3s, cy 0.3s, stroke 0.3s; }
+    .pt.a { fill: #0e7490; }
+    .pt.b { fill: #b91c1c; }
+    .pt.test { stroke: var(--pink); stroke-width: 2.5; stroke-dasharray: 3 2; }
+    .pt.wrong { stroke: #fbbf24; stroke-width: 3.5; stroke-dasharray: none; }
+
+    .plot-legend {
+      display: flex;
+      gap: 0.7rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+    }
+    .plot-legend .swatch {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 0.3rem;
+      vertical-align: baseline;
+    }
+    .plot-legend .swatch.train-a { background: #0e7490; }
+    .plot-legend .swatch.train-b { background: #b91c1c; }
+    .plot-legend .swatch.test    { background: white; border: 2px dashed var(--pink); }
+    .plot-legend .swatch.wrong   { background: white; border: 2.5px solid #fbbf24; }
+
+    .action-btn {
+      background: var(--pink);
+      color: white;
+      border: none;
+      padding: 0.65rem 1.2rem;
+      border-radius: 999px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .action-btn:hover { background: #7e1245; transform: translateY(-1px); }
+    .btn-reset {
+      background: var(--bg3);
+      color: var(--text-muted);
+      border: 1.5px solid var(--border2);
+      padding: 0.55rem 1rem;
+      border-radius: 999px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-reset:hover { background: var(--bg2); }
+
+    .actions-row { display: flex; gap: 0.5rem; align-items: center; }
+
+    .current-acc {
+      background: linear-gradient(135deg, var(--pink-lt), var(--purple-lt));
+      border: 1.5px solid #f9a8d4;
+      border-radius: 10px;
+      padding: 0.7rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .current-acc .lbl {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+    }
+    .current-acc .val {
+      font-family: 'Fira Code', monospace;
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--pink);
+    }
+
+    /* History bars */
+    .history-bars {
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 0.7rem 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-height: 120px;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+    .empty-msg {
+      color: var(--text-dim);
+      font-style: italic;
+      text-align: center;
+      padding: 1rem 0.5rem;
+      font-size: 0.85rem;
+    }
+    .h-row {
+      display: grid;
+      grid-template-columns: 50px 1fr 55px;
+      align-items: center;
+      gap: 0.5rem;
+      height: 18px;
+    }
+    .h-num {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      text-align: right;
+    }
+    .h-visual {
+      background: white;
+      border-radius: 3px;
+      overflow: hidden;
+      height: 12px;
+    }
+    .h-fill {
+      height: 100%;
+      background: var(--pink);
+      border-radius: 3px;
+    }
+    .h-value {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.75rem;
+      color: var(--text);
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+    }
+    .stat-tile {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 0.5rem 0.6rem;
+      text-align: center;
+    }
+    .stat-tile .lbl {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.62rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+    }
+    .stat-tile .val {
+      font-family: 'Fira Code', monospace;
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .stat-tile.spread .val { color: var(--orange); }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Avaliação de Modelos: Holdout</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 2 · Slide 02 / 02</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Variabilidade do Split</h1>
+        <p class="slide-subtitle">
+          O holdout depende de <strong>uma escolha aleatória</strong>. Refaça a divisão várias vezes e veja a acurácia oscilar.
+        </p>
+      </div>
+
+      <div class="main-grid">
+
+        <div class="plot-card">
+          <div style="display:flex; justify-content:space-between; align-items:baseline;">
+            <span class="plot-title">📊 Split atual (75/25, KNN k=5)</span>
+            <span style="font-family:'Fira Code',monospace; font-size:0.72rem; color:var(--text-dim);">seed = <span id="seed-val">1</span></span>
+          </div>
+          <div class="plot-legend">
+            <span><span class="swatch train-a"></span>treino (aprov.)</span>
+            <span><span class="swatch train-b"></span>treino (repr.)</span>
+            <span><span class="swatch test"></span>teste correto</span>
+            <span><span class="swatch wrong"></span>teste incorreto</span>
+          </div>
+          <div class="plot-wrap">
+            <svg class="plot-svg" viewBox="0 0 380 300" xmlns="http://www.w3.org/2000/svg" id="svg">
+              <g id="grid"></g>
+              <line class="axis-line" x1="42" y1="265" x2="365" y2="265"/>
+              <line class="axis-line" x1="42" y1="15" x2="42" y2="265"/>
+              <g id="points"></g>
+            </svg>
+          </div>
+          <div class="current-acc">
+            <span class="lbl">Acurácia do split atual</span>
+            <span class="val" id="curr-acc">—</span>
+          </div>
+          <div class="actions-row">
+            <button class="action-btn" id="new-btn" onclick="newSplit()">🎲 Novo split (nova seed)</button>
+            <button class="btn-reset" onclick="reset()">↻ Zerar histórico</button>
+          </div>
+        </div>
+
+        <div class="history-card">
+          <span class="history-title">📈 Histórico de acurácias (sem interferir no treino)</span>
+          <div class="history-bars" id="history">
+            <div class="empty-msg">Clique em <em>Novo split</em> para começar. Cada clique refaz a divisão aleatória e calcula uma nova acurácia.</div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-tile">
+              <div class="lbl">Splits</div>
+              <div class="val" id="s-n">0</div>
+            </div>
+            <div class="stat-tile">
+              <div class="lbl">Média</div>
+              <div class="val" id="s-mean">—</div>
+            </div>
+            <div class="stat-tile">
+              <div class="lbl">Mín</div>
+              <div class="val" id="s-min">—</div>
+            </div>
+            <div class="stat-tile spread">
+              <div class="lbl">Máx</div>
+              <div class="val" id="s-max">—</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">📉</span>
+        <div class="i-text">
+          <strong>Um único split é uma estimativa ruidosa.</strong> Refazer o holdout com <em>sementes</em> aleatórias diferentes pode dar acurácias variando 10 pontos percentuais — em datasets pequenos, até mais. Isso não significa que o modelo é bom ou ruim; é <em>variabilidade estatística</em> da amostragem. A solução mais comum na prática é usar <strong>k-fold cross-validation</strong> — uma estratégia que veremos em uma aula futura.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b2-s01.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <a class="btn-nav" href="b3-s01.html">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Todos os slides desta aula</a>
+    </div>
+  </div>
+
+  <script>
+    // Mesmo dataset do b2-s01 — 30 pontos
+    const points = [
+      {x:8, y:7, label:'a'}, {x:9, y:8, label:'a'}, {x:10, y:6, label:'a'},
+      {x:11, y:7, label:'a'}, {x:12, y:8, label:'a'}, {x:13, y:5, label:'a'},
+      {x:10, y:9, label:'a'}, {x:11, y:5, label:'a'}, {x:9, y:6, label:'a'},
+      {x:12, y:6, label:'a'}, {x:8, y:8, label:'a'}, {x:13, y:7, label:'a'},
+      {x:14, y:6, label:'a'}, {x:11, y:9, label:'a'}, {x:7, y:6, label:'a'},
+      {x:3, y:3, label:'b'}, {x:4, y:2, label:'b'}, {x:2, y:4, label:'b'},
+      {x:5, y:3, label:'b'}, {x:3, y:5, label:'b'}, {x:4, y:4, label:'b'},
+      {x:2, y:2, label:'b'}, {x:5, y:4, label:'b'}, {x:6, y:3, label:'b'},
+      {x:4, y:5, label:'b'}, {x:3, y:4, label:'b'}, {x:5, y:2, label:'b'},
+      {x:6, y:4, label:'b'}, {x:2, y:3, label:'b'}, {x:6, y:2, label:'b'},
+      // 4 pontos extras "borderline" para tornar a variabilidade visível
+      {x:7, y:5, label:'a'}, {x:6, y:6, label:'a'},
+      {x:7, y:4, label:'b'}, {x:8, y:5, label:'b'},
+    ];
+    const K = 5;
+    const TRAIN_PROP = 0.75;
+
+    let seed = 1;
+    const history = [];
+
+    // Seeded shuffle
+    function seededShuffle(arr, s) {
+      const a = [...arr];
+      let state = s;
+      for (let i = a.length - 1; i > 0; i--) {
+        state = (state * 1664525 + 1013904223) & 0x7fffffff;
+        const j = state % (i + 1);
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    // KNN predict
+    function predict(t, train) {
+      const dists = train.map(p => ({...p, d: Math.hypot(p.x - t.x, p.y - t.y)}));
+      dists.sort((a, b) => a.d - b.d);
+      const topK = dists.slice(0, K);
+      const nA = topK.filter(n => n.label === 'a').length;
+      return nA > topK.length - nA ? 'a' : 'b';
+    }
+
+    // Coord system
+    const XMIN=0, XMAX=17, YMIN=0, YMAX=11;
+    const PX_L=42, PX_R=365, PY_T=15, PY_B=265;
+    const sx = x => PX_L + (x - XMIN) / (XMAX - XMIN) * (PX_R - PX_L);
+    const sy = y => PY_B - (y - YMIN) / (YMAX - YMIN) * (PY_B - PY_T);
+
+    // Grid
+    const grid = document.getElementById('grid');
+    for (let x = 2; x <= 16; x += 2) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('class', 'grid-line');
+      line.setAttribute('x1', sx(x)); line.setAttribute('x2', sx(x));
+      line.setAttribute('y1', PY_T); line.setAttribute('y2', PY_B);
+      grid.appendChild(line);
+    }
+    for (let y = 2; y <= 10; y += 2) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('class', 'grid-line');
+      line.setAttribute('x1', PX_L); line.setAttribute('x2', PX_R);
+      line.setAttribute('y1', sy(y)); line.setAttribute('y2', sy(y));
+      grid.appendChild(line);
+    }
+
+    function computeAndRender() {
+      const shuffled = seededShuffle(points, seed);
+      const nTotal = shuffled.length;
+      const nTrain = Math.round(nTotal * TRAIN_PROP);
+      const train = shuffled.slice(0, nTrain);
+      const test = shuffled.slice(nTrain);
+
+      let correct = 0;
+      const predictions = test.map(t => {
+        const p = predict(t, train);
+        const ok = p === t.label;
+        if (ok) correct++;
+        return { test: t, correct: ok };
+      });
+      const acc = Math.round(correct / test.length * 100);
+
+      // Update plot
+      const pg = document.getElementById('points');
+      pg.innerHTML = '';
+      train.forEach(p => {
+        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        c.setAttribute('class', 'pt ' + p.label);
+        c.setAttribute('cx', sx(p.x)); c.setAttribute('cy', sy(p.y)); c.setAttribute('r', 5);
+        pg.appendChild(c);
+      });
+      predictions.forEach(pr => {
+        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        let cls = 'pt test ' + pr.test.label;
+        if (!pr.correct) cls += ' wrong';
+        c.setAttribute('class', cls);
+        c.setAttribute('cx', sx(pr.test.x)); c.setAttribute('cy', sy(pr.test.y)); c.setAttribute('r', 7);
+        pg.appendChild(c);
+      });
+
+      document.getElementById('seed-val').textContent = seed;
+      document.getElementById('curr-acc').textContent = acc + '%';
+      return acc;
+    }
+
+    function renderHistory() {
+      const el = document.getElementById('history');
+      if (history.length === 0) {
+        el.innerHTML = '<div class="empty-msg">Clique em <em>Novo split</em> para começar. Cada clique refaz a divisão aleatória e calcula uma nova acurácia.</div>';
+        document.getElementById('s-n').textContent = '0';
+        document.getElementById('s-mean').textContent = '—';
+        document.getElementById('s-min').textContent = '—';
+        document.getElementById('s-max').textContent = '—';
+        return;
+      }
+      el.innerHTML = history.map((acc, i) => `
+        <div class="h-row">
+          <span class="h-num">#${i+1}</span>
+          <div class="h-visual"><div class="h-fill" style="width: ${acc}%"></div></div>
+          <span class="h-value">${acc}%</span>
+        </div>
+      `).join('');
+      // Auto scroll to bottom
+      el.scrollTop = el.scrollHeight;
+
+      const mean = Math.round(history.reduce((a,b) => a+b, 0) / history.length);
+      const min = Math.min(...history);
+      const max = Math.max(...history);
+      document.getElementById('s-n').textContent = history.length;
+      document.getElementById('s-mean').textContent = mean + '%';
+      document.getElementById('s-min').textContent = min + '%';
+      document.getElementById('s-max').textContent = max + '%';
+    }
+
+    function newSplit() {
+      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+      const acc = computeAndRender();
+      history.push(acc);
+      renderHistory();
+    }
+
+    function reset() {
+      history.length = 0;
+      seed = 1;
+      computeAndRender();
+      renderHistory();
+    }
+
+    // Initial render (no history entry yet)
+    computeAndRender();
+  </script>
+</body>
+</html>
