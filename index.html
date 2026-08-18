@@ -134,10 +134,12 @@
     }
 
     /* Per-card accents */
-    .card-fundamentos    { --card-accent: #0e7490; }
-    .card-supervisionado { --card-accent: #5b21b6; }
-    .card-knn            { --card-accent: #1d4ed8; }
+    .card-fundamentos      { --card-accent: #0e7490; }
+    .card-supervisionado   { --card-accent: #5b21b6; }
+    .card-knn              { --card-accent: #1d4ed8; }
     .card-preprocessamento { --card-accent: #c2410c; }
+    .card-holdout          { --card-accent: #9d174d; }
+    .card-metricas         { --card-accent: #4338ca; }
 
     /* Coming soon */
     .card.coming-soon {
@@ -216,12 +218,26 @@
       <span class="card-link">Abrir slides →</span>
     </a>
 
-    <div class="card card-preprocessamento coming-soon">
+    <a class="card card-preprocessamento" href="preprocessamento/index.html">
       <div class="card-icon">🧹</div>
       <div class="card-title">Pré-processamento de Dados</div>
-      <div class="card-desc">Normalização (min-max, z-score) e codificação de atributos categóricos (label, one-hot).</div>
+      <div class="card-desc">Normalização (min-max, z-score) e codificação de atributos categóricos (ordinal, one-hot, top-K).</div>
       <span class="card-link">Abrir slides →</span>
-    </div>
+    </a>
+
+    <a class="card card-holdout" href="holdout/index.html">
+      <div class="card-icon">🎯</div>
+      <div class="card-title">Avaliação de Modelos: Holdout</div>
+      <div class="card-desc">Erro de treino vs. teste, overfitting/underfitting, método holdout, variabilidade do split e train/val/test.</div>
+      <span class="card-link">Abrir slides →</span>
+    </a>
+
+    <a class="card card-metricas" href="metricas/index.html">
+      <div class="card-icon">📏</div>
+      <div class="card-title">Métricas de Avaliação</div>
+      <div class="card-desc">Matriz de confusão, acurácia, sensibilidade, precisão e F1 para classificação. MAE e MSE para regressão.</div>
+      <span class="card-link">Abrir slides →</span>
+    </a>
 
   </div>
 
