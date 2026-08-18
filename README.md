@@ -1,6 +1,7 @@
 # Materiais de Aula — Aprendizado de Máquina
 
 Materiais utilizados na disciplina de **Aprendizado de Máquina**, incluindo slides, exemplos, notebooks e aplicações interativas desenvolvidas para apoiar a compreensão dos conceitos apresentados em aula.
+🔗[https://marirmendoza.github.io/machinelearning-ufrgs/](https://marirmendoza.github.io/machinelearning-ufrgs/)
 
 ## 📚 Materiais
 
