@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 2.1 — Entropia e Ganho de Informação (ID3)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .grid-calc { display: grid; grid-template-columns: 1.25fr 0.75fr; gap: 1.5rem; }
+    @media (max-width: 900px) { .grid-calc { grid-template-columns: 1fr; } }
+    
+    .tree-diagram-box {
+      background: #ffffff;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      box-shadow: var(--shadow);
+    }
+    
+    .ball-container { display: flex; gap: 4px; flex-wrap: wrap; margin: 0.3rem 0; min-height: 24px; justify-content: center; }
+    .ball { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+    .ball-pos { background: #166534; }
+    .ball-neg { background: #b91c1c; }
+
+    .calc-step {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.84rem;
+      background: #0f1724;
+      color: #f8f9fb;
+      padding: 1rem;
+      border-radius: var(--radius-sm);
+      line-height: 1.7;
+    }
+    .val-highlight { color: #38bdf8; font-weight: 700; }
+    .gain-highlight { color: #4ade80; font-weight: 700; font-size: 1.1rem; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Árvores de Decisão & Poda</span>
+      <span class="prof-tag">Prof. resp.: Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Slide 3 / 9</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="slide-title-block">
+        <span class="block-badge">Bloco 2 — Seleção de Atributos</span>
+        <h1 class="slide-title">Entropia e <span>Ganho de Informação (ID3)</span></h1>
+        <p class="slide-subtitle">
+          Para escolher o melhor atributo no topo da árvore, medimos a redução de incerteza (impureza) provocada pela divisão dos dados.
+        </p>
+      </div>
+
+      <div class="concept-box">
+        <div><strong>Fórmula da Entropia:</strong> $$H(S) = - \sum_{i=1}^m p_i \log_2(p_i)$$ Varia de $0$ (nó $100\%$ puro) até $1.0$ (nó com $50\%/50\%$ de incerteza máxima).</div>
+        <div style="margin-top:0.4rem;"><strong>Ganho de Informação:</strong> $$IG(S, A) = H(S) - \sum_{v \in \text{valores}(A)} \frac{|S_v|}{|S|} H(S_v)$$</div>
+      </div>
+
+      <div class="grid-calc">
+        <!-- Esquerda: Diagrama de Árvore Visual com Nós e Filhos -->
+        <div class="tree-diagram-box">
+          <div class="exp-heading">
+            <span class="exp-title-small">1. Diagrama do Nó Pai e Filhos (Dataset AllElectronics)</span>
+          </div>
+
+          <svg viewBox="0 0 460 260" style="width:100%; height:auto; background:#fafafa; border:1px solid #d1d9e8; border-radius:8px;">
+            <!-- Conexões da Árvore -->
+            <line x1="230" y1="75" x2="110" y2="165" stroke="#0e7490" stroke-width="2.5" />
+            <line x1="230" y1="75" x2="350" y2="165" stroke="#0e7490" stroke-width="2.5" />
+            <text x="150" y="115" font-size="11" font-weight="bold" fill="#166534">Sim</text>
+            <text x="300" y="115" font-size="11" font-weight="bold" fill="#b91c1c">Não</text>
+
+            <!-- Container do Nó Pai -->
+            <g id="node-parent-group">
+              <rect x="140" y="10" width="180" height="65" rx="8" fill="#cffafe" stroke="#0e7490" stroke-width="2" />
+              <text x="230" y="28" font-size="12" font-weight="bold" fill="#0e7490" text-anchor="middle">Nó Pai (Total = 14)</text>
+              <foreignObject x="145" y="32" width="170" height="38">
+                <div xmlns="http://www.w3.org/1999/xhtml">
+                  <div id="balls-parent" class="ball-container"></div>
+                </div>
+              </foreignObject>
+            </g>
+
+            <!-- Container do Filho 1 (Esquerda) -->
+            <g id="node-left-group">
+              <rect x="20" y="165" width="180" height="80" rx="8" fill="#dcfce7" stroke="#166534" stroke-width="2" />
+              <text x="110" y="183" font-size="11" font-weight="bold" fill="#166534" text-anchor="middle">Filho 1 (Estudante = Sim)</text>
+              <foreignObject x="25" y="188" width="170" height="50">
+                <div xmlns="http://www.w3.org/1999/xhtml">
+                  <div id="balls-left" class="ball-container"></div>
+                  <div style="font-size:0.75rem; text-align:center; font-family:'Fira Code'; font-weight:bold; color:#166534;">
+                    H(Esquerda) = <span id="txt-h-left">0.592</span>
+                  </div>
+                </div>
+              </foreignObject>
+            </g>
+
+            <!-- Container do Filho 2 (Direita) -->
+            <g id="node-right-group">
+              <rect x="260" y="165" width="180" height="80" rx="8" fill="#fee2e2" stroke="#b91c1c" stroke-width="2" />
+              <text x="350" y="183" font-size="11" font-weight="bold" fill="#b91c1c" text-anchor="middle">Filho 2 (Estudante = Não)</text>
+              <foreignObject x="265" y="188" width="170" height="50">
+                <div xmlns="http://www.w3.org/1999/xhtml">
+                  <div id="balls-right" class="ball-container"></div>
+                  <div style="font-size:0.75rem; text-align:center; font-family:'Fira Code'; font-weight:bold; color:#b91c1c;">
+                    H(Direita) = <span id="txt-h-right">0.985</span>
+                  </div>
+                </div>
+              </foreignObject>
+            </g>
+          </svg>
+
+          <!-- Sliders de Controle -->
+          <div style="display:flex; flex-direction:column; gap:0.6rem; margin-top:0.8rem;">
+            <div class="control-group">
+              <div class="control-label">
+                <span>Nó Pai — Positivos (Compra = Sim):</span>
+                <span id="val-pos-parent" class="control-val">9</span>
+              </div>
+              <input type="range" id="slider-parent" min="1" max="13" value="9" />
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.8rem;">
+              <div class="control-group">
+                <div class="control-label"><span>Filho Sim (+):</span><span id="val-left-pos" class="control-val">6</span></div>
+                <input type="range" id="slider-left-pos" min="0" max="9" value="6" />
+              </div>
+              <div class="control-group">
+                <div class="control-label"><span>Filho Sim (-):</span><span id="val-left-neg" class="control-val">1</span></div>
+                <input type="range" id="slider-left-neg" min="0" max="5" value="1" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Direita: Memória de Cálculo Numérico -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">2. Memória de Cálculo Passo a Passo</span>
+          </div>
+
+          <div class="calc-step">
+            1. Entropia do Nó Pai H(S):<br/>
+            <span id="calc-h-parent" class="val-highlight">H(S) = 0.940 bits</span>
+            <br/><br/>
+            2. Entropia dos Nós Filhos:<br/>
+            • H(Filho Sim) = <span id="calc-h-left" class="val-highlight">0.592 bits</span> (N = <span id="n-left">7</span>)<br/>
+            • H(Filho Não) = <span id="calc-h-right" class="val-highlight">0.985 bits</span> (N = <span id="n-right">7</span>)
+            <br/><br/>
+            3. Entropia Ponderada Pós-Divisão:<br/>
+            <span id="calc-h-weighted" class="val-highlight">H_novo = 0.788 bits</span>
+            <br/><br/>
+            4. Ganho de Informação IG(S, Atributo):<br/>
+            IG = H(S) - H_novo = <span id="calc-ig" class="gain-highlight">0.152 bits</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="slide-footer">
+      <a href="b1-s02.html" class="nav-btn">← Anterior</a>
+      <a href="index.html" class="nav-center">Índice do Tópico</a>
+      <a href="b2-s02.html" class="nav-btn">Próximo →</a>
+    </footer>
+  </div>
+
+  <script>
+    const sliderParentPos = document.getElementById('slider-parent');
+    const sliderLeftPos = document.getElementById('slider-left-pos');
+    const sliderLeftNeg = document.getElementById('slider-left-neg');
+
+    function entropy(pos, neg) {
+      const total = pos + neg;
+      if (total === 0 || pos === 0 || neg === 0) return 0;
+      const p1 = pos / total;
+      const p2 = neg / total;
+      return -(p1 * Math.log2(p1) + p2 * Math.log2(p2));
+    }
+
+    function renderBalls(elId, pos, neg) {
+      const el = document.getElementById(elId);
+      if (!el) return;
+      el.innerHTML = '';
+      for (let i = 0; i < pos; i++) {
+        const b = document.createElement('span');
+        b.className = 'ball ball-pos';
+        el.appendChild(b);
+      }
+      for (let i = 0; i < neg; i++) {
+        const b = document.createElement('span');
+        b.className = 'ball ball-neg';
+        el.appendChild(b);
+      }
+    }
+
+    function update() {
+      const totalN = 14;
+      const parentPos = parseInt(sliderParentPos.value);
+      const parentNeg = totalN - parentPos;
+
+      sliderLeftPos.max = parentPos;
+      sliderLeftNeg.max = parentNeg;
+
+      let leftPos = parseInt(sliderLeftPos.value);
+      let leftNeg = parseInt(sliderLeftNeg.value);
+      if (leftPos > parentPos) leftPos = parentPos;
+      if (leftNeg > parentNeg) leftNeg = parentNeg;
+
+      const rightPos = parentPos - leftPos;
+      const rightNeg = parentNeg - leftNeg;
+
+      document.getElementById('val-pos-parent').textContent = parentPos;
+      document.getElementById('val-left-pos').textContent = leftPos;
+      document.getElementById('val-left-neg').textContent = leftNeg;
+
+      renderBalls('balls-parent', parentPos, parentNeg);
+      renderBalls('balls-left', leftPos, leftNeg);
+      renderBalls('balls-right', rightPos, rightNeg);
+
+      const hParent = entropy(parentPos, parentNeg);
+      const hLeft = entropy(leftPos, leftNeg);
+      const hRight = entropy(rightPos, rightNeg);
+
+      const nLeft = leftPos + leftNeg;
+      const nRight = rightPos + rightNeg;
+
+      const hWeighted = (nLeft / totalN) * hLeft + (nRight / totalN) * hRight;
+      const ig = hParent - hWeighted;
+
+      document.getElementById('txt-h-left').textContent = hLeft.toFixed(3);
+      document.getElementById('txt-h-right').textContent = hRight.toFixed(3);
+
+      document.getElementById('calc-h-parent').textContent = `H(S) = ${hParent.toFixed(3)} bits`;
+      document.getElementById('calc-h-left').textContent = `${hLeft.toFixed(3)} bits`;
+      document.getElementById('calc-h-right').textContent = `${hRight.toFixed(3)} bits`;
+      document.getElementById('n-left').textContent = nLeft;
+      document.getElementById('n-right').textContent = nRight;
+      document.getElementById('calc-h-weighted').textContent = `H_novo = ${hWeighted.toFixed(3)} bits`;
+      document.getElementById('calc-ig').textContent = `${ig.toFixed(3)} bits`;
+    }
+
+    sliderParentPos.addEventListener('input', update);
+    sliderLeftPos.addEventListener('input', update);
+    sliderLeftNeg.addEventListener('input', update);
+    update();
+  </script>
+</body>
+</html>

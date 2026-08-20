@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 4.1 — Pré-poda e Hiperparâmetros</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 900px) { .grid-2col { grid-template-columns: 1fr; } }
+    
+    .tree-box-dynamic {
+      background: #ffffff;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Árvores de Decisão & Poda</span>
+      <span class="prof-tag">Prof. resp.: Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Slide 8 / 9</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="slide-title-block">
+        <span class="block-badge">Bloco 4 — Estratégias de Poda</span>
+        <h1 class="slide-title">Pré-poda <span>(Early Stopping) e Hiperparâmetros</span></h1>
+        <p class="slide-subtitle">
+          Hiperparâmetros são restrições definidas antes do treino que interrompem o crescimento da árvore assim que um limite é atingido.
+        </p>
+      </div>
+
+      <div class="concept-box">
+        <strong>Efeito das Restrições no Tamanho dos Nós:</strong>
+        <br/>• <code>max_depth</code> (máx 4) e <code>max_leaf_nodes</code> (máx 6): delimitam a altura e o total de folhas.
+        <br/>• <code>min_samples_split</code>: impede que nós com poucas instâncias ($N < \text{split}$) sejam divididos.
+        <br/>• <code>min_samples_leaf</code>: proíbe divisões que gerem qualquer folha com $N < \text{leaf}$ instâncias.
+      </div>
+
+      <div class="grid-2col">
+        <!-- Esquerda: Sliders de Controle de Hiperparâmetros de Pré-poda -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">1. Controle dos Hiperparâmetros</span>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label">
+              <span>max_leaf_nodes (Máx. Nós Folha):</span>
+              <span id="val-max-leaves" class="control-val">4</span>
+            </div>
+            <input type="range" id="slider-max-leaves" min="2" max="6" value="4" step="1" />
+          </div>
+
+          <div class="control-group">
+            <div class="control-label">
+              <span>max_depth (Profundidade Máxima):</span>
+              <span id="val-max-depth" class="control-val">3</span>
+            </div>
+            <input type="range" id="slider-max-depth" min="1" max="4" value="3" step="1" />
+          </div>
+
+          <div class="control-group">
+            <div class="control-label">
+              <span>min_samples_split (Min. p/ Divisão):</span>
+              <span id="val-min-split" class="control-val">5</span>
+            </div>
+            <input type="range" id="slider-min-split" min="2" max="15" value="5" step="1" />
+          </div>
+
+          <div class="control-group">
+            <div class="control-label">
+              <span>min_samples_leaf (Min. por Folha):</span>
+              <span id="val-min-leaf" class="control-val">2</span>
+            </div>
+            <input type="range" id="slider-min-leaf" min="1" max="8" value="2" step="1" />
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.6rem; margin-top:0.4rem;">
+            <div class="info-card">
+              <span>Acurácia Treino:</span><br/>
+              <strong id="txt-acc-tr" style="color:var(--green); font-size:1.1rem;">91.2%</strong>
+            </div>
+            <div class="info-card">
+              <span>Acurácia Teste:</span><br/>
+              <strong id="txt-acc-te" style="color:var(--blue); font-size:1.1rem;">89.0%</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Direita: Estrutura da Árvore Mutável com Contagem N em cada nó -->
+        <div class="tree-box-dynamic">
+          <div class="exp-heading">
+            <span class="exp-title-small">2. Estrutura SVG e Instâncias N por Nó</span>
+          </div>
+
+          <svg id="svg-prep-tree" viewBox="0 0 420 250" style="width:100%; height:auto; background:#fafafa; border:1px solid #d1d9e8; border-radius:8px;">
+            <g id="prep-edges"></g>
+            <g id="prep-nodes"></g>
+          </svg>
+
+          <div id="prep-discussion" class="formula-card">
+            // Diagnóstico de Restrição Ativa:<br/>
+            <span style="color:#38bdf8;">Instâncias N exibidas em cada nó para validar min_samples_split e min_samples_leaf.</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="slide-footer">
+      <a href="b3-s02.html" class="nav-btn">← Anterior</a>
+      <a href="index.html" class="nav-center">Índice do Tópico</a>
+      <a href="b4-s02.html" class="nav-btn">Próximo →</a>
+    </footer>
+  </div>
+
+  <script>
+    const sliderLeaves = document.getElementById('slider-max-leaves');
+    const sliderDepth = document.getElementById('slider-max-depth');
+    const sliderSplit = document.getElementById('slider-min-split');
+    const sliderLeaf = document.getElementById('slider-min-leaf');
+
+    function update() {
+      const maxLeaves = parseInt(sliderLeaves.value); // max 6
+      const depth = parseInt(sliderDepth.value);     // max 4
+      const split = parseInt(sliderSplit.value);
+      const leaf = parseInt(sliderLeaf.value);
+
+      document.getElementById('val-max-leaves').textContent = maxLeaves;
+      document.getElementById('val-max-depth').textContent = depth;
+      document.getElementById('val-min-split').textContent = split;
+      document.getElementById('val-min-leaf').textContent = leaf;
+
+      const edgesG = document.getElementById('prep-edges');
+      const nodesG = document.getElementById('prep-nodes');
+      const disc = document.getElementById('prep-discussion');
+
+      // N em cada nó hipotético da árvore (Total N=40 na raiz)
+      // N_root = 40
+      // Left = 22, Right = 18
+      // Left-Left = 14, Left-Right = 8
+      // Right-Left = 13, Right-Right = 5
+      // Right-Right-Left = 3, Right-Right-Right = 2
+
+      // Verificar restrições ativas
+      let canSplitSubNode = (depth >= 4) && (5 >= split) && (3 >= leaf) && (2 >= leaf) && (maxLeaves >= 5);
+      let canSplitRight = (depth >= 3) && (18 >= split) && (13 >= leaf) && (5 >= leaf) && (maxLeaves >= 4);
+      let canSplitLeft = (depth >= 2) && (22 >= split) && (14 >= leaf) && (8 >= leaf) && (maxLeaves >= 3);
+
+      let effectiveLeaves = 2;
+      if (canSplitLeft) effectiveLeaves++;
+      if (canSplitRight) effectiveLeaves++;
+      if (canSplitSubNode) effectiveLeaves++;
+      effectiveLeaves = Math.min(effectiveLeaves, maxLeaves);
+
+      let trAcc = 70 + effectiveLeaves * 4 - split * 0.3 - leaf * 0.4;
+      let teAcc = trAcc;
+
+      document.getElementById('txt-acc-tr').textContent = `${Math.min(98, Math.max(65, trAcc)).toFixed(1)}%`;
+      document.getElementById('txt-acc-te').textContent = `${Math.min(92, Math.max(60, teAcc)).toFixed(1)}%`;
+
+      // Atualizar explicação sobre qual hiperparâmetro interrompeu o nó N=5
+      let reasonText = "";
+      if (5 < split) {
+        reasonText = `Nó (N=5) NÃO dividiu pois N=5 < min_samples_split (${split}).`;
+      } else if (3 < leaf || 2 < leaf) {
+        reasonText = `Nó (N=5) NÃO dividiu pois a folha filha geraria N=2 < min_samples_leaf (${leaf}).`;
+      } else if (maxLeaves <= 4) {
+        reasonText = `Nó (N=5) NÃO dividiu pois max_leaf_nodes (${maxLeaves}) foi atingido.`;
+      } else if (depth < 4) {
+        reasonText = `Nó (N=5) NÃO dividiu pois max_depth (${depth}) foi atingido.`;
+      } else {
+        reasonText = `Nó (N=5) dividiu com sucesso em duas folhas (N=3 e N=2).`;
+      }
+
+      disc.innerHTML = `
+        // Análise de Restrições:<br/>
+        • Total de Folhas Ativas: <strong style="color:#fbbf24;">${effectiveLeaves} / max_leaves=${maxLeaves}</strong><br/>
+        • <span style="color:#38bdf8;">${reasonText}</span>
+      `;
+
+      // Desenhar Árvore SVG com rótulo N=amostras em cada nó
+      if (effectiveLeaves <= 2) {
+        // 2 Folhas (Stump)
+        edgesG.innerHTML = `
+          <line x1="210" y1="35" x2="110" y2="135" stroke="#0e7490" stroke-width="2" />
+          <line x1="210" y1="35" x2="310" y2="135" stroke="#0e7490" stroke-width="2" />
+          <text x="145" y="80" font-size="10" font-weight="bold" fill="#166534">Sim</text>
+          <text x="270" y="80" font-size="10" font-weight="bold" fill="#b91c1c">Não</text>
+        `;
+        nodesG.innerHTML = `
+          <rect x="135" y="10" width="150" height="38" rx="6" fill="#cffafe" stroke="#0e7490" stroke-width="2" />
+          <text x="210" y="27" font-size="11" font-weight="bold" fill="#0e7490" text-anchor="middle">Idade ≤ 40</text>
+          <text x="210" y="41" font-size="10" font-weight="bold" fill="#3d4f6e" text-anchor="middle">(N = 40)</text>
+
+          <rect x="50" y="120" width="120" height="36" rx="6" fill="#dcfce7" stroke="#166534" stroke-width="2" />
+          <text x="110" y="137" font-size="10" font-weight="bold" fill="#166534" text-anchor="middle">Folha 1 (Sim)</text>
+          <text x="110" y="150" font-size="9" font-weight="bold" fill="#166534" text-anchor="middle">(N = 22)</text>
+
+          <rect x="250" y="120" width="120" height="36" rx="6" fill="#fee2e2" stroke="#b91c1c" stroke-width="2" />
+          <text x="310" y="137" font-size="10" font-weight="bold" fill="#b91c1c" text-anchor="middle">Folha 2 (Não)</text>
+          <text x="310" y="150" font-size="9" font-weight="bold" fill="#b91c1c" text-anchor="middle">(N = 18)</text>
+        `;
+      } else if (effectiveLeaves === 3 || effectiveLeaves === 4) {
+        // 3 ou 4 Folhas
+        edgesG.innerHTML = `
+          <line x1="210" y1="30" x2="110" y2="85" stroke="#0e7490" stroke-width="2" />
+          <line x1="210" y1="30" x2="310" y2="85" stroke="#0e7490" stroke-width="2" />
+          <line x1="110" y1="85" x2="60" y2="160" stroke="#0e7490" stroke-width="2" />
+          <line x1="110" y1="85" x2="160" y2="160" stroke="#0e7490" stroke-width="2" />
+          <line x1="310" y1="85" x2="260" y2="160" stroke="#0e7490" stroke-width="2" />
+          <line x1="310" y1="85" x2="360" y2="160" stroke="#0e7490" stroke-width="2" />
+        `;
+        nodesG.innerHTML = `
+          <!-- Raiz N=40 -->
+          <rect x="145" y="10" width="130" height="34" rx="6" fill="#cffafe" stroke="#0e7490" stroke-width="2" />
+          <text x="210" y="25" font-size="10" font-weight="bold" fill="#0e7490" text-anchor="middle">Idade ≤ 40 (N=40)</text>
+          
+          <!-- Esquerda N=22 -->
+          <rect x="50" y="70" width="120" height="32" rx="6" fill="#ede9fe" stroke="#5b21b6" stroke-width="2" />
+          <text x="110" y="90" font-size="10" font-weight="bold" fill="#5b21b6" text-anchor="middle">Renda ≤ 5k (N=22)</text>
+          
+          <!-- Direita N=18 -->
+          <rect x="250" y="70" width="120" height="32" rx="6" fill="#ede9fe" stroke="#5b21b6" stroke-width="2" />
+          <text x="310" y="90" font-size="10" font-weight="bold" fill="#5b21b6" text-anchor="middle">Crédito (N=18)</text>
+
+          <!-- Folhas Nivel 3 -->
+          <rect x="15" y="150" width="90" height="30" rx="5" fill="#dcfce7" stroke="#166534" stroke-width="2" />
+          <text x="60" y="169" font-size="9" font-weight="bold" fill="#166534" text-anchor="middle">Folha (N=14)</text>
+
+          <rect x="115" y="150" width="90" height="30" rx="5" fill="#fee2e2" stroke="#b91c1c" stroke-width="2" />
+          <text x="160" y="169" font-size="9" font-weight="bold" fill="#b91c1c" text-anchor="middle">Folha (N=8)</text>
+
+          <rect x="215" y="150" width="90" height="30" rx="5" fill="#dcfce7" stroke="#166534" stroke-width="2" />
+          <text x="260" y="169" font-size="9" font-weight="bold" fill="#166534" text-anchor="middle">Folha (N=13)</text>
+
+          <rect x="315" y="150" width="90" height="30" rx="5" fill="${canSplitSubNode ? '#ede9fe' : '#fee2e2'}" stroke="${canSplitSubNode ? '#5b21b6' : '#b91c1c'}" stroke-width="2" />
+          <text x="360" y="169" font-size="9" font-weight="bold" fill="${canSplitSubNode ? '#5b21b6' : '#b91c1c'}" text-anchor="middle">Nó (N=5)</text>
+        `;
+      } else {
+        // 5 ou 6 Folhas (Expandida com SubNó N=5 dividido em N=3 e N=2)
+        edgesG.innerHTML = `
+          <line x1="210" y1="25" x2="110" y2="75" stroke="#0e7490" stroke-width="2" />
+          <line x1="210" y1="25" x2="310" y2="75" stroke="#0e7490" stroke-width="2" />
+          <line x1="110" y1="75" x2="60" y2="135" stroke="#0e7490" stroke-width="2" />
+          <line x1="110" y1="75" x2="160" y2="135" stroke="#0e7490" stroke-width="2" />
+          <line x1="310" y1="75" x2="260" y2="135" stroke="#0e7490" stroke-width="2" />
+          <line x1="310" y1="75" x2="360" y2="135" stroke="#0e7490" stroke-width="2" />
+          <!-- SubNó N=5 dividido em nível 4 -->
+          <line x1="360" y1="135" x2="335" y2="195" stroke="#0e7490" stroke-width="1.5" />
+          <line x1="360" y1="135" x2="385" y2="195" stroke="#0e7490" stroke-width="1.5" />
+        `;
+        nodesG.innerHTML = `
+          <rect x="145" y="5" width="130" height="30" rx="5" fill="#cffafe" stroke="#0e7490" stroke-width="2" />
+          <text x="210" y="21" font-size="10" font-weight="bold" fill="#0e7490" text-anchor="middle">Idade ≤ 40 (N=40)</text>
+          
+          <rect x="50" y="60" width="120" height="28" rx="5" fill="#ede9fe" stroke="#5b21b6" stroke-width="2" />
+          <text x="110" y="78" font-size="9" font-weight="bold" fill="#5b21b6" text-anchor="middle">Renda ≤ 5k (N=22)</text>
+          
+          <rect x="250" y="60" width="120" height="28" rx="5" fill="#ede9fe" stroke="#5b21b6" stroke-width="2" />
+          <text x="310" y="78" font-size="9" font-weight="bold" fill="#5b21b6" text-anchor="middle">Crédito (N=18)</text>
+
+          <rect x="15" y="120" width="90" height="28" rx="5" fill="#dcfce7" stroke="#166534" stroke-width="2" />
+          <text x="60" y="137" font-size="9" font-weight="bold" fill="#166534" text-anchor="middle">Folha (N=14)</text>
+
+          <rect x="115" y="120" width="90" height="28" rx="5" fill="#fee2e2" stroke="#b91c1c" stroke-width="2" />
+          <text x="160" y="137" font-size="9" font-weight="bold" fill="#b91c1c" text-anchor="middle">Folha (N=8)</text>
+
+          <rect x="215" y="120" width="90" height="28" rx="5" fill="#dcfce7" stroke="#166534" stroke-width="2" />
+          <text x="260" y="137" font-size="9" font-weight="bold" fill="#166534" text-anchor="middle">Folha (N=13)</text>
+
+          <rect x="315" y="120" width="90" height="28" rx="5" fill="#ede9fe" stroke="#5b21b6" stroke-width="2" />
+          <text x="360" y="137" font-size="9" font-weight="bold" fill="#5b21b6" text-anchor="middle">Nó 4 (N=5)</text>
+
+          <!-- Nível 4 Dividido -->
+          <circle cx="335" cy="195" r="9" fill="#166534" />
+          <text x="335" y="215" font-size="9" font-weight="bold" fill="#166534" text-anchor="middle">N=3</text>
+
+          <circle cx="385" cy="195" r="9" fill="#b91c1c" />
+          <text x="385" y="215" font-size="9" font-weight="bold" fill="#b91c1c" text-anchor="middle">N=2</text>
+        `;
+      }
+    }
+
+    sliderLeaves.addEventListener('input', update);
+    sliderDepth.addEventListener('input', update);
+    sliderSplit.addEventListener('input', update);
+    sliderLeaf.addEventListener('input', update);
+    update();
+  </script>
+</body>
+</html>

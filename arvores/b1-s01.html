@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 1.1 — Particionamento Recursivo e Regras IF-THEN</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .split-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.4rem;
+    }
+    @media (max-width: 900px) {
+      .split-grid { grid-template-columns: 1fr; }
+    }
+    .viz-box {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+    .rules-code {
+      background: #0f1724;
+      color: #38bdf8;
+      border-radius: var(--radius-sm);
+      padding: 0.9rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      line-height: 1.7;
+      min-height: 120px;
+    }
+    .kw { color: #f472b6; font-weight: 700; }
+    .val { color: #fbbf24; }
+    .cls-a { color: #4ade80; font-weight: 700; }
+    .cls-b { color: #f87171; font-weight: 700; }
+    svg text { font-family: 'Fira Code', monospace; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Árvores de Decisão & Poda</span>
+      <span class="prof-tag">Prof. resp.: Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Slide 1 / 9</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="slide-title-block">
+        <span class="block-badge">Bloco 1 — Intuição e Regras</span>
+        <h1 class="slide-title">Particionamento Recursivo e <span>Regras IF-THEN</span></h1>
+        <p class="slide-subtitle">
+          A árvore de decisão divide o espaço de entrada em regiões retangulares através de cortes ortogonais. A classe predita em cada folha reage à classe majoritária das instâncias naquela partição.
+        </p>
+      </div>
+
+      <div class="concept-box">
+        <strong>Estrutura Adaptativa e Votação Majoritária:</strong> Ao mover os cortes, a classe predominante em cada partição pode se inverter. As folhas da árvore e as regras <em>IF-THEN</em> adaptam automaticamente suas previsões conforme a distribuição de instâncias.
+      </div>
+
+      <div class="split-grid">
+        <!-- Esquerda: Espaço de Atributos 2D -->
+        <div class="viz-box">
+          <div class="exp-heading">
+            <span class="exp-title-small">1. Espaço de Atributos 2D (Renda vs. Idade)</span>
+          </div>
+
+          <svg id="svg-space" viewBox="0 0 400 320" style="width:100%; height:auto; background:#fafafa; border:1px solid #d1d9e8; border-radius:8px;">
+            <!-- Regiões dinâmicas -->
+            <g id="regions"></g>
+            <!-- Linhas de corte -->
+            <line id="line-x1" x1="0" y1="0" x2="0" y2="0" stroke="#0e7490" stroke-width="2.5" stroke-dasharray="4,4" />
+            <line id="line-x2" x1="0" y1="0" x2="0" y2="0" stroke="#5b21b6" stroke-width="2.5" stroke-dasharray="4,4" />
+            <!-- Eixos -->
+            <line x1="40" y1="280" x2="380" y2="280" stroke="#6b7fa3" stroke-width="1.5" />
+            <line x1="40" y1="20" x2="40" y2="280" stroke="#6b7fa3" stroke-width="1.5" />
+            <text x="380" y="300" font-size="11" fill="#3d4f6e" text-anchor="end">Idade (X₁)</text>
+            <text x="35" y="15" font-size="11" fill="#3d4f6e" text-anchor="start">Renda (X₂)</text>
+            <!-- Pontos -->
+            <g id="points"></g>
+          </svg>
+
+          <div class="control-group">
+            <div class="control-label">
+              <span>Corte 1 — Idade (X₁):</span>
+              <span id="val-cut1" class="control-val">42 anos</span>
+            </div>
+            <input type="range" id="slider-cut1" min="20" max="70" value="42" step="1" />
+          </div>
+
+          <div class="control-group">
+            <div class="control-label">
+              <span>Corte 2 — Renda (X₂) em Idade &gt; X₁:</span>
+              <span id="val-cut2" class="control-val">R$ 4.800</span>
+            </div>
+            <input type="range" id="slider-cut2" min="1000" max="9000" value="4800" step="100" />
+          </div>
+        </div>
+
+        <!-- Direita: Árvore Gerada Reativa + Regras Adaptativas -->
+        <div class="viz-box">
+          <div class="exp-heading">
+            <span class="exp-title-small">2. Árvore Reativa (Adapta a Classe Predita)</span>
+          </div>
+
+          <!-- Árvore SVG com folhas dinâmicas -->
+          <svg id="svg-tree" viewBox="0 0 400 170" style="width:100%; height:auto; background:#ffffff; border:1px solid #d1d9e8; border-radius:8px;">
+            <!-- Conexões -->
+            <line x1="200" y1="30" x2="100" y2="85" stroke="#94a3b8" stroke-width="2" />
+            <line x1="200" y1="30" x2="300" y2="85" stroke="#94a3b8" stroke-width="2" />
+            <line x1="300" y1="85" x2="240" y2="140" stroke="#94a3b8" stroke-width="2" />
+            <line x1="300" y1="85" x2="360" y2="140" stroke="#94a3b8" stroke-width="2" />
+
+            <!-- Labels ramos: Sim / Não -->
+            <text x="135" y="52" font-size="11" fill="#166534" font-weight="800">Sim</text>
+            <text x="260" y="52" font-size="11" fill="#b91c1c" font-weight="800">Não</text>
+            <text x="255" y="112" font-size="11" fill="#166534" font-weight="800">Sim</text>
+            <text x="345" y="112" font-size="11" fill="#b91c1c" font-weight="800">Não</text>
+
+            <!-- Nó Raiz -->
+            <rect x="140" y="10" width="120" height="36" rx="6" fill="#cffafe" stroke="#0e7490" stroke-width="2" />
+            <text id="node-root" x="200" y="32" font-size="11" font-weight="bold" fill="#0e7490" text-anchor="middle">Idade ≤ 42?</text>
+
+            <!-- Folha 1 (Região 1) -->
+            <rect id="rect-leaf1" x="50" y="70" width="100" height="34" rx="6" fill="#dcfce7" stroke="#166534" stroke-width="2" />
+            <text id="text-leaf1" x="100" y="91" font-size="10" font-weight="bold" fill="#166534" text-anchor="middle">Aprovado (4/4)</text>
+
+            <!-- Nó Sub-Decisão (Direita) -->
+            <rect x="240" y="68" width="120" height="36" rx="6" fill="#ede9fe" stroke="#5b21b6" stroke-width="2" />
+            <text id="node-sub" x="300" y="90" font-size="11" font-weight="bold" fill="#5b21b6" text-anchor="middle">Renda ≤ 4.8k?</text>
+
+            <!-- Folha 2 (Região 2) -->
+            <rect id="rect-leaf2" x="195" y="125" width="90" height="32" rx="6" fill="#fee2e2" stroke="#b91c1c" stroke-width="2" />
+            <text id="text-leaf2" x="240" y="145" font-size="10" font-weight="bold" fill="#b91c1c" text-anchor="middle">Negado (3/3)</text>
+
+            <!-- Folha 3 (Região 3) -->
+            <rect id="rect-leaf3" x="315" y="125" width="90" height="32" rx="6" fill="#dcfce7" stroke="#166534" stroke-width="2" />
+            <text id="text-leaf3" x="360" y="145" font-size="10" font-weight="bold" fill="#166534" text-anchor="middle">Aprovado (3/3)</text>
+          </svg>
+
+          <!-- Regras IF-THEN em código adaptativas -->
+          <div class="control-label"><span>Conjunto Equivalente de Regras IF-THEN:</span></div>
+          <div id="rules-box" class="rules-code"></div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="slide-footer">
+      <a href="#" class="nav-btn disabled">← Anterior</a>
+      <a href="index.html" class="nav-center">Índice do Tópico</a>
+      <a href="b1-s02.html" class="nav-btn">Próximo →</a>
+    </footer>
+  </div>
+
+  <script>
+    const pointsData = [
+      { age: 25, income: 2500, cls: 'A' },
+      { age: 30, income: 7000, cls: 'A' },
+      { age: 35, income: 3200, cls: 'A' },
+      { age: 38, income: 8500, cls: 'A' },
+      { age: 50, income: 2000, cls: 'B' },
+      { age: 55, income: 3500, cls: 'B' },
+      { age: 62, income: 4200, cls: 'B' },
+      { age: 48, income: 7500, cls: 'A' },
+      { age: 60, income: 8200, cls: 'A' },
+      { age: 65, income: 6800, cls: 'A' },
+    ];
+
+    const sliderC1 = document.getElementById('slider-cut1');
+    const sliderC2 = document.getElementById('slider-cut2');
+    const valC1 = document.getElementById('val-cut1');
+    const valC2 = document.getElementById('val-cut2');
+
+    function mapAgeToX(age) { return 40 + ((age - 20) / 50) * 340; }
+    function mapIncomeToY(inc) { return 280 - ((inc - 1000) / 8000) * 260; }
+
+    function getMajority(pts) {
+      if (pts.length === 0) return { label: 'Aprovado', cls: 'A', countA: 0, countB: 0, total: 0 };
+      let cA = 0, cB = 0;
+      pts.forEach(p => { if (p.cls === 'A') cA++; else cB++; });
+      if (cA >= cB) {
+        return { label: 'Aprovado', cls: 'A', countA: cA, countB: cB, total: pts.length };
+      } else {
+        return { label: 'Negado', cls: 'B', countA: cA, countB: cB, total: pts.length };
+      }
+    }
+
+    function updateLeafSVG(rectId, textId, maj) {
+      const rect = document.getElementById(rectId);
+      const text = document.getElementById(textId);
+      if (maj.cls === 'A') {
+        rect.setAttribute('fill', '#dcfce7');
+        rect.setAttribute('stroke', '#166534');
+        text.setAttribute('fill', '#166534');
+        text.textContent = `Aprovado (${maj.countA}/${maj.total})`;
+      } else {
+        rect.setAttribute('fill', '#fee2e2');
+        rect.setAttribute('stroke', '#b91c1c');
+        text.setAttribute('fill', '#b91c1c');
+        text.textContent = `Negado (${maj.countB}/${maj.total})`;
+      }
+    }
+
+    function update() {
+      const c1 = parseFloat(sliderC1.value);
+      const c2 = parseFloat(sliderC2.value);
+
+      valC1.textContent = c1 + ' anos';
+      valC2.textContent = 'R$ ' + (c2 / 1000).toFixed(1) + 'k';
+
+      const x1Px = mapAgeToX(c1);
+      const l1 = document.getElementById('line-x1');
+      l1.setAttribute('x1', x1Px); l1.setAttribute('y1', 20);
+      l1.setAttribute('x2', x1Px); l1.setAttribute('y2', 280);
+
+      const y2Px = mapIncomeToY(c2);
+      const l2 = document.getElementById('line-x2');
+      l2.setAttribute('x1', x1Px); l2.setAttribute('y1', y2Px);
+      l2.setAttribute('x2', 380); l2.setAttribute('y2', y2Px);
+
+      // Agrupar pontos nas 3 regiões
+      const r1Pts = pointsData.filter(p => p.age <= c1);
+      const r2Pts = pointsData.filter(p => p.age > c1 && p.income <= c2);
+      const r3Pts = pointsData.filter(p => p.age > c1 && p.income > c2);
+
+      const majR1 = getMajority(r1Pts);
+      const majR2 = getMajority(r2Pts);
+      const majR3 = getMajority(r3Pts);
+
+      // Preenchimento colorido das regiões segundo a classe majoritária
+      const colorR1 = majR1.cls === 'A' ? 'rgba(22,101,52,0.15)' : 'rgba(185,28,28,0.15)';
+      const colorR2 = majR2.cls === 'A' ? 'rgba(22,101,52,0.15)' : 'rgba(185,28,28,0.15)';
+      const colorR3 = majR3.cls === 'A' ? 'rgba(22,101,52,0.15)' : 'rgba(185,28,28,0.15)';
+
+      const regG = document.getElementById('regions');
+      regG.innerHTML = `
+        <rect x="40" y="20" width="${x1Px - 40}" height="260" fill="${colorR1}" />
+        <rect x="${x1Px}" y="${y2Px}" width="${380 - x1Px}" height="${280 - y2Px}" fill="${colorR2}" />
+        <rect x="${x1Px}" y="20" width="${380 - x1Px}" height="${y2Px - 20}" fill="${colorR3}" />
+      `;
+
+      document.getElementById('node-root').textContent = `Idade ≤ ${c1}?`;
+      document.getElementById('node-sub').textContent = `Renda ≤ ${(c2/1000).toFixed(1)}k?`;
+
+      updateLeafSVG('rect-leaf1', 'text-leaf1', majR1);
+      updateLeafSVG('rect-leaf2', 'text-leaf2', majR2);
+      updateLeafSVG('rect-leaf3', 'text-leaf3', majR3);
+
+      const ptsG = document.getElementById('points');
+      ptsG.innerHTML = '';
+      pointsData.forEach(p => {
+        const cx = mapAgeToX(p.age);
+        const cy = mapIncomeToY(p.income);
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', cx); circle.setAttribute('cy', cy); circle.setAttribute('r', 6);
+        circle.setAttribute('fill', p.cls === 'A' ? '#166534' : '#b91c1c');
+        circle.setAttribute('stroke', '#ffffff'); circle.setAttribute('stroke-width', '1.5');
+        ptsG.appendChild(circle);
+      });
+
+      const spanCls1 = majR1.cls === 'A' ? `<span class="cls-a">Aprovado (${majR1.countA}/${majR1.total})</span>` : `<span class="cls-b">Negado (${majR1.countB}/${majR1.total})</span>`;
+      const spanCls2 = majR2.cls === 'A' ? `<span class="cls-a">Aprovado (${majR2.countA}/${majR2.total})</span>` : `<span class="cls-b">Negado (${majR2.countB}/${majR2.total})</span>`;
+      const spanCls3 = majR3.cls === 'A' ? `<span class="cls-a">Aprovado (${majR3.countA}/${majR3.total})</span>` : `<span class="cls-b">Negado (${majR3.countB}/${majR3.total})</span>`;
+
+      document.getElementById('rules-box').innerHTML = `
+        <div><span class="kw">REGRA 1:</span> <span class="kw">IF</span> Idade &le; <span class="val">${c1}</span> <span style="color:#166534; font-weight:bold;">(Sim)</span> <span class="kw">THEN</span> ${spanCls1}</div>
+        <div><span class="kw">REGRA 2:</span> <span class="kw">IF</span> Idade &gt; <span class="val">${c1}</span> <span style="color:#b91c1c; font-weight:bold;">(Não)</span> <span class="kw">AND</span> Renda &le; <span class="val">R$ ${(c2/1000).toFixed(1)}k</span> <span style="color:#166534; font-weight:bold;">(Sim)</span> <span class="kw">THEN</span> ${spanCls2}</div>
+        <div><span class="kw">REGRA 3:</span> <span class="kw">IF</span> Idade &gt; <span class="val">${c1}</span> <span style="color:#b91c1c; font-weight:bold;">(Não)</span> <span class="kw">AND</span> Renda &gt; <span class="val">R$ ${(c2/1000).toFixed(1)}k</span> <span style="color:#b91c1c; font-weight:bold;">(Não)</span> <span class="kw">THEN</span> ${spanCls3}</div>
+      `;
+    }
+
+    sliderC1.addEventListener('input', update);
+    sliderC2.addEventListener('input', update);
+    update();
+  </script>
+</body>
+</html>
