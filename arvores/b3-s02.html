@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 3.2 — Alta Variância e Instabilidade</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .grid-2col { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 1.5rem; }
+    @media (max-width: 900px) { .grid-2col { grid-template-columns: 1fr; } }
+    
+    .seed-bar {
+      display: flex;
+      gap: 0.6rem;
+      align-items: center;
+      background: var(--bg3);
+      padding: 0.6rem 0.9rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border2);
+    }
+    .seed-input {
+      width: 70px;
+      padding: 0.35rem 0.5rem;
+      font-family: 'Fira Code', monospace;
+      font-weight: 700;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Árvores de Decisão & Poda</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 3 · Slide 02 / 02</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Alta Variância e Instabilidade nos Dados</h1>
+        <p class="slide-subtitle">
+          Árvores não-podadas possuem alta variância: pequenas alterações na amostragem dos dados podem alterar drasticamente a escolha da raiz e toda a estrutura do modelo.
+        </p>
+      </div>
+
+      <div class="concept-box">
+        <strong>Gerador Interativo de Amostras:</strong> Digite uma semente (seed) ou clique em <strong>"Nova Amostra"</strong> para extrair um novo conjunto de treino com $N = 36$ instâncias. Observe como a linha de corte e a variável escolhida na raiz flutuam!
+      </div>
+
+      <div class="grid-2col">
+        <!-- Esquerda: Mapa 2D com N = 36 instâncias amostradas -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">1. Espaço de Atributos (N = 36 Pontos)</span>
+          </div>
+
+          <div class="seed-bar">
+            <span style="font-size:0.85rem; font-weight:600;">Semente Aleatória:</span>
+            <input type="number" id="input-seed" class="seed-input" value="42" min="1" max="999" />
+            <button class="btn btn-primary btn-sm" onclick="generateNewSample()">Nova Amostra (Random Seed)</button>
+          </div>
+
+          <svg id="svg-variance-map" viewBox="0 0 400 240" style="width:100%; height:auto; background:#fafafa; border:1px solid #d1d9e8; border-radius:8px;">
+            <g id="var-regions"></g>
+            <line id="var-cut-line" stroke="#0e7490" stroke-width="2.5" stroke-dasharray="4,4" />
+            <g id="var-pts"></g>
+          </svg>
+        </div>
+
+        <!-- Direita: Impacto Estrutural na Árvore -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">2. Estrutura da Árvore Resultante</span>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:0.8rem;">
+            <div class="info-card">
+              <span>Semente Ativa:</span><br/>
+              <strong id="lbl-active-seed" style="color:var(--teal); font-size:1.1rem;">Seed 42</strong>
+            </div>
+
+            <div class="info-card">
+              <span>Atributo Escolhido para a Raiz:</span><br/>
+              <strong id="lbl-root-attr" style="color:var(--purple); font-size:1.15rem;">Atributo X₁ (Raio ≤ 14.8)</strong>
+            </div>
+
+            <div class="info-card">
+              <span>Orientação do Corte Inicial:</span><br/>
+              <strong id="lbl-split-orient" style="color:var(--green); font-size:1.1rem;">Corte Vertical (Paralelo a X₂)</strong>
+            </div>
+          </div>
+
+          <div class="formula-card" style="margin-top:0.4rem;">
+            // Diagnóstico de Alta Variância:<br/>
+            Devido à natureza gulosa (greedy) do algoritmo, trocar poucas instâncias altera a impureza inicial de modo que o topo da árvore muda completamente.
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="slide-footer">
+      <a href="b3-s01.html" class="nav-btn">← Anterior</a>
+      <a href="index.html" class="nav-center">Índice do Tópico</a>
+      <a href="b4-s01.html" class="nav-btn">Próximo →</a>
+    </footer>
+  </div>
+
+  <script>
+    const inputSeed = document.getElementById('input-seed');
+
+    // Pseudo-random generator com semente
+    function pseudoRandom(seed) {
+      let x = Math.sin(seed++) * 10000;
+      return x - Math.floor(x);
+    }
+
+    function renderSample(seed) {
+      document.getElementById('lbl-active-seed').textContent = `Seed ${seed}`;
+
+      const regG = document.getElementById('var-regions');
+      const ptsG = document.getElementById('var-pts');
+      const cutLine = document.getElementById('var-cut-line');
+
+      ptsG.innerHTML = '';
+      let s = seed;
+
+      // Gerar 36 pontos
+      const pts = [];
+      for (let i = 0; i < 36; i++) {
+        const x = 40 + pseudoRandom(s++) * 320;
+        const y = 20 + pseudoRandom(s++) * 200;
+        const cls = (x < 200 && y < 140) ? 'A' : (x > 220 || y > 150) ? 'B' : (pseudoRandom(s++) > 0.5 ? 'A' : 'B');
+        pts.push({ x, y, cls });
+      }
+
+      // Determinar orientação do corte com base na semente
+      const isVertical = (seed % 2 === 0);
+
+      if (isVertical) {
+        const cutX = 180 + (pseudoRandom(s++) * 40 - 20);
+        cutLine.setAttribute('x1', cutX); cutLine.setAttribute('y1', 20);
+        cutLine.setAttribute('x2', cutX); cutLine.setAttribute('y2', 220);
+
+        regG.innerHTML = `
+          <rect x="40" y="20" width="${cutX - 40}" height="200" fill="rgba(22,101,52,0.14)" />
+          <rect x="${cutX}" y="20" width="${360 - cutX}" height="200" fill="rgba(185,28,28,0.14)" />
+        `;
+        document.getElementById('lbl-root-attr').textContent = `Atributo X₁ (Raio ≤ ${(cutX/20).toFixed(1)})`;
+        document.getElementById('lbl-split-orient').textContent = 'Corte Vertical (Divisão em X₁)';
+      } else {
+        const cutY = 120 + (pseudoRandom(s++) * 30 - 15);
+        cutLine.setAttribute('x1', 40); cutLine.setAttribute('y1', cutY);
+        cutLine.setAttribute('x2', 360); cutLine.setAttribute('y2', cutY);
+
+        regG.innerHTML = `
+          <rect x="40" y="20" width="320" height="${cutY - 20}" fill="rgba(185,28,28,0.14)" />
+          <rect x="40" y="${cutY}" width="320" height="${220 - cutY}" fill="rgba(22,101,52,0.14)" />
+        `;
+        document.getElementById('lbl-root-attr').textContent = `Atributo X₂ (Textura ≤ ${(cutY/10).toFixed(1)})`;
+        document.getElementById('lbl-split-orient').textContent = 'Corte Horizontal (Divisão em X₂)';
+      }
+
+      // Desenhar os 36 pontos
+      pts.forEach(p => {
+        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        c.setAttribute('cx', p.x); c.setAttribute('cy', p.y); c.setAttribute('r', 5);
+        c.setAttribute('fill', p.cls === 'A' ? '#166534' : '#b91c1c');
+        c.setAttribute('stroke', '#ffffff'); c.setAttribute('stroke-width', '1.5');
+        ptsG.appendChild(c);
+      });
+    }
+
+    function generateNewSample() {
+      const newSeed = Math.floor(Math.random() * 900) + 10;
+      inputSeed.value = newSeed;
+      renderSample(newSeed);
+    }
+
+    inputSeed.addEventListener('input', () => {
+      const s = parseInt(inputSeed.value) || 42;
+      renderSample(s);
+    });
+
+    renderSample(42);
+  </script>
+</body>
+</html>

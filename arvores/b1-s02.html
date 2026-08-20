@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 1.2 — Cortes Ortogonais e Escala de Atributos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 900px) { .grid-2col { grid-template-columns: 1fr; } }
+    .scale-btn-group { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+    .scale-btn {
+      padding: 0.5rem 0.9rem;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border);
+      background: var(--bg2);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .scale-btn.active {
+      background: var(--teal);
+      color: white;
+      border-color: var(--teal);
+    }
+    .metric-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.8rem;
+      background: var(--bg3);
+      border-radius: 6px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Árvores de Decisão & Poda</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 1 · Slide 02 / 02</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Cortes Ortogonais e Escala de Atributos</h1>
+        <p class="slide-subtitle">
+          Árvores analisam atributos individualmente através de ordenações. Por isso, ao contrário de algoritmos como KNN ou SVM, elas são <strong>invariantes a transformações monotônicas</strong>.
+        </p>
+      </div>
+
+      <div class="concept-box">
+        <strong>Por que a normalização não é necessária?</strong> O algoritmo avalia os atributos de forma isolada buscando um ponto de corte ordenado ($X_j \le \theta$). Multiplicar uma variável por $1.000$, mudar de metros para quilômetros ou aplicar $\log$ altera apenas a escala do valor de $\theta$, mas <em>mantém intacta a ordem das instâncias e a pureza do corte</em>.
+      </div>
+
+      <div class="grid-2col">
+        <!-- Painel de Experimento -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">1. Altere a Escala dos Atributos</span>
+          </div>
+
+          <div class="scale-btn-group">
+            <button class="scale-btn active" onclick="setScale('orig')">Escala Original (1x)</button>
+            <button class="scale-btn" onclick="setScale('mult')">Multiplicar X₁ por 1.000</button>
+            <button class="scale-btn" onclick="setScale('log')">Aplicar Log em X₂</button>
+          </div>
+
+          <svg id="svg-scale-plot" viewBox="0 0 400 280" style="width:100%; height:auto; background:#fafafa; border:1px solid #d1d9e8; border-radius:8px;">
+            <g id="bg-regions"></g>
+            <line id="cut-line" stroke="#0e7490" stroke-width="2.5" stroke-dasharray="4,4" />
+            <line x1="40" y1="240" x2="380" y2="240" stroke="#6b7fa3" stroke-width="1.5" />
+            <line x1="40" y1="20" x2="40" y2="240" stroke="#6b7fa3" stroke-width="1.5" />
+            <text id="label-x1" x="380" y="260" font-size="11" fill="#3d4f6e" text-anchor="end">X₁ (Orig)</text>
+            <text id="label-x2" x="35" y="15" font-size="11" fill="#3d4f6e" text-anchor="start">X₂ (Orig)</text>
+            <g id="pts-scale"></g>
+          </svg>
+        </div>
+
+        <!-- Painel de Comparação de Desempenho -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">2. Impacto na Estrutura e Acurácia</span>
+          </div>
+
+          <div class="info-card">
+            <strong>Resultado da Divisão:</strong><br/>
+            À medida que você altera a escala, observe que o limiar de corte é automaticamente reajustado no novo espaço numérico sem alterar quais instâncias ficam de cada lado!
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:0.8rem; margin-top:0.5rem;">
+            <div class="metric-badge">
+              <span>Ponto de Corte Selecionado:</span>
+              <strong id="cut-val" style="color:var(--teal);">X₁ ≤ 3.5</strong>
+            </div>
+
+            <div class="metric-badge">
+              <span>Ganho de Informação (IG):</span>
+              <strong id="ig-val" style="color:var(--green);">0.419 bits</strong>
+            </div>
+
+            <div class="metric-badge">
+              <span>Acurácia da Árvore:</span>
+              <strong id="acc-val" style="color:var(--blue);">100% (Inalterada)</strong>
+            </div>
+          </div>
+
+          <div class="formula-card" style="margin-top:0.5rem;">
+            // Regra em Escala Original:<br/>
+            <span style="color:#38bdf8;">IF</span> X1 &le; <span id="code-cut-orig" style="color:#fbbf24;">3.5</span> <span style="color:#38bdf8;">THEN</span> <span style="color:#4ade80;">Classe A</span><br/><br/>
+            // Regra em Nova Escala:<br/>
+            <span style="color:#38bdf8;">IF</span> X1_transformado &le; <span id="code-cut-trans" style="color:#fbbf24;">3.5</span> <span style="color:#38bdf8;">THEN</span> <span style="color:#4ade80;">Classe A</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="slide-footer">
+      <a href="b1-s01.html" class="nav-btn">← Anterior</a>
+      <a href="index.html" class="nav-center">Índice do Tópico</a>
+      <a href="b2-s01.html" class="nav-btn">Próximo →</a>
+    </footer>
+  </div>
+
+  <script>
+    const origPoints = [
+      { x1: 1, x2: 2, cls: 'A' },
+      { x1: 2, x2: 5, cls: 'A' },
+      { x1: 3, x2: 3, cls: 'A' },
+      { x1: 4, x2: 7, cls: 'B' },
+      { x1: 5, x2: 4, cls: 'B' },
+      { x1: 6, x2: 8, cls: 'B' }
+    ];
+
+    let mode = 'orig';
+
+    function setScale(m) {
+      mode = m;
+      document.querySelectorAll('.scale-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      render();
+    }
+
+    function render() {
+      const labelX1 = document.getElementById('label-x1');
+      const labelX2 = document.getElementById('label-x2');
+      const cutVal = document.getElementById('cut-val');
+      const codeCutOrig = document.getElementById('code-cut-orig');
+      const codeCutTrans = document.getElementById('code-cut-trans');
+
+      let pts = origPoints.map(p => ({ ...p }));
+      let threshold = 3.5;
+      let x1Name = "X₁ (Original)";
+      let x2Name = "X₂ (Original)";
+
+      if (mode === 'mult') {
+        pts = pts.map(p => ({ x1: p.x1 * 1000, x2: p.x2, cls: p.cls }));
+        threshold = 3500;
+        x1Name = "X₁ × 1.000";
+        x2Name = "X₂ (Original)";
+      } else if (mode === 'log') {
+        pts = pts.map(p => ({ x1: p.x1, x2: Math.log(p.x2), cls: p.cls }));
+        threshold = 3.5;
+        x1Name = "X₁ (Original)";
+        x2Name = "ln(X₂)";
+      }
+
+      labelX1.textContent = x1Name;
+      labelX2.textContent = x2Name;
+      cutVal.textContent = `X₁ ≤ ${threshold}`;
+      codeCutOrig.textContent = "3.5";
+      codeCutTrans.textContent = threshold;
+
+      // Renderizar gráfico
+      const minX = mode === 'mult' ? 0 : 0;
+      const maxX = mode === 'mult' ? 7000 : 7;
+      const minY = 0;
+      const maxY = mode === 'log' ? 2.5 : 9;
+
+      function mapX(x) { return 40 + ((x - minX) / (maxX - minX)) * 340; }
+      function mapY(y) { return 240 - ((y - minY) / (maxY - minY)) * 220; }
+
+      const cutX = mapX(threshold);
+      const cutLine = document.getElementById('cut-line');
+      cutLine.setAttribute('x1', cutX); cutLine.setAttribute('y1', 20);
+      cutLine.setAttribute('x2', cutX); cutLine.setAttribute('y2', 240);
+
+      document.getElementById('bg-regions').innerHTML = `
+        <rect x="40" y="20" width="${cutX - 40}" height="220" fill="rgba(22,101,52,0.12)" />
+        <rect x="${cutX}" y="20" width="${380 - cutX}" height="220" fill="rgba(185,28,28,0.12)" />
+      `;
+
+      const ptsG = document.getElementById('pts-scale');
+      ptsG.innerHTML = '';
+      pts.forEach(p => {
+        const cx = mapX(p.x1);
+        const cy = mapY(p.x2);
+        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        c.setAttribute('cx', cx); c.setAttribute('cy', cy); c.setAttribute('r', 7);
+        c.setAttribute('fill', p.cls === 'A' ? '#166534' : '#b91c1c');
+        c.setAttribute('stroke', '#fff'); c.setAttribute('stroke-width', '1.5');
+        ptsG.appendChild(c);
+      });
+    }
+
+    render();
+  </script>
+</body>
+</html>
