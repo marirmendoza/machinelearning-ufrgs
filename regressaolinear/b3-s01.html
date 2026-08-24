@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 3.1 — Superfície de Custo 3D e Curvas de Nível 2D</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 900px) { .grid-2col { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Regressão Linear</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 3 · Slide 01 / 03</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Superfície de Custo 3D e Curvas de Nível 2D</h1>
+        <p class="slide-subtitle">
+          Na regressão linear com erro quadrático, a função de custo $J(w_0, w_1)$ é estritamente convexa e possui um único mínimo global.
+        </p>
+      </div>
+
+      <div class="concept-box">
+        <strong>Convexidade e Mapeamento de Contorno:</strong>
+        <br/>• Cada par de parâmetros $(w_0, w_1)$ corresponde a uma reta específica nos dados e a uma altura na superfície de custo $J(w_0, w_1)$.
+        <br/>• As **curvas de nível (contornos)** unem pontos com o mesmo valor de custo. O centro das elipses indica o **Mínimo Global** ($w_0^* \approx 45.0, w_1^* \approx -8.50$).
+      </div>
+
+      <div class="grid-2col">
+        <!-- Esquerda: Curvas de Nível 2D (w0 vs w1) -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">1. Espaço de Parâmetros (Curvas de Nível w₀ vs w₁)</span>
+          </div>
+
+          <svg id="svg-contour" viewBox="0 0 380 240" style="width:100%; height:auto; background:#fafafa; border:1px solid #d1d9e8; border-radius:8px;">
+            <g id="ellipses-group"></g>
+            <line x1="40" y1="200" x2="360" y2="200" stroke="#6b7fa3" stroke-width="1.5" />
+            <line x1="40" y1="20" x2="40" y2="200" stroke="#6b7fa3" stroke-width="1.5" />
+            <text x="360" y="220" font-size="10" fill="#3d4f6e" text-anchor="end">w₀ (Bias)</text>
+            <text x="35" y="15" font-size="10" fill="#3d4f6e" text-anchor="start">w₁ (Inclinação)</text>
+
+            <circle id="param-pt" r="6" fill="#b91c1c" stroke="#fff" stroke-width="2" />
+          </svg>
+
+          <div class="control-group">
+            <div class="control-label"><span>w₁ (Inclinação):</span><span id="val-w1" class="control-val">-8.50</span></div>
+            <input type="range" id="slider-w1" min="-15.0" max="2.0" value="-8.50" step="0.10" />
+          </div>
+
+          <div class="control-group">
+            <div class="control-label"><span>w₀ (Bias):</span><span id="val-w0" class="control-val">45.0</span></div>
+            <input type="range" id="slider-w0" min="20.0" max="70.0" value="45.0" step="0.5" />
+          </div>
+        </div>
+
+        <!-- Direita: Reta nos Dados -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">2. Reta nos Dados e Custo J(w₀, w₁)</span>
+          </div>
+
+          <svg id="svg-plot" viewBox="0 0 380 200" style="width:100%; height:auto; background:#fafafa; border:1px solid #d1d9e8; border-radius:8px;">
+            <g id="grid-lines" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="2,2"></g>
+            <line x1="45" y1="170" x2="360" y2="170" stroke="#0f1724" stroke-width="1.5" />
+            <line x1="45" y1="15" x2="45" y2="170" stroke="#0f1724" stroke-width="1.5" />
+            <g id="x-ticks"></g><g id="y-ticks"></g>
+            <line id="reg-line" stroke="#0e7490" stroke-width="3" />
+            <g id="pts-group"></g>
+          </svg>
+
+          <div class="info-card" style="text-align:center;">
+            <span>Valor do Custo Atual $J(w_0, w_1)$:</span><br/>
+            <strong id="txt-cost" style="font-size:1.8rem; color:var(--red); font-family:'Fira Code', monospace;">4.82</strong>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="slide-footer">
+      <a href="b2-s02.html" class="nav-btn">← Anterior</a>
+      <a href="index.html" class="nav-center">Índice do Tópico</a>
+      <a href="b3-s02.html" class="nav-btn">Próximo →</a>
+    </footer>
+  </div>
+
+  <script>
+    const dataset = [
+      { x: 1.2, y: 38 }, { x: 1.5, y: 34 }, { x: 1.8, y: 31 },
+      { x: 2.0, y: 29 }, { x: 2.3, y: 27 }, { x: 2.6, y: 23 },
+      { x: 3.0, y: 20 }, { x: 3.4, y: 16 }, { x: 3.8, y: 13 }
+    ];
+
+    const w0Opt = 45.0, w1Opt = -8.50;
+
+    function mapW0(w0) { return 40 + ((w0 - 20.0) / 50.0) * 320; }
+    function mapW1(w1) { return 200 - ((w1 - (-15.0)) / 17.0) * 180; }
+
+    function mapPlotX(x) { return 45 + ((x - 1.0) / 3.0) * 315; }
+    function mapPlotY(y) { return 170 - ((y - 10) / 40) * 155; }
+
+    function drawAxes() {
+      const xG = document.getElementById('x-ticks');
+      const gridG = document.getElementById('grid-lines');
+      xG.innerHTML = ''; gridG.innerHTML = '';
+      [1.0, 2.0, 3.0, 4.0].forEach(val => {
+        const cx = mapPlotX(val);
+        const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        txt.setAttribute('x', cx); txt.setAttribute('y', 185);
+        txt.setAttribute('font-size', '9'); txt.setAttribute('font-weight', 'bold');
+        txt.setAttribute('fill', '#3d4f6e'); txt.setAttribute('text-anchor', 'middle');
+        txt.textContent = val.toFixed(1);
+        xG.appendChild(txt);
+        const gridL = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        gridL.setAttribute('x1', cx); gridL.setAttribute('y1', 15);
+        gridL.setAttribute('x2', cx); gridL.setAttribute('y2', 170);
+        gridG.appendChild(gridL);
+      });
+
+      const yG = document.getElementById('y-ticks');
+      [10, 25, 40, 50].forEach(val => {
+        const cy = mapPlotY(val);
+        const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        txt.setAttribute('x', 38); txt.setAttribute('y', cy + 3);
+        txt.setAttribute('font-size', '9'); txt.setAttribute('font-weight', 'bold');
+        txt.setAttribute('fill', '#3d4f6e'); txt.setAttribute('text-anchor', 'end');
+        txt.textContent = val;
+        yG.appendChild(txt);
+        const gridL = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        gridL.setAttribute('x1', 45); gridL.setAttribute('y1', cy);
+        gridL.setAttribute('x2', 360); gridL.setAttribute('y2', cy);
+        gridG.appendChild(gridL);
+      });
+    }
+
+    function drawContours() {
+      const g = document.getElementById('ellipses-group');
+      g.innerHTML = '';
+      const cx = mapW0(w0Opt);
+      const cy = mapW1(w1Opt);
+
+      [15, 35, 60, 95, 135].forEach((r, idx) => {
+        const el = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+        el.setAttribute('cx', cx); el.setAttribute('cy', cy);
+        el.setAttribute('rx', r * 1.3); el.setAttribute('ry', r * 0.7);
+        el.setAttribute('fill', 'none');
+        el.setAttribute('stroke', `rgba(14, 116, 144, ${0.8 - idx*0.12})`);
+        el.setAttribute('stroke-width', '1.5');
+        g.appendChild(el);
+      });
+    }
+
+    function update() {
+      const w0 = parseFloat(document.getElementById('slider-w0').value);
+      const w1 = parseFloat(document.getElementById('slider-w1').value);
+
+      document.getElementById('val-w0').textContent = w0.toFixed(1);
+      document.getElementById('val-w1').textContent = w1.toFixed(2);
+
+      const paramPt = document.getElementById('param-pt');
+      paramPt.setAttribute('cx', mapW0(w0));
+      paramPt.setAttribute('cy', mapW1(w1));
+
+      const line = document.getElementById('reg-line');
+      const y1 = w1 * 1.0 + w0;
+      const y2 = w1 * 4.0 + w0;
+      line.setAttribute('x1', mapPlotX(1.0)); line.setAttribute('y1', mapPlotY(y1));
+      line.setAttribute('x2', mapPlotX(4.0)); line.setAttribute('y2', mapPlotY(y2));
+
+      const ptsG = document.getElementById('pts-group');
+      ptsG.innerHTML = '';
+      let sumErr = 0;
+      dataset.forEach(p => {
+        const pred = w1 * p.x + w0;
+        sumErr += (pred - p.y) * (pred - p.y);
+        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        c.setAttribute('cx', mapPlotX(p.x)); c.setAttribute('cy', mapPlotY(p.y)); c.setAttribute('r', 4);
+        c.setAttribute('fill', '#1d4ed8'); c.setAttribute('stroke', '#fff'); c.setAttribute('stroke-width', '1');
+        ptsG.appendChild(c);
+      });
+
+      const cost = sumErr / dataset.length;
+      document.getElementById('txt-cost').textContent = cost.toFixed(2);
+    }
+
+    drawAxes();
+    drawContours();
+    document.getElementById('slider-w0').addEventListener('input', update);
+    document.getElementById('slider-w1').addEventListener('input', update);
+    update();
+  </script>
+</body>
+</html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 3.3 — Regressão Multivariada e Por Que Usar o Gradiente Descendente</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 900px) { .grid-2col { grid-template-columns: 1fr; } }
+
+    .prediction-display {
+      background: #0f1724;
+      color: #f8f9fb;
+      font-family: 'Fira Code', monospace;
+      padding: 0.9rem 1.1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.92rem;
+      line-height: 1.6;
+      text-align: center;
+    }
+    .highlight-val { color: #fbbf24; font-weight: 700; }
+    .highlight-w { color: #38bdf8; font-weight: 700; }
+    .result-val { color: #4ade80; font-size: 1.15rem; font-weight: 800; display: inline-block; margin-left: 0.3rem; }
+
+    .comp-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+      margin-top: 0.5rem;
+    }
+    .comp-card {
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.8rem;
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Regressão Linear</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 3 · Slide 03 / 03</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Regressão Multivariada e Por Que Usar o Gradiente Descendente</h1>
+        <p class="slide-subtitle">
+          Em cenários reais com múltiplos atributos de entrada, o Gradiente Descendente torna-se a única alternativa escalável para treinar o modelo.
+        </p>
+      </div>
+
+      <div class="concept-box">
+        <strong>Regressão Linear Multivariada (Hipótese de Hiperplano):</strong>
+        <br/>• <strong>Hipótese com d atributos:</strong> <code>f(x) = w₀ + w₁·x₁ + w₂·x₂ + ... + w_d·x_d</code>
+        <br/>• <strong>Exemplo de Combinação:</strong> Prever MPG a partir de <code>Peso (x₁)</code> e <code>Potência HP (x₂)</code>:
+        <br/><code style="font-size:0.95rem; color:var(--teal); font-weight:bold;">MPG = w₀ + w₁·(Peso) + w₂·(Potência)</code>
+      </div>
+
+      <div class="grid-2col">
+        <!-- Esquerda: Simulação Interativa Multivariada (2 Atributos) -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">1. Ajuste dos Pesos Multivariados (w₀, w₁, w₂)</span>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label">
+              <span>w₁ (Peso por 1.000 kg):</span>
+              <span id="val-w1" class="control-val">-6.00</span>
+            </div>
+            <input type="range" id="slider-w1" min="-12.0" max="0.0" value="-6.00" step="0.25" />
+          </div>
+
+          <div class="control-group">
+            <div class="control-label">
+              <span>w₂ (Peso por Potência HP):</span>
+              <span id="val-w2" class="control-val">-0.05</span>
+            </div>
+            <input type="range" id="slider-w2" min="-0.15" max="0.0" value="-0.05" step="0.01" />
+          </div>
+
+          <div class="control-group">
+            <div class="control-label">
+              <span>w₀ (Bias / Intercepto):</span>
+              <span id="val-w0" class="control-val">48.0</span>
+            </div>
+            <input type="range" id="slider-w0" min="20.0" max="70.0" value="48.0" step="0.5" />
+          </div>
+
+          <div class="prediction-display">
+            f(x₁, x₂) = (<span id="txt-w1" class="highlight-w">-6.00</span> &times; x₁) + (<span id="txt-w2" class="highlight-w">-0.05</span> &times; x₂) + <span id="txt-w0" class="highlight-w">48.0</span>
+          </div>
+
+          <div class="info-card" style="margin-top:0.3rem;">
+            <strong style="color:var(--teal);">Simulação (Carro de 2.500 kg e 150 HP):</strong>
+            <br/>f(2.5, 150) = (-6.00 &times; 2.5) + (-0.05 &times; 150) + 48.0 = <span id="txt-pred-multi" class="result-val" style="color:var(--green);">25.50 MPG</span>
+          </div>
+        </div>
+
+        <!-- Direita: Por que precisamos do Gradiente Descendente? -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">2. Solução Analítica vs. Gradiente Descendente</span>
+          </div>
+
+          <div class="comp-grid">
+            <div class="comp-card">
+              <strong style="color:var(--red);">Solução Analítica (Equação Normal):</strong><br/>
+              <code>w = (Xᵀ X)⁻¹ Xᵀ y</code><br/>
+              • Requer inverter uma matriz <code>d &times; d</code>.<br/>
+              • Custo computacional <code>O(d³)</code>.<br/>
+              • Inviável para milhares de atributos ou se a matriz for singular!
+            </div>
+
+            <div class="comp-card">
+              <strong style="color:var(--green);">Algoritmo Gradiente Descendente:</strong><br/>
+              <code>w_j &larr; w_j - &alpha; &part;J/&part;w_j</code><br/>
+              • Custo por iteração <code>O(d · N)</code>.<br/>
+              • Não requer inversão de matrizes.<br/>
+              • Escala perfeitamente para milhões de atributos (redes neurais).
+            </div>
+          </div>
+
+          <div class="formula-card">
+            // Por que o Gradiente Descendente é tão importante no ML?<br/>
+            O problema central do ML é encontrar os parâmetros que minimizam uma função de custo. Para alguns modelos simples, podemos encontrar a solução diretamente por métodos analíticos. Porém, em problemas de alta dimensionalidade, essa abordagem pode se tornar computacionalmente cara.<br/><br/>
+            O Gradiente Descendente oferece uma estratégia iterativa e escalável: calcula a direção de maior redução do erro e atualiza os parâmetros passo a passo. Isso permite treinar modelos com milhares, milhões ou até bilhões de parâmetros. Gradiente descendente não é “o algoritmo do ML”; é um método de otimização usado para treinar muitos modelos de ML.
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="slide-footer">
+      <a href="b3-s02.html" class="nav-btn">← Anterior</a>
+      <a href="index.html" class="nav-center">Índice do Tópico</a>
+      <a href="b4-s01.html" class="nav-btn">Próximo →</a>
+    </footer>
+  </div>
+
+  <script>
+    const sliderW1 = document.getElementById('slider-w1');
+    const sliderW2 = document.getElementById('slider-w2');
+    const sliderW0 = document.getElementById('slider-w0');
+
+    function update() {
+      const w1 = parseFloat(sliderW1.value);
+      const w2 = parseFloat(sliderW2.value);
+      const w0 = parseFloat(sliderW0.value);
+
+      document.getElementById('val-w1').textContent = w1.toFixed(2);
+      document.getElementById('val-w2').textContent = w2.toFixed(2);
+      document.getElementById('val-w0').textContent = w0.toFixed(1);
+
+      document.getElementById('txt-w1').textContent = w1.toFixed(2);
+      document.getElementById('txt-w2').textContent = w2.toFixed(2);
+      document.getElementById('txt-w0').textContent = w0.toFixed(1);
+
+      // Simulação para x1 = 2.5 (peso) e x2 = 150 (HP)
+      const pred = w1 * 2.5 + w2 * 150 + w0;
+      document.getElementById('txt-pred-multi').textContent = pred.toFixed(2) + ' MPG';
+    }
+
+    sliderW1.addEventListener('input', update);
+    sliderW2.addEventListener('input', update);
+    sliderW0.addEventListener('input', update);
+    update();
+  </script>
+</body>
+</html>

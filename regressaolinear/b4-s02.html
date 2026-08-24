@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 4.2 — Variantes do Gradiente (Batch, Mini-batch, SGD)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 900px) { .grid-2col { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Regressão Linear</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 4 · Slide 02 / 03</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Variantes do Gradiente (Batch, Mini-batch, SGD)</h1>
+        <p class="slide-subtitle">
+          O tamanho do lote (batch size) determina a precisão do vetor gradiente e o custo computacional por iteração.
+        </p>
+      </div>
+
+      <div class="concept-box">
+        <strong>Comparativo de Variantes:</strong>
+        <br/>• <strong>Batch Gradient Descent:</strong> Usa 100% dos dados a cada iteração. Trajetória **perfeitamente suave**, mas computacionalmente pesada.
+        <br/>• <strong>Stochastic Gradient Descent (SGD):</strong> Usa **1 exemplo aleatório** por iteração. Trajetória em **ziguezague/ruidosa**, mas extremamente rápida.
+        <br/>• <strong>Mini-batch Gradient Descent:</strong> Usa pequenos lotes (ex: 32 ou 64 instâncias). Equilíbrio ideal entre velocidade e estabilidade.
+      </div>
+
+      <div class="grid-2col">
+        <!-- Esquerda: Trajetória no Espaço de Parâmetros -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">1. Trajetória de Aprendizado no Contorno (w₀ vs w₁)</span>
+          </div>
+
+          <svg id="svg-contour" viewBox="0 0 380 230" style="width:100%; height:auto; background:#fafafa; border:1px solid #d1d9e8; border-radius:8px;">
+            <g id="ellipses-group"></g>
+            <path id="path-var" stroke="#0e7490" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+            <g id="pts-group"></g>
+          </svg>
+
+          <div style="display:flex; justify-content:space-around; font-size:0.85rem; font-weight:600;">
+            <label><input type="radio" name="variant" value="batch" checked /> Batch (100% dados)</label>
+            <label><input type="radio" name="variant" value="minibatch" /> Mini-batch (K=3)</label>
+            <label><input type="radio" name="variant" value="sgd" /> SGD (K=1)</label>
+          </div>
+        </div>
+
+        <!-- Direita: Quadro Informativo -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">2. Características Computacionais</span>
+          </div>
+
+          <div id="variant-info" class="info-card" style="line-height:1.6;">
+            Selecione uma variante para comparar a trajetória de aprendizado até o mínimo global.
+          </div>
+
+          <div class="formula-card">
+            // Resumo de Escolha Prática:<br/>
+            • Datasets pequenos ($N < 10.000$) &rarr; <span style="color:#38bdf8;">Batch GD</span><br/>
+            • Big Data / Redes Profundas &rarr; <span style="color:#fbbf24;">Mini-batch GD (32 a 512)</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="slide-footer">
+      <a href="b4-s01.html" class="nav-btn">← Anterior</a>
+      <a href="index.html" class="nav-center">Índice do Tópico</a>
+      <a href="b4-s03.html" class="nav-btn">Próximo →</a>
+    </footer>
+  </div>
+
+  <script>
+    function mapW0(w0) { return 40 + ((w0 - 20) / 30) * 320; }
+    function mapW1(w1) { return 200 - ((w1 - (-1.5)) / 2.0) * 180; }
+
+    function drawContours() {
+      const g = document.getElementById('ellipses-group');
+      g.innerHTML = '';
+      const cx = mapW0(43.5); const cy = mapW1(-8.0/10);
+      [15, 35, 60, 95, 135].forEach((r, idx) => {
+        const el = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+        el.setAttribute('cx', cx); el.setAttribute('cy', cy);
+        el.setAttribute('rx', r * 1.3); el.setAttribute('ry', r * 0.7);
+        el.setAttribute('fill', 'none'); el.setAttribute('stroke', `rgba(14, 116, 144, ${0.7 - idx*0.1})`);
+        el.setAttribute('stroke-width', '1.5');
+        g.appendChild(el);
+      });
+    }
+
+    function update() {
+      const variant = document.querySelector('input[name="variant"]:checked').value;
+      const info = document.getElementById('variant-info');
+      const path = document.getElementById('path-var');
+      const ptsG = document.getElementById('pts-group');
+      ptsG.innerHTML = '';
+
+      let history = [];
+
+      if (variant === 'batch') {
+        info.innerHTML = '<strong style="color:var(--teal);">Batch Gradient Descent:</strong><br/>Usa todas as instâncias a cada passo. A trajetória desce em linha perfeitamente reta e suave em direção ao mínimo global.';
+        path.setAttribute('stroke', '#0e7490');
+        history = [
+          {w0: 25.0, w1: 0.20}, {w0: 30.0, w1: -0.10}, {w0: 35.0, w1: -0.35},
+          {w0: 39.0, w1: -0.55}, {w0: 41.5, w1: -0.70}, {w0: 43.5, w1: -0.80}
+        ];
+      } else if (variant === 'minibatch') {
+        info.innerHTML = '<strong style="color:var(--purple);">Mini-batch Gradient Descent (K=3):</strong><br/>Usa um pequeno lote a cada passo. Apresenta leve oscilação, mas converge com alta eficiência computacional.';
+        path.setAttribute('stroke', '#5b21b6');
+        history = [
+          {w0: 25.0, w1: 0.20}, {w0: 29.5, w1: -0.05}, {w0: 33.0, w1: -0.40},
+          {w0: 37.5, w1: -0.48}, {w0: 42.0, w1: -0.75}, {w0: 43.5, w1: -0.80}
+        ];
+      } else {
+        info.innerHTML = '<strong style="color:var(--orange);">Stochastic Gradient Descent (SGD):</strong><br/>Usa 1 exemplo por passo. Trajetória ruidosa em ziguezague ao redor do mínimo, mas atualizações hiper-rápidas!';
+        path.setAttribute('stroke', '#c2410c');
+        history = [
+          {w0: 25.0, w1: 0.20}, {w0: 32.0, w1: 0.10}, {w0: 28.0, w1: -0.30},
+          {w0: 38.0, w1: -0.20}, {w0: 35.0, w1: -0.65}, {w0: 45.0, w1: -0.55},
+          {w0: 41.0, w1: -0.85}, {w0: 43.5, w1: -0.80}
+        ];
+      }
+
+      let d = '';
+      history.forEach((h, idx) => {
+        const cx = mapW0(h.w0); const cy = mapW1(h.w1);
+        d += (idx === 0 ? 'M ' : ' L ') + cx.toFixed(1) + ' ' + cy.toFixed(1);
+        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        c.setAttribute('cx', cx); c.setAttribute('cy', cy); c.setAttribute('r', idx === history.length-1 ? 5 : 3.5);
+        c.setAttribute('fill', path.getAttribute('stroke'));
+        ptsG.appendChild(c);
+      });
+      path.setAttribute('d', d);
+    }
+
+    drawContours();
+    document.querySelectorAll('input[name="variant"]').forEach(r => r.addEventListener('change', update));
+    update();
+  </script>
+</body>
+</html>

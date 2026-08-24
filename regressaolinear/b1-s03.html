@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 1.3 — Síntese do Modelo Linear e Foco de Visualização</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 900px) { .grid-2col { grid-template-columns: 1fr; } }
+
+    .focus-btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .focus-btn {
+      padding: 0.45rem 0.85rem;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border);
+      background: var(--bg2);
+      color: var(--text);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+    .focus-btn:hover { border-color: var(--teal); color: var(--teal); }
+    .focus-btn.active {
+      background: var(--teal);
+      color: #fff;
+      border-color: var(--teal);
+      box-shadow: 0 2px 8px rgba(14,116,144,0.25);
+    }
+
+    .prediction-display {
+      background: #0f1724;
+      color: #f8f9fb;
+      font-family: 'Fira Code', monospace;
+      padding: 0.8rem 1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.92rem;
+      line-height: 1.6;
+      text-align: center;
+    }
+    .highlight-w { color: #38bdf8; font-weight: 700; }
+
+    .info-card-focus {
+      border-left: 4px solid var(--teal);
+      background: var(--bg3);
+      padding: 0.9rem;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: 0.88rem;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Regressão Linear</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 1 · Slide 03 / 03</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Síntese do Modelo Linear e Foco de Visualização</h1>
+        <p class="slide-subtitle">
+          Gerando 10 pontos aleatórios, ajustando a reta ideal e inspecionando cada componente do modelo.
+        </p>
+      </div>
+
+      <div class="concept-box">
+        <strong>Equação Geral da Reta com 1 Entrada e Bias:</strong>
+        <br/>• <strong>Modelo Linear:</strong> <code>f(x) = w₁ · x + w₀</code>
+        <br/>• Clique em <strong>"🎲 Gerar Novos Dados"</strong> para criar 10 novos pontos com ruído. O algoritmo recalcula instantaneamente os parâmetros <code>w₁</code> e <code>w₀</code> que melhor ajustam a reta aos dados.
+        <br/>• Clique nos botões de <strong>Foco de Visualização</strong> para isolar e destacar visualmente os dados reais, a reta, as previsões ou os resíduos.
+      </div>
+
+      <div class="grid-2col">
+        <!-- Esquerda: Gráfico SVG com Gerador de Dados e Foco -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">1. Gráfico de Dispersão e Ajuste da Reta</span>
+            <button id="btn-gen-data" class="btn btn-outline btn-sm">🎲 Gerar Novos Dados (N=10)</button>
+          </div>
+
+          <svg id="svg-plot" viewBox="0 0 400 270" style="width:100%; height:auto; background:#fafafa; border:1px solid #d1d9e8; border-radius:8px;">
+            <g id="grid-lines" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="2,2"></g>
+
+            <line x1="50" y1="220" x2="380" y2="220" stroke="#0f1724" stroke-width="2" />
+            <line x1="50" y1="20" x2="50" y2="220" stroke="#0f1724" stroke-width="2" />
+
+            <text x="215" y="260" font-size="11" font-weight="bold" fill="#0f1724" text-anchor="middle">Atributo de Entrada (x)</text>
+            <text x="15" y="120" font-size="11" font-weight="bold" fill="#0f1724" text-anchor="middle" transform="rotate(-90 15 120)">Saída Alvo (y)</text>
+
+            <g id="x-ticks"></g>
+            <g id="y-ticks"></g>
+
+            <!-- Grupos de Componentes do Gráfico -->
+            <g id="residuals-group"></g>
+            <g id="predictions-proj-group"></g>
+            <line id="reg-line" stroke="#0e7490" stroke-width="3" />
+            <g id="predictions-pts-group"></g>
+            <g id="pts-group"></g>
+          </svg>
+
+          <!-- Seletor de Foco -->
+          <div class="control-group">
+            <span style="font-size:0.85rem; font-weight:700; color:var(--text);">Foco da Visualização:</span>
+            <div class="focus-btn-group">
+              <button class="focus-btn active" data-focus="all">🔍 Todos</button>
+              <button class="focus-btn" data-focus="pts">🔵 Dados Originais (y)</button>
+              <button class="focus-btn" data-focus="line">📈 A Reta (w₁, w₀)</button>
+              <button class="focus-btn" data-focus="preds">🟢 Previsões (f(x))</button>
+              <button class="focus-btn" data-focus="res">🔴 Resíduos (eᵢ)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Direita: Detalhes do Foco Selecionado e Parâmetros Aprendidos -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">2. Parâmetros Ajustados e Diagnóstico</span>
+          </div>
+
+          <div class="prediction-display">
+            Reta Otimizada: <span style="color:#38bdf8;">f(x) = (<span id="txt-w1" class="highlight-w">-8.50</span>) &times; x + <span id="txt-w0" class="highlight-w">45.0</span></span>
+          </div>
+
+          <div id="focus-info-card" class="info-card-focus">
+            <!-- Conteúdo dinâmico preenchido pelo JS -->
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="slide-footer">
+      <a href="b1-s02.html" class="nav-btn">← Anterior</a>
+      <a href="index.html" class="nav-center">Índice do Tópico</a>
+      <a href="b2-s01.html" class="nav-btn">Próximo →</a>
+    </footer>
+  </div>
+
+  <script>
+    let dataset = [];
+    let w1 = -8.5, w0 = 45.0;
+    let currentFocus = 'all';
+
+    function generateRandomData() {
+      const trueW1 = -12.0 + Math.random() * 8.0; // entre -12 e -4
+      const trueW0 = 35.0 + Math.random() * 20.0;  // entre 35 e 55
+      
+      dataset = [];
+      for (let i = 0; i < 10; i++) {
+        const x = 1.1 + (i / 9) * 2.7; // de 1.1 a 3.8
+        const noise = (Math.random() - 0.5) * 8.0;
+        const y = Math.max(10, Math.min(50, trueW1 * x + trueW0 + noise));
+        dataset.push({ x, y });
+      }
+
+      fitModel();
+    }
+
+    function fitModel() {
+      let curW0 = 25.0, curW1 = 0.0;
+      const alpha = 0.04;
+      const N = dataset.length;
+
+      for (let ep = 0; ep < 500; ep++) {
+        let gw0 = 0, gw1 = 0;
+        dataset.forEach(p => {
+          const err = (curW1 * p.x + curW0) - p.y;
+          gw0 += (2 / N) * err;
+          gw1 += (2 / N) * err * p.x;
+        });
+        curW0 -= alpha * gw0;
+        curW1 -= alpha * gw1 * 0.4;
+      }
+
+      w0 = curW0;
+      w1 = curW1;
+      updateVisuals();
+    }
+
+    function mapX(x) { return 50 + ((x - 1.0) / 3.0) * 330; }
+    function mapY(y) { return 220 - ((y - 10) / 40) * 200; }
+
+    function drawAxes() {
+      const xG = document.getElementById('x-ticks');
+      const gridG = document.getElementById('grid-lines');
+      xG.innerHTML = ''; gridG.innerHTML = '';
+
+      [1.0, 2.0, 3.0, 4.0].forEach(val => {
+        const cx = mapX(val);
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', cx); line.setAttribute('y1', 220);
+        line.setAttribute('x2', cx); line.setAttribute('y2', 225);
+        line.setAttribute('stroke', '#0f1724'); line.setAttribute('stroke-width', '1.5');
+        xG.appendChild(line);
+
+        const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        txt.setAttribute('x', cx); txt.setAttribute('y', 240);
+        txt.setAttribute('font-size', '10'); txt.setAttribute('font-weight', 'bold');
+        txt.setAttribute('fill', '#3d4f6e'); txt.setAttribute('text-anchor', 'middle');
+        txt.textContent = val.toFixed(1);
+        xG.appendChild(txt);
+
+        const gridL = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        gridL.setAttribute('x1', cx); gridL.setAttribute('y1', 20);
+        gridL.setAttribute('x2', cx); gridL.setAttribute('y2', 220);
+        gridG.appendChild(gridL);
+      });
+
+      const yG = document.getElementById('y-ticks');
+      [10, 20, 30, 40, 50].forEach(val => {
+        const cy = mapY(val);
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', 45); line.setAttribute('y1', cy);
+        line.setAttribute('x2', 50); line.setAttribute('y2', cy);
+        line.setAttribute('stroke', '#0f1724'); line.setAttribute('stroke-width', '1.5');
+        yG.appendChild(line);
+
+        const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        txt.setAttribute('x', 40); txt.setAttribute('y', cy + 4);
+        txt.setAttribute('font-size', '10'); txt.setAttribute('font-weight', 'bold');
+        txt.setAttribute('fill', '#3d4f6e'); txt.setAttribute('text-anchor', 'end');
+        txt.textContent = val;
+        yG.appendChild(txt);
+
+        const gridL = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        gridL.setAttribute('x1', 50); gridL.setAttribute('y1', cy);
+        gridL.setAttribute('x2', 380); gridL.setAttribute('y2', cy);
+        gridG.appendChild(gridL);
+      });
+    }
+
+    function updateVisuals() {
+      document.getElementById('txt-w1').textContent = w1.toFixed(2);
+      document.getElementById('txt-w0').textContent = w0.toFixed(1);
+
+      // Reta
+      const line = document.getElementById('reg-line');
+      const y1 = w1 * 1.0 + w0;
+      const y2 = w1 * 4.0 + w0;
+      line.setAttribute('x1', mapX(1.0)); line.setAttribute('y1', mapY(y1));
+      line.setAttribute('x2', mapX(4.0)); line.setAttribute('y2', mapY(y2));
+
+      // Grupos
+      const ptsG = document.getElementById('pts-group');
+      const predsPtsG = document.getElementById('predictions-pts-group');
+      const predsProjG = document.getElementById('predictions-proj-group');
+      const resG = document.getElementById('residuals-group');
+
+      ptsG.innerHTML = ''; predsPtsG.innerHTML = ''; predsProjG.innerHTML = ''; resG.innerHTML = '';
+
+      dataset.forEach(p => {
+        const predY = w1 * p.x + w0;
+        const cx = mapX(p.x);
+        const cyReal = mapY(p.y);
+        const cyPred = mapY(predY);
+
+        // Pontos reais (Dados)
+        const cReal = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        cReal.setAttribute('cx', cx); cReal.setAttribute('cy', cyReal); cReal.setAttribute('r', 5.5);
+        cReal.setAttribute('fill', '#1d4ed8'); cReal.setAttribute('stroke', '#fff'); cReal.setAttribute('stroke-width', '1.5');
+        ptsG.appendChild(cReal);
+
+        // Pontos de Previsão na Reta (Verdes)
+        const cPred = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        cPred.setAttribute('cx', cx); cPred.setAttribute('cy', cyPred); cPred.setAttribute('r', 6);
+        cPred.setAttribute('fill', '#166534'); cPred.setAttribute('stroke', '#fff'); cPred.setAttribute('stroke-width', '1.5');
+        predsPtsG.appendChild(cPred);
+
+        // Projeção tracejada verde para o Eixo Y
+        const projL = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        projL.setAttribute('x1', 50); projL.setAttribute('y1', cyPred);
+        projL.setAttribute('x2', cx); projL.setAttribute('y2', cyPred);
+        projL.setAttribute('stroke', '#166534'); projL.setAttribute('stroke-width', '1.5');
+        projL.setAttribute('stroke-dasharray', '3,3');
+        predsProjG.appendChild(projL);
+
+        // Linhas de Resíduos (Vermelhas)
+        const lRes = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        lRes.setAttribute('x1', cx); lRes.setAttribute('y1', cyReal);
+        lRes.setAttribute('x2', cx); lRes.setAttribute('y2', cyPred);
+        lRes.setAttribute('stroke', '#b91c1c'); lRes.setAttribute('stroke-width', '2');
+        lRes.setAttribute('stroke-dasharray', '3,3');
+        resG.appendChild(lRes);
+      });
+
+      renderFocusMode();
+    }
+
+    function renderFocusMode() {
+      const ptsG = document.getElementById('pts-group');
+      const line = document.getElementById('reg-line');
+      const predsPtsG = document.getElementById('predictions-pts-group');
+      const predsProjG = document.getElementById('predictions-proj-group');
+      const resG = document.getElementById('residuals-group');
+      const card = document.getElementById('focus-info-card');
+
+      ptsG.style.opacity = '1'; ptsG.style.display = 'block';
+      line.style.opacity = '1'; line.setAttribute('stroke-width', '3');
+      predsPtsG.style.opacity = '1'; predsPtsG.style.display = 'block';
+      predsProjG.style.opacity = '0';
+      resG.style.opacity = '1'; resG.style.display = 'block';
+
+      if (currentFocus === 'pts') {
+        line.style.opacity = '0.15';
+        predsPtsG.style.opacity = '0.15';
+        resG.style.opacity = '0.15';
+        card.style.borderLeftColor = 'var(--blue)';
+        card.innerHTML = '<strong style="color:var(--blue);">Foco: Dados Originais (y)</strong><br/>Exibindo em destaque os 10 pontos azuis observados (xᵢ, yᵢ). São as medições reais de treino coletadas sem interferência do modelo.';
+      } else if (currentFocus === 'line') {
+        ptsG.style.opacity = '0.15';
+        predsPtsG.style.opacity = '0.15';
+        resG.style.opacity = '0.15';
+        line.setAttribute('stroke-width', '5');
+        card.style.borderLeftColor = 'var(--teal)';
+        card.innerHTML = `<strong style="color:var(--teal);">Foco: A Reta de Regressão</strong><br/>Equação Otimizada: <code>f(x) = ${w1.toFixed(2)}·x + ${w0.toFixed(1)}</code>.<br/>A linha azul-turquesa representa a hipótese contínua ajustada aos dados.`;
+      } else if (currentFocus === 'preds') {
+        ptsG.style.opacity = '0.15';
+        line.style.opacity = '0.3';
+        resG.style.opacity = '0.15';
+        predsProjG.style.opacity = '1';
+        card.style.borderLeftColor = 'var(--green)';
+        card.innerHTML = '<strong style="color:var(--green);">Foco: Previsões (f(xᵢ))</strong><br/>Os pontos verdes posicionados sobre a reta representam as saídas preditas f(xᵢ) para cada entrada xᵢ. As linhas tracejadas projetam o valor predito no eixo Y.';
+      } else if (currentFocus === 'res') {
+        ptsG.style.opacity = '0.3';
+        line.style.opacity = '0.2';
+        predsPtsG.style.opacity = '0.3';
+        card.style.borderLeftColor = 'var(--red)';
+        card.innerHTML = '<strong style="color:var(--red);">Foco: Resíduos (eᵢ)</strong><br/>As linhas vermelhas tracejadas medem as distâncias verticais eᵢ = f(xᵢ) - yᵢ. Os parâmetros w₁ e w₀ são ajustados para minimizar a soma dos seus quadrados.';
+      } else {
+        card.style.borderLeftColor = 'var(--teal)';
+        card.innerHTML = '<strong style="color:var(--teal);">Foco: Todos os Componentes</strong><br/>Visão integrada combinando os 10 dados reais (azuis), a reta de regressão (azul-turquesa), as previsões (verdes) e os resíduos (vermelhos).';
+      }
+    }
+
+    drawAxes();
+    generateRandomData();
+
+    document.getElementById('btn-gen-data').addEventListener('click', generateRandomData);
+
+    document.querySelectorAll('.focus-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const targetBtn = e.currentTarget;
+        document.querySelectorAll('.focus-btn').forEach(b => b.classList.remove('active'));
+        targetBtn.classList.add('active');
+        currentFocus = targetBtn.getAttribute('data-focus');
+        renderFocusMode();
+      });
+    });
+  </script>
+</body>
+</html>

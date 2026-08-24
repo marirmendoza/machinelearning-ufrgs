@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 4.1 — Taxa de Aprendizagem (α) e Divergência</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 900px) { .grid-2col { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Regressão Linear</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 4 · Slide 01 / 03</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Taxa de Aprendizagem (α) e Divergência</h1>
+        <p class="slide-subtitle">
+          A escolha da taxa de aprendizagem α controla o tamanho do passo a cada iteração do gradiente.
+        </p>
+      </div>
+
+      <div class="concept-box">
+        <strong>Três Cenários Possíveis da Taxa de Aprendizagem α:</strong>
+        <br/>• <strong>α muito pequeno (ex: 0.001):</strong> Passos minúsculos; convergência extremamente lenta.
+        <br/>• <strong>α ideal (ex: 0.04):</strong> Redução suave e contínua do custo a cada época até o mínimo.
+        <br/>• <strong>α muito grande (ex: 0.60+ / Overshooting):</strong> O passo "salta" por cima do mínimo; o custo aumenta e o algoritmo diverge.
+      </div>
+
+      <div class="grid-2col">
+        <!-- Esquerda: Slider e Gráfico Custo vs Épocas -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">1. Gráfico Custo J(f) vs. Épocas/Iterações</span>
+          </div>
+
+          <svg id="svg-cost-curve" viewBox="0 0 380 230" style="width:100%; height:auto; background:#fafafa; border:1px solid #d1d9e8; border-radius:8px;">
+            <line x1="40" y1="200" x2="360" y2="200" stroke="#6b7fa3" stroke-width="1.5" />
+            <line x1="40" y1="20" x2="40" y2="200" stroke="#6b7fa3" stroke-width="1.5" />
+            <text x="360" y="220" font-size="10" fill="#3d4f6e" text-anchor="end">Épocas (Iterações)</text>
+            <text x="35" y="15" font-size="10" fill="#3d4f6e" text-anchor="start">Custo J</text>
+
+            <path id="path-cost" stroke="#0e7490" stroke-width="3" fill="none" />
+          </svg>
+
+          <div class="control-group">
+            <div class="control-label">
+              <span>Taxa de Aprendizagem (α):</span>
+              <span id="val-alpha" class="control-val">0.04</span>
+            </div>
+            <input type="range" id="slider-alpha" min="0.002" max="0.55" value="0.04" step="0.005" />
+          </div>
+        </div>
+
+        <!-- Direita: Diagnóstico Prático -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">2. Diagnóstico de Convergência</span>
+          </div>
+
+          <div id="diag-box" class="info-card" style="line-height:1.6;">
+            Ajuste o slider de α para observar o comportamento da curva de custo ao longo de 30 épocas.
+          </div>
+
+          <div class="formula-card">
+            // Valores Tipicamente Testados na Prática:<br/>
+            <span style="color:#38bdf8;">α &in; {0.001, 0.003, 0.01, 0.03, 0.1, 0.3}</span><br/>
+            <br/>
+            Se o custo aumentar em qualquer iteração, reduza a taxa de aprendizagem α imediatamente!
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="slide-footer">
+      <a href="b3-s03.html" class="nav-btn">← Anterior</a>
+      <a href="index.html" class="nav-center">Índice do Tópico</a>
+      <a href="b4-s02.html" class="nav-btn">Próximo →</a>
+    </footer>
+  </div>
+
+  <script>
+    const dataset = [
+      { x: 1.2, y: 38 }, { x: 1.5, y: 34 }, { x: 1.8, y: 31 },
+      { x: 2.0, y: 29 }, { x: 2.3, y: 27 }, { x: 2.6, y: 23 },
+      { x: 3.0, y: 20 }, { x: 3.4, y: 16 }, { x: 3.8, y: 13 }
+    ];
+
+    const sliderAlpha = document.getElementById('slider-alpha');
+
+    function simulate(alphaVal) {
+      let w0 = 45.0, w1 = 0.20;
+      const N = dataset.length;
+      const costs = [];
+
+      for (let ep = 0; ep < 30; ep++) {
+        let gw0 = 0, gw1 = 0, cost = 0;
+        dataset.forEach(p => {
+          const err = (w1 * p.x + w0) - p.y;
+          gw0 += (2 / N) * err;
+          gw1 += (2 / N) * err * p.x;
+          cost += (1 / N) * err * err;
+        });
+        costs.push(cost);
+        w0 -= alphaVal * gw0;
+        w1 -= alphaVal * gw1;
+        if (cost > 1000) break;
+      }
+      return costs;
+    }
+
+    function mapEpToX(ep) { return 40 + (ep / 30.0) * 320; }
+    function mapCostToY(c) {
+      if (c > 150) c = 150;
+      return 200 - (c / 150.0) * 180;
+    }
+
+    function update() {
+      const a = parseFloat(sliderAlpha.value);
+      document.getElementById('val-alpha').textContent = a.toFixed(3);
+
+      const costs = simulate(a);
+      let d = '';
+      costs.forEach((c, ep) => {
+        const x = mapEpToX(ep);
+        const y = mapCostToY(c);
+        d += (ep === 0 ? 'M ' : ' L ') + x.toFixed(1) + ' ' + y.toFixed(1);
+      });
+
+      const path = document.getElementById('path-cost');
+      path.setAttribute('d', d);
+
+      const diag = document.getElementById('diag-box');
+      const lastCost = costs[costs.length - 1];
+      const isDiverging = lastCost > costs[0] || lastCost > 150;
+
+      if (isDiverging) {
+        path.setAttribute('stroke', '#b91c1c');
+        diag.innerHTML = `Status: <strong style="color:var(--red);">Divergência (Overshooting! α = ${a.toFixed(3)})</strong><br/>O passo é tão grande que os parâmetros saltam para fora da tigela de custo. O erro explodiu!`;
+      } else if (a < 0.015) {
+        path.setAttribute('stroke', '#854d0e');
+        diag.innerHTML = `Status: <strong style="color:var(--yellow);">Convergência Lenta (α = ${a.toFixed(3)})</strong><br/>O algoritmo está aprendendo, mas precisará de centenas de épocas para chegar ao mínimo.`;
+      } else {
+        path.setAttribute('stroke', '#166534');
+        diag.innerHTML = `Status: <strong style="color:var(--green);">Convergência Ideal (α = ${a.toFixed(3)})</strong><br/>Queda suave e rápida do custo global J(f).`;
+      }
+    }
+
+    sliderAlpha.addEventListener('input', update);
+    update();
+  </script>
+</body>
+</html>

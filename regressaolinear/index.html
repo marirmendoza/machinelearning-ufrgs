@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Regressão Linear & Gradiente Descendente — Índice dos Slides</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f8f9fb; --bg2: #ffffff; --bg3: #f0f2f6;
+      --border: #c7d0e0; --border2: #d1d9e8;
+      --text: #0f1724; --text-muted: #3d4f6e; --text-dim: #6b7fa3;
+      --teal: #0e7490; --grad: linear-gradient(135deg, #0e7490, #1d4ed8);
+    }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 3rem 1.5rem;
+    }
+    .hero { text-align: center; margin-bottom: 2.5rem; max-width: 680px; }
+    .badge {
+      display: inline-block;
+      padding: 0.3rem 1rem;
+      border-radius: 999px;
+      background: rgba(14,116,144,0.08);
+      border: 1px solid rgba(14,116,144,0.25);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 1.2rem;
+    }
+    h1 {
+      font-size: 2.3rem;
+      font-weight: 800;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+    .prof-name {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.88rem;
+      color: var(--text-dim);
+      margin: 0.4rem 0 0.8rem 0;
+    }
+    .hero-sub {
+      color: var(--text-muted);
+      font-size: 1rem;
+      max-width: 580px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 1.2rem;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      text-decoration: none;
+      font-family: 'Fira Code', monospace;
+    }
+    .back-link:hover { color: var(--teal); }
+
+    .blocks {
+      display: flex; flex-direction: column;
+      gap: 2rem;
+      max-width: 880px; width: 100%;
+    }
+    .block-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--teal);
+      margin-bottom: 1rem;
+      padding-left: 0.5rem;
+      border-left: 3px solid var(--teal);
+    }
+    .slides-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1rem;
+    }
+    .slide-link {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 1.1rem 1.25rem;
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      text-decoration: none;
+      color: var(--text);
+      transition: all 0.2s ease;
+    }
+    .slide-link:hover {
+      border-color: var(--teal);
+      box-shadow: 0 4px 16px rgba(14,116,144,0.12);
+      transform: translateY(-2px);
+    }
+    .slide-num {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--teal);
+    }
+    .slide-name {
+      font-size: 0.98rem;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+    .slide-desc {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+  <div style="width: 100%; max-width: 880px;">
+    <a href="../index.html" class="back-link">← Voltar para o Índice Geral</a>
+  </div>
+
+  <header class="hero">
+    <span class="badge">UFRGS — Aprendizado de Máquina</span>
+    <h1>Regressão Linear & Gradiente Descendente</h1>
+    <p class="prof-name">Profa. Mariana Recamonde-Mendoza</p>
+    <p class="hero-sub">
+      Coleção de slides interativos cobrindo a hipótese linear, resíduos, funções de perda (MSE, MAE, Huber), superfícies de custo, algoritmo do gradiente descendente, regressão multivariada, taxa de aprendizagem, variantes (SGD) e normalização.
+    </p>
+  </header>
+
+  <main class="blocks">
+    <!-- Bloco 1 -->
+    <section>
+      <div class="block-title">Bloco 1 — Hipótese Linear e Resíduos</div>
+      <div class="slides-grid">
+        <a href="b1-s01.html" class="slide-link">
+          <span class="slide-num">Slide 1.1</span>
+          <span class="slide-name">A Reta de Regressão e Parâmetros (w₁ e w₀)</span>
+          <span class="slide-desc">Ajuste manual e simulação interativa de previsão de Eficiência (MPG) vs Peso do Veículo.</span>
+        </a>
+        <a href="b1-s02.html" class="slide-link">
+          <span class="slide-num">Slide 1.2</span>
+          <span class="slide-name">Resíduos e Visualização dos Quadrados de Erro</span>
+          <span class="slide-desc">Análise gráfica e tabela detalhada de resíduos e áreas eᵢ².</span>
+        </a>
+        <a href="b1-s03.html" class="slide-link">
+          <span class="slide-num">Slide 1.3</span>
+          <span class="slide-name">Síntese do Modelo Linear e Foco de Visualização</span>
+          <span class="slide-desc">Gerador de 10 pontos aleatórios, minimização por Gradiente Descendente e seletores de foco.</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- Bloco 2 -->
+    <section>
+      <div class="block-title">Bloco 2 — Funções de Perda (Loss Functions)</div>
+      <div class="slides-grid">
+        <a href="b2-s01.html" class="slide-link">
+          <span class="slide-num">Slide 2.1</span>
+          <span class="slide-name">A Função de Custo MSE e Comparação de Perdas</span>
+          <span class="slide-desc">Definição do Erro Quadrático Médio e comparação gráfica entre L₂, L₁ e Huber.</span>
+        </a>
+        <a href="b2-s02.html" class="slide-link">
+          <span class="slide-num">Slide 2.2</span>
+          <span class="slide-name">O Impacto de Outliers e Robustez das Perdas</span>
+          <span class="slide-desc">Experimento com ponto discrepante e demonstração da imunidade do MAE e Huber.</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- Bloco 3 -->
+    <section>
+      <div class="block-title">Bloco 3 — Superfície de Custo, Gradiente e Multivariado</div>
+      <div class="slides-grid">
+        <a href="b3-s01.html" class="slide-link">
+          <span class="slide-num">Slide 3.1</span>
+          <span class="slide-name">Superfície de Custo 3D e Curvas de Nível 2D</span>
+          <span class="slide-desc">A "tigela" convexa do erro e mapeamento de contornos sincronizado com a reta.</span>
+        </a>
+        <a href="b3-s02.html" class="slide-link">
+          <span class="slide-num">Slide 3.2</span>
+          <span class="slide-name">O Algoritmo do Gradiente Descendente</span>
+          <span class="slide-desc">Regra de atualização passo a passo no espaço de parâmetros até o mínimo global.</span>
+        </a>
+        <a href="b3-s03.html" class="slide-link">
+          <span class="slide-num">Slide 3.3</span>
+          <span class="slide-name">Regressão Multivariada e Por Que Usar o Gradiente?</span>
+          <span class="slide-desc">Previsão com múltiplos atributos e desvantagens da Equação Normal Analítica.</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- Bloco 4 -->
+    <section>
+      <div class="block-title">Bloco 4 — Hiperparâmetros, Variantes e Normalização</div>
+      <div class="slides-grid">
+        <a href="b4-s01.html" class="slide-link">
+          <span class="slide-num">Slide 4.1</span>
+          <span class="slide-name">Taxa de Aprendizagem (α) e Divergência</span>
+          <span class="slide-desc">Convergência lenta (α pequeno), ótima (α ideal) e overshooting (α grande).</span>
+        </a>
+        <a href="b4-s02.html" class="slide-link">
+          <span class="slide-num">Slide 4.2</span>
+          <span class="slide-name">Variantes do Gradiente (Batch, Mini-batch, SGD)</span>
+          <span class="slide-desc">Trajetória suave do Batch vs. ziguezague do SGD nas curvas de nível.</span>
+        </a>
+        <a href="b4-s03.html" class="slide-link">
+          <span class="slide-num">Slide 4.3</span>
+          <span class="slide-name">Importância da Normalização de Atributos</span>
+          <span class="slide-desc">Transformação das elipses alongadas em círculos simétricos para acelerar a convergência.</span>
+        </a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

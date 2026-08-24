@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 1.2 — Resíduos e Visualização dos Quadrados de Erro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 900px) { .grid-2col { grid-template-columns: 1fr; } }
+
+    .residuals-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      font-family: 'Fira Code', monospace;
+    }
+    .residuals-table th, .residuals-table td {
+      border: 1px solid var(--border2);
+      padding: 0.35rem 0.5rem;
+      text-align: center;
+    }
+    .residuals-table th {
+      background: var(--bg3);
+      color: var(--text);
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Regressão Linear</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 1 · Slide 02 / 03</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Resíduos e Visualização dos Quadrados de Erro</h1>
+        <p class="slide-subtitle">
+          Analisando a diferença vertical entre cada valor real observado e a predição da reta de regressão.
+        </p>
+      </div>
+
+      <div class="concept-box">
+        <strong>Resíduo Individual vs. Área do Quadrado de Erro:</strong>
+        <br/>• <strong>Resíduo Individual (eᵢ):</strong> Diferença direta com sinal entre a predição e o valor real: <code>eᵢ = f(xᵢ) - yᵢ</code>.
+        <br/>• <strong>Área do Quadrado de Erro (eᵢ²):</strong> O quadrado do resíduo <code>(f(xᵢ) - yᵢ)²</code> representado pela área dos quadrados vermelhos desenhados sobre o gráfico.
+        <br/>• Ao mover os sliders da reta, a soma das áreas de todos os quadrados varia. No próximo slide (Bloco 2), calcularemos a média dessas áreas (Erro Quadrático Médio - MSE).
+      </div>
+
+      <div class="grid-2col">
+        <!-- Esquerda: Gráfico 2D com Linhas Verticais e Quadrados de Erro -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">1. Visualização Geométrica dos Erros (L₂ Loss)</span>
+          </div>
+
+          <svg id="svg-plot" viewBox="0 0 400 270" style="width:100%; height:auto; background:#fafafa; border:1px solid #d1d9e8; border-radius:8px;">
+            <g id="grid-lines" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="2,2"></g>
+            <line x1="50" y1="220" x2="380" y2="220" stroke="#0f1724" stroke-width="2" />
+            <line x1="50" y1="20" x2="50" y2="220" stroke="#0f1724" stroke-width="2" />
+            
+            <text x="215" y="260" font-size="11" font-weight="bold" fill="#0f1724" text-anchor="middle">Peso do Veículo (x 1.000 kg)</text>
+            <text x="15" y="120" font-size="11" font-weight="bold" fill="#0f1724" text-anchor="middle" transform="rotate(-90 15 120)">Eficiência (MPG)</text>
+
+            <g id="x-ticks"></g>
+            <g id="y-ticks"></g>
+
+            <g id="squares-group"></g>
+            <g id="lines-group"></g>
+            <line id="reg-line" stroke="#0e7490" stroke-width="3" />
+            <g id="pts-group"></g>
+          </svg>
+
+          <div class="control-group">
+            <div class="control-label">
+              <span>w₁ (Inclinação):</span>
+              <span id="val-w1" class="control-val">-8.50</span>
+            </div>
+            <input type="range" id="slider-w1" min="-15.0" max="2.0" value="-8.50" step="0.10" />
+          </div>
+
+          <div class="control-group">
+            <div class="control-label">
+              <span>w₀ (Bias / Intercepto):</span>
+              <span id="val-w0" class="control-val">45.0</span>
+            </div>
+            <input type="range" id="slider-w0" min="20.0" max="70.0" value="45.0" step="0.5" />
+          </div>
+        </div>
+
+        <!-- Direita: Tabela de Resíduos Individuais e Áreas dos Quadrados -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">2. Tabela de Resíduos e Áreas (eᵢ²)</span>
+          </div>
+
+          <div style="overflow-x:auto;">
+            <table class="residuals-table">
+              <thead>
+                <tr>
+                  <th>x (Peso)</th>
+                  <th>y (Real)</th>
+                  <th>f(x) (Predito)</th>
+                  <th>Resíduo (eᵢ)</th>
+                  <th>Área (eᵢ²)</th>
+                </tr>
+              </thead>
+              <tbody id="tbl-body"></tbody>
+            </table>
+          </div>
+
+          <div class="info-card" style="text-align:center; margin-top:0.4rem; background:var(--bg3);">
+            Soma Total das Áreas dos Quadrados (&sum; eᵢ²):<br/>
+            <strong id="txt-sum-sq" style="font-size:1.5rem; color:var(--red); font-family:'Fira Code', monospace;">43.38</strong>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="slide-footer">
+      <a href="b1-s01.html" class="nav-btn">← Anterior</a>
+      <a href="index.html" class="nav-center">Índice do Tópico</a>
+      <a href="b1-s03.html" class="nav-btn">Próximo →</a>
+    </footer>
+  </div>
+
+  <script>
+    const dataset = [
+      { x: 1.2, y: 38 }, { x: 1.5, y: 34 }, { x: 1.8, y: 31 },
+      { x: 2.0, y: 29 }, { x: 2.3, y: 27 }, { x: 2.6, y: 23 },
+      { x: 3.0, y: 20 }, { x: 3.4, y: 16 }, { x: 3.8, y: 13 }
+    ];
+
+    const sliderW1 = document.getElementById('slider-w1');
+    const sliderW0 = document.getElementById('slider-w0');
+
+    function mapX(x) { return 50 + ((x - 1.0) / 3.0) * 330; }
+    function mapY(y) { return 220 - ((y - 10) / 40) * 200; }
+
+    function drawAxes() {
+      const xG = document.getElementById('x-ticks');
+      const gridG = document.getElementById('grid-lines');
+      xG.innerHTML = ''; gridG.innerHTML = '';
+
+      [1.0, 2.0, 3.0, 4.0].forEach(val => {
+        const cx = mapX(val);
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', cx); line.setAttribute('y1', 220);
+        line.setAttribute('x2', cx); line.setAttribute('y2', 225);
+        line.setAttribute('stroke', '#0f1724'); line.setAttribute('stroke-width', '1.5');
+        xG.appendChild(line);
+
+        const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        txt.setAttribute('x', cx); txt.setAttribute('y', 240);
+        txt.setAttribute('font-size', '10'); txt.setAttribute('font-weight', 'bold');
+        txt.setAttribute('fill', '#3d4f6e'); txt.setAttribute('text-anchor', 'middle');
+        txt.textContent = val.toFixed(1);
+        xG.appendChild(txt);
+
+        const gridL = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        gridL.setAttribute('x1', cx); gridL.setAttribute('y1', 20);
+        gridL.setAttribute('x2', cx); gridL.setAttribute('y2', 220);
+        gridG.appendChild(gridL);
+      });
+
+      const yG = document.getElementById('y-ticks');
+      [10, 20, 30, 40, 50].forEach(val => {
+        const cy = mapY(val);
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', 45); line.setAttribute('y1', cy);
+        line.setAttribute('x2', 50); line.setAttribute('y2', cy);
+        line.setAttribute('stroke', '#0f1724'); line.setAttribute('stroke-width', '1.5');
+        yG.appendChild(line);
+
+        const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        txt.setAttribute('x', 40); txt.setAttribute('y', cy + 4);
+        txt.setAttribute('font-size', '10'); txt.setAttribute('font-weight', 'bold');
+        txt.setAttribute('fill', '#3d4f6e'); txt.setAttribute('text-anchor', 'end');
+        txt.textContent = val;
+        yG.appendChild(txt);
+
+        const gridL = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        gridL.setAttribute('x1', 50); gridL.setAttribute('y1', cy);
+        gridL.setAttribute('x2', 380); gridL.setAttribute('y2', cy);
+        gridG.appendChild(gridL);
+      });
+    }
+
+    function update() {
+      const w1 = parseFloat(sliderW1.value);
+      const w0 = parseFloat(sliderW0.value);
+
+      document.getElementById('val-w1').textContent = w1.toFixed(2);
+      document.getElementById('val-w0').textContent = w0.toFixed(1);
+
+      const y1 = w1 * 1.0 + w0;
+      const y2 = w1 * 4.0 + w0;
+
+      const line = document.getElementById('reg-line');
+      line.setAttribute('x1', mapX(1.0)); line.setAttribute('y1', mapY(y1));
+      line.setAttribute('x2', mapX(4.0)); line.setAttribute('y2', mapY(y2));
+
+      const sqG = document.getElementById('squares-group');
+      const linesG = document.getElementById('lines-group');
+      const ptsG = document.getElementById('pts-group');
+      const tblBody = document.getElementById('tbl-body');
+      
+      sqG.innerHTML = ''; linesG.innerHTML = ''; ptsG.innerHTML = ''; tblBody.innerHTML = '';
+
+      let sumSquareErr = 0;
+
+      dataset.forEach(p => {
+        const predY = w1 * p.x + w0;
+        const err = predY - p.y;
+        const sqErr = err * err;
+        sumSquareErr += sqErr;
+
+        const cx = mapX(p.x);
+        const cyReal = mapY(p.y);
+        const cyPred = mapY(predY);
+
+        const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        l.setAttribute('x1', cx); l.setAttribute('y1', cyReal);
+        l.setAttribute('x2', cx); l.setAttribute('y2', cyPred);
+        l.setAttribute('stroke', '#b91c1c'); l.setAttribute('stroke-width', '2');
+        l.setAttribute('stroke-dasharray', '3,3');
+        linesG.appendChild(l);
+
+        const side = Math.abs(cyReal - cyPred);
+        if (side > 1) {
+          const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          rect.setAttribute('x', cx);
+          rect.setAttribute('y', Math.min(cyReal, cyPred));
+          rect.setAttribute('width', side);
+          rect.setAttribute('height', side);
+          rect.setAttribute('fill', 'rgba(239, 68, 68, 0.18)');
+          rect.setAttribute('stroke', '#b91c1c');
+          rect.setAttribute('stroke-width', '1');
+          sqG.appendChild(rect);
+        }
+
+        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        c.setAttribute('cx', cx); c.setAttribute('cy', cyReal); c.setAttribute('r', 5);
+        c.setAttribute('fill', '#1d4ed8'); c.setAttribute('stroke', '#fff'); c.setAttribute('stroke-width', '1.5');
+        ptsG.appendChild(c);
+
+        // Preencher tabela
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${p.x.toFixed(1)}</td>
+          <td>${p.y}</td>
+          <td>${predY.toFixed(2)}</td>
+          <td style="color:${err >= 0 ? '#b91c1c' : '#166534'};">${err >= 0 ? '+' : ''}${err.toFixed(2)}</td>
+          <td style="font-weight:bold; color:#b91c1c;">${sqErr.toFixed(2)}</td>
+        `;
+        tblBody.appendChild(tr);
+      });
+
+      document.getElementById('txt-sum-sq').textContent = sumSquareErr.toFixed(2);
+    }
+
+    drawAxes();
+    sliderW1.addEventListener('input', update);
+    sliderW0.addEventListener('input', update);
+    update();
+  </script>
+</body>
+</html>

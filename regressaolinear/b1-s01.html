@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 1.1 — A Reta de Regressão e Parâmetros (w₁ e w₀)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 900px) { .grid-2col { grid-template-columns: 1fr; } }
+
+    .prediction-display {
+      background: #0f1724;
+      color: #f8f9fb;
+      font-family: 'Fira Code', monospace;
+      padding: 0.9rem 1.1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.98rem;
+      line-height: 1.6;
+      text-align: center;
+    }
+    .highlight-val { color: #fbbf24; font-weight: 700; }
+    .highlight-w { color: #38bdf8; font-weight: 700; }
+    .result-val { color: #4ade80; font-size: 1.2rem; font-weight: 800; display: inline-block; margin-left: 0.3rem; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Regressão Linear</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 1 · Slide 01 / 03</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">A Reta de Regressão e Parâmetros (w₁ e w₀)</h1>
+        <p class="slide-subtitle">
+          O modelo linear assume uma relação contínua entre o atributo de entrada (peso) e a saída alvo (eficiência em MPG).
+        </p>
+      </div>
+
+      <div class="concept-box">
+        <strong>Estudo de Caso (Eficiência de Combustível vs. Peso do Veículo):</strong>
+        <br/>• <strong>Equação da Hipótese:</strong> <code>f(x) = w₁ · x + w₀</code>
+        <br/>• <strong>w₁ (Peso / Coeficiente Angular):</strong> Taxa de variação da eficiência por unidade de peso (espera-se <code>w₁ &lt; 0</code>).
+        <br/>• <strong>w₀ (Bias / Intercepto):</strong> Eficiência base teórica no eixo Y quando o peso é zero (<code>x = 0</code>).
+      </div>
+
+      <div class="grid-2col">
+        <!-- Esquerda: Gráfico de Dispersão 2D -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">1. Gráfico de Dispersão (Peso vs. MPG)</span>
+          </div>
+
+          <svg id="svg-plot" viewBox="0 0 400 270" style="width:100%; height:auto; background:#fafafa; border:1px solid #d1d9e8; border-radius:8px;">
+            <g id="grid-lines" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="2,2"></g>
+            <line x1="50" y1="220" x2="380" y2="220" stroke="#0f1724" stroke-width="2" />
+            <line x1="50" y1="20" x2="50" y2="220" stroke="#0f1724" stroke-width="2" />
+            
+            <text x="215" y="260" font-size="11" font-weight="bold" fill="#0f1724" text-anchor="middle">Peso do Veículo (x 1.000 kg)</text>
+            <text x="15" y="120" font-size="11" font-weight="bold" fill="#0f1724" text-anchor="middle" transform="rotate(-90 15 120)">Eficiência (MPG)</text>
+
+            <g id="x-ticks"></g>
+            <g id="y-ticks"></g>
+
+            <line id="reg-line" stroke="#0e7490" stroke-width="3" />
+            <circle id="sim-pt" r="6" fill="#c2410c" stroke="#fff" stroke-width="2" style="display:none;" />
+            <line id="sim-v-line" stroke="#c2410c" stroke-width="1.5" stroke-dasharray="3,3" style="display:none;" />
+            <g id="pts-group"></g>
+          </svg>
+
+          <div class="control-group">
+            <div class="control-label">
+              <span>w₁ (Inclinação / Coef. Angular):</span>
+              <span id="val-w1" class="control-val">-8.50</span>
+            </div>
+            <input type="range" id="slider-w1" min="-15.0" max="2.0" value="-8.50" step="0.10" />
+          </div>
+
+          <div class="control-group">
+            <div class="control-label">
+              <span>w₀ (Bias / Intercepto Y):</span>
+              <span id="val-w0" class="control-val">45.0</span>
+            </div>
+            <input type="range" id="slider-w0" min="20.0" max="70.0" value="45.0" step="0.5" />
+          </div>
+        </div>
+
+        <!-- Direita: Simulação Interativa de Previsão -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">2. Simulação Interativa de Previsão</span>
+          </div>
+
+          <div class="formula-card">
+            // Modelo Ajustado Atual:<br/>
+            <span style="color:#38bdf8;">f(x) = (<span id="txt-w1" style="color:#fbbf24;">-8.50</span>) &times; Peso + <span id="txt-w0" style="color:#fbbf24;">45.0</span></span>
+          </div>
+
+          <div class="control-group" style="margin-top:0.4rem; background:var(--bg3); padding:0.8rem; border-radius:var(--radius-sm); border:1px solid var(--border2);">
+            <div class="control-label">
+              <span>Escolha o Peso do Veículo Teste (x):</span>
+              <span id="val-sim-x" class="control-val" style="color:var(--orange);">2.50 mil kg</span>
+            </div>
+            <input type="range" id="slider-sim-x" min="1.0" max="4.0" value="2.50" step="0.05" />
+          </div>
+
+          <div class="info-card" style="line-height:1.6;">
+            <strong style="color:var(--teal);">Resultado da Predição para o Modelo Atual:</strong>
+            <div class="prediction-display" style="margin-top:0.5rem;">
+              f(<span id="txt-sim-x" class="highlight-val">2.50</span>) = 
+              (<span id="txt-sim-w1" class="highlight-w">-8.50</span> &times; <span id="txt-sim-x2" class="highlight-val">2.50</span>) + 
+              <span id="txt-sim-w0" class="highlight-w">45.0</span> = 
+              <span id="txt-sim-result" class="result-val">23.75 MPG</span>
+            </div>
+            <span style="color:var(--text-muted); font-size:0.84rem; display:block; margin-top:0.6rem;">
+              • Arraste os sliders de <code>w₁</code> e <code>w₀</code> ou altere o peso do veículo <code>x</code> para calcular instantaneamente a eficiência predita.
+            </span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="slide-footer">
+      <a href="#" class="nav-btn disabled">← Anterior</a>
+      <a href="index.html" class="nav-center">Índice do Tópico</a>
+      <a href="b1-s02.html" class="nav-btn">Próximo →</a>
+    </footer>
+  </div>
+
+  <script>
+    const dataset = [
+      { x: 1.2, y: 38 }, { x: 1.5, y: 34 }, { x: 1.8, y: 31 },
+      { x: 2.0, y: 29 }, { x: 2.3, y: 27 }, { x: 2.6, y: 23 },
+      { x: 3.0, y: 20 }, { x: 3.4, y: 16 }, { x: 3.8, y: 13 }
+    ];
+
+    const sliderW1 = document.getElementById('slider-w1');
+    const sliderW0 = document.getElementById('slider-w0');
+    const sliderSimX = document.getElementById('slider-sim-x');
+
+    function mapX(x) { return 50 + ((x - 1.0) / 3.0) * 330; }
+    function mapY(y) { return 220 - ((y - 10) / 40) * 200; }
+
+    function drawAxes() {
+      const xG = document.getElementById('x-ticks');
+      const gridG = document.getElementById('grid-lines');
+      xG.innerHTML = ''; gridG.innerHTML = '';
+
+      [1.0, 2.0, 3.0, 4.0].forEach(val => {
+        const cx = mapX(val);
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', cx); line.setAttribute('y1', 220);
+        line.setAttribute('x2', cx); line.setAttribute('y2', 225);
+        line.setAttribute('stroke', '#0f1724'); line.setAttribute('stroke-width', '1.5');
+        xG.appendChild(line);
+
+        const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        txt.setAttribute('x', cx); txt.setAttribute('y', 240);
+        txt.setAttribute('font-size', '10'); txt.setAttribute('font-weight', 'bold');
+        txt.setAttribute('fill', '#3d4f6e'); txt.setAttribute('text-anchor', 'middle');
+        txt.textContent = val.toFixed(1);
+        xG.appendChild(txt);
+
+        const gridL = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        gridL.setAttribute('x1', cx); gridL.setAttribute('y1', 20);
+        gridL.setAttribute('x2', cx); gridL.setAttribute('y2', 220);
+        gridG.appendChild(gridL);
+      });
+
+      const yG = document.getElementById('y-ticks');
+      [10, 20, 30, 40, 50].forEach(val => {
+        const cy = mapY(val);
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', 45); line.setAttribute('y1', cy);
+        line.setAttribute('x2', 50); line.setAttribute('y2', cy);
+        line.setAttribute('stroke', '#0f1724'); line.setAttribute('stroke-width', '1.5');
+        yG.appendChild(line);
+
+        const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        txt.setAttribute('x', 40); txt.setAttribute('y', cy + 4);
+        txt.setAttribute('font-size', '10'); txt.setAttribute('font-weight', 'bold');
+        txt.setAttribute('fill', '#3d4f6e'); txt.setAttribute('text-anchor', 'end');
+        txt.textContent = val;
+        yG.appendChild(txt);
+
+        const gridL = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        gridL.setAttribute('x1', 50); gridL.setAttribute('y1', cy);
+        gridL.setAttribute('x2', 380); gridL.setAttribute('y2', cy);
+        gridG.appendChild(gridL);
+      });
+    }
+
+    function update() {
+      const w1 = parseFloat(sliderW1.value);
+      const w0 = parseFloat(sliderW0.value);
+      const simX = parseFloat(sliderSimX.value);
+
+      document.getElementById('val-w1').textContent = w1.toFixed(2);
+      document.getElementById('val-w0').textContent = w0.toFixed(1);
+      document.getElementById('txt-w1').textContent = w1.toFixed(2);
+      document.getElementById('txt-w0').textContent = w0.toFixed(1);
+
+      document.getElementById('val-sim-x').textContent = simX.toFixed(2) + ' mil kg';
+      document.getElementById('txt-sim-x').textContent = simX.toFixed(2);
+      document.getElementById('txt-sim-x2').textContent = simX.toFixed(2);
+      document.getElementById('txt-sim-w1').textContent = w1.toFixed(2);
+      document.getElementById('txt-sim-w0').textContent = w0.toFixed(1);
+
+      const simPred = w1 * simX + w0;
+      document.getElementById('txt-sim-result').textContent = simPred.toFixed(2) + ' MPG';
+
+      const y1 = w1 * 1.0 + w0;
+      const y2 = w1 * 4.0 + w0;
+      const line = document.getElementById('reg-line');
+      line.setAttribute('x1', mapX(1.0)); line.setAttribute('y1', mapY(y1));
+      line.setAttribute('x2', mapX(4.0)); line.setAttribute('y2', mapY(y2));
+
+      const simPt = document.getElementById('sim-pt');
+      const simVLine = document.getElementById('sim-v-line');
+      const simPx = mapX(simX);
+      const simPy = mapY(simPred);
+      simPt.style.display = 'block'; simVLine.style.display = 'block';
+      simPt.setAttribute('cx', simPx); simPt.setAttribute('cy', simPy);
+      simVLine.setAttribute('x1', simPx); simVLine.setAttribute('y1', 220);
+      simVLine.setAttribute('x2', simPx); simVLine.setAttribute('y2', simPy);
+
+      const ptsG = document.getElementById('pts-group');
+      ptsG.innerHTML = '';
+      dataset.forEach(p => {
+        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        c.setAttribute('cx', mapX(p.x)); c.setAttribute('cy', mapY(p.y)); c.setAttribute('r', 6);
+        c.setAttribute('fill', '#1d4ed8'); c.setAttribute('stroke', '#fff'); c.setAttribute('stroke-width', '1.5');
+        ptsG.appendChild(c);
+      });
+    }
+
+    drawAxes();
+    sliderW1.addEventListener('input', update);
+    sliderW0.addEventListener('input', update);
+    sliderSimX.addEventListener('input', update);
+    update();
+  </script>
+</body>
+</html>

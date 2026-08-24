@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 3.2 — O Algoritmo do Gradiente Descendente</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 900px) { .grid-2col { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Regressão Linear</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 3 · Slide 02 / 03</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">O Algoritmo do Gradiente Descendente</h1>
+        <p class="slide-subtitle">
+          Ajuste iterativo dos parâmetros $w_j$ no sentido oposto ao vetor gradiente até alcançar a convergência.
+        </p>
+      </div>
+
+      <div class="concept-box">
+        <strong>Regra de Atualização Simultânea:</strong>
+        <br/>• <strong>Vetor Gradiente ($\nabla J$):</strong> Indica a direção de maior crescimento do erro.
+        <br/>• <strong>Atualização:</strong> $$w_0 \leftarrow w_0 - \alpha \frac{\partial J}{\partial w_0}, \quad w_1 \leftarrow w_1 - \alpha \frac{\partial J}{\partial w_1}$$
+        • <strong>Derivadas Parciais do MSE:</strong> $$\frac{\partial J}{\partial w_0} = \frac{2}{N} \sum (f(x^{(i)}) - y^{(i)}), \quad \frac{\partial J}{\partial w_1} = \frac{2}{N} \sum (f(x^{(i)}) - y^{(i)}) \cdot x^{(i)}$$
+      </div>
+
+      <div class="grid-2col">
+        <!-- Esquerda: Trajetória da Descida nas Curvas de Nível -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">1. Trajetória no Espaço de Parâmetros (w₀ vs w₁)</span>
+          </div>
+
+          <svg id="svg-contour" viewBox="0 0 380 230" style="width:100%; height:auto; background:#fafafa; border:1px solid #d1d9e8; border-radius:8px;">
+            <g id="ellipses-group"></g>
+            <path id="path-gd" stroke="#b91c1c" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+            <g id="path-pts"></g>
+          </svg>
+
+          <div style="display:flex; gap:0.5rem; justify-content:center;">
+            <button id="btn-step" class="btn btn-primary btn-sm">▶ Dar 1 Passo</button>
+            <button id="btn-run" class="btn btn-outline btn-sm">⚡ Treinar (10 Passos)</button>
+            <button id="btn-reset" class="btn btn-outline btn-sm">↺ Resetar</button>
+          </div>
+        </div>
+
+        <!-- Direita: Reta de Regressão e Status dos Gradientes -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">2. Status de Treinamento e Reta Ajustada</span>
+          </div>
+
+          <svg id="svg-plot" viewBox="0 0 380 160" style="width:100%; height:auto; background:#fafafa; border:1px solid #d1d9e8; border-radius:8px;">
+            <line id="reg-line" stroke="#0e7490" stroke-width="3" />
+            <g id="pts-group"></g>
+          </svg>
+
+          <div class="formula-card" style="font-size:0.82rem;">
+            Iteração: <strong id="lbl-iter" style="color:#fbbf24;">0</strong> | Custo J: <strong id="lbl-cost" style="color:#f87171;">--</strong><br/>
+            w₀: <span id="lbl-w0">25.0</span> | ∂J/∂w₀: <span id="lbl-gw0" style="color:#38bdf8;">--</span><br/>
+            w₁: <span id="lbl-w1">0.20</span> | ∂J/∂w₁: <span id="lbl-gw1" style="color:#38bdf8;">--</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="slide-footer">
+      <a href="b3-s01.html" class="nav-btn">← Anterior</a>
+      <a href="index.html" class="nav-center">Índice do Tópico</a>
+      <a href="b3-s03.html" class="nav-btn">Próximo →</a>
+    </footer>
+  </div>
+
+  <script>
+    const dataset = [
+      { x: 1.2, y: 38 }, { x: 1.5, y: 34 }, { x: 1.8, y: 31 },
+      { x: 2.0, y: 29 }, { x: 2.3, y: 27 }, { x: 2.6, y: 23 },
+      { x: 3.0, y: 20 }, { x: 3.4, y: 16 }, { x: 3.8, y: 13 }
+    ];
+
+    let w0 = 25.0, w1 = 0.20;
+    let alpha = 0.04;
+    let iter = 0;
+    let history = [];
+
+    function mapW0(w0) { return 40 + ((w0 - 20.0) / 50.0) * 320; }
+    function mapW1(w1) { return 200 - ((w1 - (-15.0)) / 17.0) * 180; }
+
+    function mapPlotX(x) { return 40 + ((x - 1.0) / 3.0) * 320; }
+    function mapPlotY(y) { return 150 - ((y - 10) / 40) * 135; }
+
+    function drawContours() {
+      const g = document.getElementById('ellipses-group');
+      g.innerHTML = '';
+      const cx = mapW0(45.0); const cy = mapW1(-8.50);
+      [15, 35, 60, 95, 135].forEach((r, idx) => {
+        const el = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+        el.setAttribute('cx', cx); el.setAttribute('cy', cy);
+        el.setAttribute('rx', r * 1.3); el.setAttribute('ry', r * 0.7);
+        el.setAttribute('fill', 'none'); el.setAttribute('stroke', `rgba(14, 116, 144, ${0.7 - idx*0.1})`);
+        el.setAttribute('stroke-width', '1.5');
+        g.appendChild(el);
+      });
+    }
+
+    function computeGradients() {
+      let gw0 = 0, gw1 = 0, cost = 0;
+      const N = dataset.length;
+      dataset.forEach(p => {
+        const err = (w1 * p.x + w0) - p.y;
+        gw0 += (2 / N) * err;
+        gw1 += (2 / N) * err * p.x;
+        cost += (1 / N) * err * err;
+      });
+      return { gw0, gw1, cost };
+    }
+
+    function step() {
+      const g = computeGradients();
+      w0 -= alpha * g.gw0;
+      w1 -= alpha * g.gw1 * 0.4;
+      iter++;
+      history.push({ w0, w1 });
+      render();
+    }
+
+    function reset() {
+      w0 = 25.0; w1 = 0.20; iter = 0;
+      history = [{ w0, w1 }];
+      render();
+    }
+
+    function render() {
+      const g = computeGradients();
+      document.getElementById('lbl-iter').textContent = iter;
+      document.getElementById('lbl-cost').textContent = g.cost.toFixed(2);
+      document.getElementById('lbl-w0').textContent = w0.toFixed(2);
+      document.getElementById('lbl-w1').textContent = w1.toFixed(2);
+      document.getElementById('lbl-gw0').textContent = g.gw0.toFixed(2);
+      document.getElementById('lbl-gw1').textContent = g.gw1.toFixed(2);
+
+      let dPath = '';
+      const ptsG = document.getElementById('path-pts');
+      ptsG.innerHTML = '';
+      history.forEach((h, idx) => {
+        const cx = mapW0(h.w0); const cy = mapW1(h.w1);
+        dPath += (idx === 0 ? 'M ' : ' L ') + cx.toFixed(1) + ' ' + cy.toFixed(1);
+        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        c.setAttribute('cx', cx); c.setAttribute('cy', cy); c.setAttribute('r', idx === history.length - 1 ? 5 : 3);
+        c.setAttribute('fill', idx === history.length - 1 ? '#b91c1c' : '#0e7490');
+        ptsG.appendChild(c);
+      });
+      document.getElementById('path-gd').setAttribute('d', dPath);
+
+      const line = document.getElementById('reg-line');
+      const y1 = w1 * 1.0 + w0; const y2 = w1 * 4.0 + w0;
+      line.setAttribute('x1', mapPlotX(1.0)); line.setAttribute('y1', mapPlotY(y1));
+      line.setAttribute('x2', mapPlotX(4.0)); line.setAttribute('y2', mapPlotY(y2));
+
+      const dPtsG = document.getElementById('pts-group');
+      dPtsG.innerHTML = '';
+      dataset.forEach(p => {
+        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        c.setAttribute('cx', mapPlotX(p.x)); c.setAttribute('cy', mapPlotY(p.y)); c.setAttribute('r', 4);
+        c.setAttribute('fill', '#1d4ed8'); c.setAttribute('stroke', '#fff'); c.setAttribute('stroke-width', '1');
+        dPtsG.appendChild(c);
+      });
+    }
+
+    drawContours();
+    document.getElementById('btn-step').addEventListener('click', step);
+    document.getElementById('btn-run').addEventListener('click', () => { for (let i=0; i<10; i++) step(); });
+    document.getElementById('btn-reset').addEventListener('click', reset);
+    reset();
+  </script>
+</body>
+</html>

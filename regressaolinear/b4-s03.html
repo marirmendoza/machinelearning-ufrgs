@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 4.3 — Importância da Normalização de Atributos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 900px) { .grid-2col { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Regressão Linear</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 4 · Slide 03 / 03</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Importância da Normalização de Atributos</h1>
+        <p class="slide-subtitle">
+          Atributos em escalas numéricas muito diferentes distorcem a geometria da superfície de custo, desacelerando o gradiente.
+        </p>
+      </div>
+
+      <div class="concept-box">
+        <strong>Geometria da Superfície com e sem Normalização:</strong>
+        <br/>• <strong>Sem Normalização:</strong> Curvas de nível transformam-se em **elipses extremamente alongadas** (ravinas estreitas). Pequenas variações no peso causam mudanças drásticas na predição, forçando o gradiente a **ziguezaguar**.
+        <br/>• <strong>Com Normalização (Z-Score / Min-Max):</strong> Curvas de nível tornam-se **círculos simétricos**. O vetor gradiente aponta **diretamente para o centro/mínimo**, acelerando a convergência.
+      </div>
+
+      <div class="grid-2col">
+        <!-- Esquerda: Visualização dos Contornos e Passos do Gradiente -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">1. Geometria do Espaço de Parâmetros e Trajetória</span>
+          </div>
+
+          <svg id="svg-scaling" viewBox="0 0 380 230" style="width:100%; height:auto; background:#fafafa; border:1px solid #d1d9e8; border-radius:8px;">
+            <g id="contours-group"></g>
+            <path id="path-steps" stroke="#b91c1c" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+            <g id="pts-group"></g>
+          </svg>
+
+          <div style="display:flex; justify-content:space-around; font-size:0.88rem; font-weight:600;">
+            <label><input type="radio" name="scaling" value="raw" checked /> Sem Normalização (Elipses Achatadas)</label>
+            <label><input type="radio" name="scaling" value="norm" /> Com Normalização (Círculos Simétricos)</label>
+          </div>
+        </div>
+
+        <!-- Direita: Quadro Comparativo -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">2. Comparativo de Eficiência de Treino</span>
+          </div>
+
+          <div id="scale-info" class="info-card" style="line-height:1.6;">
+            Selecione uma opção para observar a diferença visual na trajetória do gradiente.
+          </div>
+
+          <div class="formula-card">
+            // Padronização Z-Score:<br/>
+            <code>x' = (x - &mu;) / &sigma;</code>
+            <br/><br/>
+            Garante média zero (<code>&mu; = 0</code>) e desvio padrão um (<code>&sigma; = 1</code>), permitindo usar uma mesma taxa de aprendizagem α ideal para todos os pesos.
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="slide-footer">
+      <a href="b4-s02.html" class="nav-btn">← Anterior</a>
+      <a href="index.html" class="nav-center">Índice do Tópico</a>
+      <a href="#" class="nav-btn disabled">Próximo →</a>
+    </footer>
+  </div>
+
+  <script>
+    function update() {
+      const isNorm = document.querySelector('input[name="scaling"]:checked').value === 'norm';
+      const cG = document.getElementById('contours-group');
+      const info = document.getElementById('scale-info');
+      const path = document.getElementById('path-steps');
+      const ptsG = document.getElementById('pts-group');
+
+      cG.innerHTML = ''; ptsG.innerHTML = '';
+      const cx = 190, cy = 115;
+
+      if (!isNorm) {
+        [20, 45, 75, 115, 155].forEach((r, idx) => {
+          const el = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+          el.setAttribute('cx', cx); el.setAttribute('cy', cy);
+          el.setAttribute('rx', r * 1.6); el.setAttribute('ry', r * 0.35);
+          el.setAttribute('fill', 'none'); el.setAttribute('stroke', `rgba(185, 28, 28, ${0.7 - idx*0.1})`);
+          el.setAttribute('stroke-width', '1.5');
+          cG.appendChild(el);
+        });
+
+        const steps = [
+          {x: 40, y: 30}, {x: 80, y: 190}, {x: 100, y: 50},
+          {x: 130, y: 170}, {x: 150, y: 70}, {x: 170, y: 140}, {x: 190, y: 115}
+        ];
+
+        let d = '';
+        steps.forEach((p, idx) => {
+          d += (idx === 0 ? 'M ' : ' L ') + p.x + ' ' + p.y;
+          const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          c.setAttribute('cx', p.x); c.setAttribute('cy', p.y); c.setAttribute('r', idx === steps.length-1 ? 5 : 3);
+          c.setAttribute('fill', '#b91c1c');
+          ptsG.appendChild(c);
+        });
+        path.setAttribute('d', d);
+        path.setAttribute('stroke', '#b91c1c');
+
+        info.innerHTML = '<strong style="color:var(--red);">Sem Normalização:</strong><br/>A ravina estreita obriga o gradiente a ziguezaguar entre as paredes do contorno, desacelerando drasticamente a velocidade de convergência.';
+      } else {
+        [25, 50, 75, 100, 125].forEach((r, idx) => {
+          const el = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          el.setAttribute('cx', cx); el.setAttribute('cy', cy);
+          el.setAttribute('r', r);
+          el.setAttribute('fill', 'none'); el.setAttribute('stroke', `rgba(22, 101, 52, ${0.7 - idx*0.1})`);
+          el.setAttribute('stroke-width', '1.5');
+          cG.appendChild(el);
+        });
+
+        const steps = [
+          {x: 60, y: 50}, {x: 100, y: 70}, {x: 140, y: 90}, {x: 190, y: 115}
+        ];
+
+        let d = '';
+        steps.forEach((p, idx) => {
+          d += (idx === 0 ? 'M ' : ' L ') + p.x + ' ' + p.y;
+          const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          c.setAttribute('cx', p.x); c.setAttribute('cy', p.y); c.setAttribute('r', idx === steps.length-1 ? 5 : 3);
+          c.setAttribute('fill', '#166534');
+          ptsG.appendChild(c);
+        });
+        path.setAttribute('d', d);
+        path.setAttribute('stroke', '#166534');
+
+        info.innerHTML = '<strong style="color:var(--green);">Com Normalização Z-Score:</strong><br/>O espaço de parâmetros torna-se perfeitamente esférico/circular. O gradiente aponta direto para o centro, convergindo no menor número de passos!';
+      }
+    }
+
+    document.querySelectorAll('input[name="scaling"]').forEach(r => r.addEventListener('change', update));
+    update();
+  </script>
+</body>
+</html>
