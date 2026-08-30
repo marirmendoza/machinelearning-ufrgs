@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 3 — Combinando Neurônios (XOR)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .layout {
+      display: flex;
+      gap: 2rem;
+      margin-top: 2rem;
+      align-items: center;
+    }
+
+    .plot-container {
+      flex: 1;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      position: relative;
+    }
+
+    .svg-plot {
+      width: 100%;
+      height: 400px;
+      background: #fafafa;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+    }
+
+    .pt-blue { fill: #3b82f6; stroke: white; stroke-width: 2; }
+    .pt-orange { fill: #f97316; stroke: white; stroke-width: 2; }
+    
+    .line-linear { stroke: #10b981; stroke-width: 3; stroke-dasharray: 6; }
+    .area-blue { fill: rgba(59, 130, 246, 0.1); }
+    .area-orange { fill: rgba(249, 115, 22, 0.1); }
+
+    .line-hidden1 { stroke: #8b5cf6; stroke-width: 2; }
+    .line-hidden2 { stroke: #ec4899; stroke-width: 2; }
+
+    .controls {
+      width: 300px;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .btn-toggle {
+      background: var(--bg2);
+      border: 2px solid var(--border);
+      padding: 1rem;
+      border-radius: 12px;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-toggle h4 { font-size: 1.05rem; margin-bottom: 0.3rem; color: var(--text); }
+    .btn-toggle p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; }
+
+    .btn-toggle.active {
+      border-color: var(--teal);
+      background: rgba(219,39,119,0.05);
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 0.3rem 0.8rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+    }
+    .status-fail { background: #fee2e2; color: #b91c1c; }
+    .status-success { background: #dcfce7; color: #15803d; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Neurais</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 3 · Slide 01</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Por que precisamos de camadas ocultas?</h1>
+        <p class="slide-subtitle">
+          Um neurônio isolado (Perceptron Clássico) consegue apenas traçar uma reta para separar os dados (problemas <strong>linearmente separáveis</strong>). 
+        </p>
+      </div>
+
+      <div class="layout">
+        <div class="plot-container">
+          <!-- XOR Plot: (1,1) and (4,4) are orange, (1,4) and (4,1) are blue -->
+          <svg viewBox="0 0 500 500" class="svg-plot">
+            <!-- Grid -->
+            <line x1="50" y1="450" x2="450" y2="450" stroke="#cbd5e1" stroke-width="2" />
+            <line x1="50" y1="50" x2="50" y2="450" stroke="#cbd5e1" stroke-width="2" />
+            <text x="250" y="480" font-family="monospace" font-size="12" fill="#64748b" text-anchor="middle">x₁</text>
+            <text x="20" y="250" font-family="monospace" font-size="12" fill="#64748b" transform="rotate(-90 20,250)" text-anchor="middle">x₂</text>
+
+            <!-- State 1: Linear -->
+            <g id="layer-linear">
+              <polygon points="50,450 50,50 450,50" class="area-blue" />
+              <polygon points="50,450 450,450 450,50" class="area-orange" />
+              <line x1="50" y1="450" x2="450" y2="50" class="line-linear" />
+            </g>
+
+            <!-- State 2: Network -->
+            <g id="layer-network" style="opacity: 0;">
+              <!-- Decision region for orange: middle band -->
+              <polygon points="50,250 50,50 250,50 450,250 450,450 250,450" class="area-blue" />
+              <polygon points="50,450 50,250 250,50 450,50 450,250 250,450" class="area-orange" opacity="0.6"/>
+              
+              <line x1="50" y1="250" x2="250" y2="50" class="line-hidden1" />
+              <line x1="250" y1="450" x2="450" y2="250" class="line-hidden2" />
+              
+              <text x="70" y="230" fill="#8b5cf6" font-family="monospace" font-size="12">Neurônio 1</text>
+              <text x="370" y="440" fill="#ec4899" font-family="monospace" font-size="12">Neurônio 2</text>
+            </g>
+
+            <!-- Points -->
+            <circle cx="150" cy="350" r="12" class="pt-orange" /> <!-- (0,0) -->
+            <circle cx="350" cy="150" r="12" class="pt-orange" /> <!-- (1,1) -->
+            
+            <circle cx="150" cy="150" r="12" class="pt-blue" />   <!-- (0,1) -->
+            <circle cx="350" cy="350" r="12" class="pt-blue" />   <!-- (1,0) -->
+          </svg>
+        </div>
+
+        <div class="controls">
+          <button class="btn-toggle active" id="btn-linear" onclick="setMode('linear')">
+            <h4>1. Um único Neurônio</h4>
+            <p>O modelo tenta traçar uma única reta para separar as cores. É impossível resolver o problema do XOR.</p>
+            <span class="status-badge status-fail">Falha (Erro alto)</span>
+          </button>
+
+          <button class="btn-toggle" id="btn-net" onclick="setMode('network')">
+            <h4>2. Rede Neural (Camada Oculta)</h4>
+            <p>Adicionando uma camada oculta, a rede traça duas retas e combina os resultados, resolvendo o problema.</p>
+            <span class="status-badge status-success">Sucesso (Erro zero)</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="insight-box mt-4">
+        <span class="i-icon">💡</span>
+        <div class="i-text">
+          Cada neurônio na camada oculta atua como um "detector de padrão" simples (uma reta). O neurônio de saída combina esses detectores (reta 1 E reta 2) para formar regiões de decisão complexas e curvas.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b2-s01.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+      </div>
+      <a class="btn-nav" href="b4-s01.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    function setMode(mode) {
+      document.getElementById('btn-linear').classList.remove('active');
+      document.getElementById('btn-net').classList.remove('active');
+      
+      const layerLin = document.getElementById('layer-linear');
+      const layerNet = document.getElementById('layer-network');
+      
+      if (mode === 'linear') {
+        document.getElementById('btn-linear').classList.add('active');
+        layerLin.style.opacity = '1';
+        layerLin.style.transition = 'opacity 0.3s';
+        layerNet.style.opacity = '0';
+      } else {
+        document.getElementById('btn-net').classList.add('active');
+        layerLin.style.opacity = '0';
+        layerNet.style.opacity = '1';
+        layerNet.style.transition = 'opacity 0.3s';
+      }
+    }
+  </script>
+</body>
+</html>

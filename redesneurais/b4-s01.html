@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 4.1 — Gradiente Descendente</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .plot-container {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .svg-plot {
+      width: 100%;
+      height: 350px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+    }
+
+    .curve {
+      fill: none;
+      stroke: #cbd5e1;
+      stroke-width: 4;
+      stroke-linecap: round;
+    }
+    
+    .gradient-line {
+      stroke: #f43f5e;
+      stroke-width: 2;
+      stroke-dasharray: 4;
+    }
+
+    .ball {
+      fill: #3b82f6;
+      stroke: white;
+      stroke-width: 3;
+      transition: cx 0.4s ease-out, cy 0.4s ease-out;
+    }
+
+    .controls-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .control-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .control-row label {
+      font-weight: 600;
+      font-size: 0.95rem;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--teal);
+    }
+    
+    .btn {
+      background: var(--teal);
+      color: white;
+      border: none;
+      padding: 0.8rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: #be185d; }
+    
+    .btn-outline {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+    .btn-outline:hover { background: #f1f5f9; color: var(--text); }
+
+    .stats {
+      background: #f1f5f9;
+      padding: 1rem;
+      border-radius: 8px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .stats span { color: var(--teal); font-weight: 700; }
+    
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Neurais</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 4 · Slide 01</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Gradiente Descendente</h1>
+        <p class="slide-subtitle">
+          Imagine que você está de olhos vendados em uma montanha (a função de custo) e quer chegar ao ponto mais baixo. Você sente a inclinação (o gradiente) sob seus pés e dá um passo na direção contrária.
+        </p>
+      </div>
+
+      <div class="layout">
+        <div class="plot-container">
+          <svg viewBox="0 0 500 350" class="svg-plot">
+            <!-- Axes -->
+            <line x1="250" y1="20" x2="250" y2="330" stroke="#94a3b8" stroke-width="1" />
+            <line x1="20" y1="310" x2="480" y2="310" stroke="#94a3b8" stroke-width="1" />
+            <text x="470" y="300" font-family="monospace" font-size="12" fill="#64748b">w (peso)</text>
+            <text x="260" y="30" font-family="monospace" font-size="12" fill="#64748b">J(w) (Erro)</text>
+
+            <!-- Parabola: J(w) = w^2 -->
+            <!-- w ranges from -10 to 10 -->
+            <!-- SVG coordinates: x = (w+10)*20 + 50 -->
+            <!-- y = 310 - w^2 * 2.8 -->
+            <path id="curve" class="curve" d="" />
+            
+            <!-- Tangent line -->
+            <line id="tangent" class="gradient-line" x1="0" y1="0" x2="0" y2="0" opacity="0" />
+
+            <circle id="ball" class="ball" cx="0" cy="0" r="10" />
+          </svg>
+        </div>
+
+        <div class="controls-panel">
+          <div class="control-row">
+            <label>Taxa de Aprendizagem (α) <span id="alpha-val">0.10</span></label>
+            <input type="range" id="alpha-slider" min="0.01" max="1.05" step="0.01" value="0.10" />
+            <span style="font-size:0.75rem; color:#64748b; margin-top:0.2rem;">O tamanho do passo que você dá. Tente aumentar muito!</span>
+          </div>
+
+          <button class="btn" onclick="step()">🚶‍♂️ Dar um passo</button>
+          <button class="btn btn-outline" onclick="reset()">🔄 Recomeçar</button>
+
+          <div class="stats">
+            <div>Peso atual (w): <span id="stat-w">-8.00</span></div>
+            <div>Erro atual J(w): <span id="stat-err">64.00</span></div>
+            <div>Gradiente (inclinação): <span id="stat-grad">-16.00</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="insight-box mt-4">
+        <span class="i-icon">💡</span>
+        <div class="i-text">
+          O <strong>Gradiente Descendente</strong> atualiza o peso pela fórmula: w<sub>novo</sub> = w<sub>atual</sub> - &alpha; &middot; gradiente. <br>
+          Se a taxa &alpha; for muito pequena, ele demora a convergir. Se for muito grande, ele pode <strong>pular</strong> o vale e divergir (overshooting)!
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b3-s01.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b4-s02.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    // Logic for Parabola
+    const W_MIN = -10, W_MAX = 10;
+    
+    function mapX(w) {
+      return ((w - W_MIN) / (W_MAX - W_MIN)) * 400 + 50;
+    }
+    function mapY(err) {
+      return 310 - (err * 2.8);
+    }
+
+    // Draw curve
+    let d = "";
+    for (let w = W_MIN; w <= W_MAX; w += 0.5) {
+      let err = w * w;
+      d += (w === W_MIN ? "M " : "L ") + mapX(w) + " " + mapY(err);
+    }
+    document.getElementById('curve').setAttribute('d', d);
+
+    // State
+    let currentW = -8;
+
+    function renderState() {
+      let err = currentW * currentW;
+      let grad = 2 * currentW;
+      
+      document.getElementById('ball').setAttribute('cx', mapX(currentW));
+      document.getElementById('ball').setAttribute('cy', mapY(err));
+      
+      document.getElementById('stat-w').textContent = currentW.toFixed(2);
+      document.getElementById('stat-err').textContent = err.toFixed(2);
+      document.getElementById('stat-grad').textContent = grad.toFixed(2);
+
+      // Draw tangent
+      const tLine = document.getElementById('tangent');
+      if (Math.abs(grad) > 0.01) {
+        let x1 = currentW - 2;
+        let y1 = err - grad * 2;
+        let x2 = currentW + 2;
+        let y2 = err + grad * 2;
+        tLine.setAttribute('x1', mapX(x1));
+        tLine.setAttribute('y1', mapY(y1));
+        tLine.setAttribute('x2', mapX(x2));
+        tLine.setAttribute('y2', mapY(y2));
+        tLine.setAttribute('opacity', '1');
+      } else {
+        tLine.setAttribute('opacity', '0');
+      }
+    }
+
+    function step() {
+      const alpha = parseFloat(document.getElementById('alpha-slider').value);
+      let grad = 2 * currentW;
+      currentW = currentW - (alpha * grad);
+      
+      // Cap for visual sanity if it explodes
+      if (currentW > 12) currentW = 12;
+      if (currentW < -12) currentW = -12;
+      
+      renderState();
+    }
+
+    function reset() {
+      currentW = -8;
+      renderState();
+    }
+
+    document.getElementById('alpha-slider').addEventListener('input', (e) => {
+      document.getElementById('alpha-val').textContent = parseFloat(e.target.value).toFixed(2);
+    });
+
+    renderState();
+  </script>
+</body>
+</html>

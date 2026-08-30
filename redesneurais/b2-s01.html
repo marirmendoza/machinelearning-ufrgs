@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 2 — Funções de Ativação</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .split-view {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .panel {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      box-shadow: var(--shadow);
+    }
+
+    .panel h3 {
+      font-size: 1.2rem;
+      color: var(--teal);
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .equation {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      background: #f1f5f9;
+      padding: 0.8rem;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .graph-container {
+      position: relative;
+      width: 100%;
+      height: 250px;
+      background: #fafafa;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .axis {
+      stroke: #cbd5e1;
+      stroke-width: 2;
+    }
+
+    .axis-tick {
+      stroke: #cbd5e1;
+      stroke-width: 1;
+    }
+
+    .axis-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 10px;
+      fill: #64748b;
+    }
+
+    .curve {
+      stroke: var(--teal);
+      stroke-width: 3;
+      fill: none;
+    }
+
+    .dot {
+      fill: #f43f5e;
+      stroke: white;
+      stroke-width: 2;
+      transition: cx 0.1s, cy 0.1s;
+    }
+
+    .result-box {
+      font-family: 'Fira Code', monospace;
+      font-size: 1.4rem;
+      font-weight: 700;
+      text-align: center;
+      color: #1e293b;
+      margin-top: auto;
+    }
+
+    .slider-container {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      padding: 1.5rem;
+      border-radius: var(--radius);
+      margin-top: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    .slider-container label {
+      font-weight: 600;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .slider-container input[type="range"] {
+      flex: 1;
+      accent-color: #f43f5e;
+    }
+
+    .s-val {
+      font-family: 'Fira Code', monospace;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #f43f5e;
+      width: 60px;
+      text-align: right;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Neurais</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 2 · Slide 01</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Perceptron vs. Sigmóide</h1>
+        <p class="slide-subtitle">
+          Após calcular a soma s, o neurônio precisa decidir se irá "disparar" (ativar). Existem diferentes
+          <strong>funções de ativação</strong> para isso.
+        </p>
+      </div>
+
+      <div class="slider-container">
+        <label>Soma calculada (s):</label>
+        <input type="range" id="s-slider" min="-10" max="10" value="-5" step="0.1" />
+        <span class="s-val" id="s-display">-5.0</span>
+      </div>
+
+      <div class="split-view">
+        <!-- Perceptron -->
+        <div class="panel">
+          <h3>Função Degrau (Perceptron)</h3>
+          <div class="equation">
+            f(s) = 1, se s ≥ 0 <br>
+            f(s) = 0, caso contrário
+          </div>
+          <div class="graph-container">
+            <svg width="100%" height="100%" viewBox="0 0 400 250" preserveAspectRatio="none" id="svg-step">
+              <!-- Axes -->
+              <line x1="0" y1="125" x2="400" y2="125" class="axis" />
+              <line x1="200" y1="0" x2="200" y2="250" class="axis" />
+              <!-- Ticks -->
+              <text x="205" y="25" class="axis-label">1</text>
+              <text x="205" y="245" class="axis-label">0</text>
+              <text x="10" y="140" class="axis-label">-10</text>
+              <text x="375" y="140" class="axis-label">10</text>
+
+              <!-- Curve -->
+              <path d="M 0 225 L 200 225 L 200 25 L 400 25" class="curve" />
+
+              <!-- Dot -->
+              <circle cx="0" cy="225" r="7" class="dot" id="dot-step" />
+            </svg>
+          </div>
+          <div class="result-box">f(s) = <span id="res-step">0</span></div>
+        </div>
+
+        <!-- Sigmoide -->
+        <div class="panel">
+          <h3>Função Sigmóide</h3>
+          <div class="equation">
+            f(s) = 1 / (1 + e⁻ˢ)
+          </div>
+          <div class="graph-container">
+            <svg width="100%" height="100%" viewBox="0 0 400 250" preserveAspectRatio="none" id="svg-sig">
+              <!-- Axes -->
+              <line x1="0" y1="125" x2="400" y2="125" class="axis" stroke-dasharray="4" />
+              <line x1="200" y1="0" x2="200" y2="250" class="axis" />
+              <!-- Ticks -->
+              <text x="205" y="25" class="axis-label">1</text>
+              <text x="205" y="245" class="axis-label">0</text>
+              <text x="205" y="140" class="axis-label">0.5</text>
+
+              <!-- Curve -->
+              <path d="" class="curve" id="path-sig" />
+
+              <!-- Dot -->
+              <circle cx="0" cy="225" r="7" class="dot" id="dot-sig" />
+            </svg>
+          </div>
+          <div class="result-box">f(s) = <span id="res-sig">0.000</span></div>
+        </div>
+      </div>
+
+      <div class="insight-box mt-4">
+        <span class="i-icon">💡</span>
+        <div class="i-text">
+          A função degrau é rígida, causando saltos abruptos. A <strong>sigmóide</strong> tem uma transição suave,
+          permitindo que a rede entenda não apenas "sim/não", mas também o <strong>grau de incerteza</strong>. Além
+          disso, ela é diferenciável (tem derivada contínua), o que é essencial para o algoritmo de aprendizado.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b1-s01.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+      </div>
+      <a class="btn-nav" href="b3-s01.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    // Draw Sigmoid path
+    const pathSig = document.getElementById('path-sig');
+    let d = "";
+    for (let px = 0; px <= 400; px += 2) {
+      // Map px (0..400) to s (-10..10)
+      const s = (px / 400) * 20 - 10;
+      const f = 1 / (1 + Math.exp(-s));
+      // Map f (0..1) to py (225..25)
+      const py = 225 - (f * 200);
+      d += (px === 0 ? "M " : "L ") + px + " " + py;
+    }
+    pathSig.setAttribute('d', d);
+
+    function update() {
+      const s = parseFloat(document.getElementById('s-slider').value);
+      document.getElementById('s-display').textContent = s.toFixed(1);
+
+      const px = ((s + 10) / 20) * 400;
+
+      // Step
+      const fStep = s >= 0 ? 1 : 0;
+      const pyStep = 225 - (fStep * 200);
+      document.getElementById('dot-step').setAttribute('cx', px);
+      document.getElementById('dot-step').setAttribute('cy', pyStep);
+      document.getElementById('res-step').textContent = fStep;
+
+      // Sigmoid
+      const fSig = 1 / (1 + Math.exp(-s));
+      const pySig = 225 - (fSig * 200);
+      document.getElementById('dot-sig').setAttribute('cx', px);
+      document.getElementById('dot-sig').setAttribute('cy', pySig);
+      document.getElementById('res-sig').textContent = fSig.toFixed(3);
+    }
+
+    document.getElementById('s-slider').addEventListener('input', update);
+    update();
+  </script>
+</body>
+
+</html>

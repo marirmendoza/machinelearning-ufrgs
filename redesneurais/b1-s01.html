@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 1 — O Neurônio Computacional</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .neuron-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 2rem;
+      padding: 3rem 1rem;
+      position: relative;
+    }
+    
+    .inputs-col {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .node {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      position: relative;
+      z-index: 2;
+    }
+
+    .node-input {
+      background: #e0e7ff; /* light indigo */
+      border: 3px solid #818cf8;
+      color: #3730a3;
+    }
+
+    .node-soma {
+      width: 100px;
+      height: 100px;
+      background: #dbeafe; /* light blue */
+      border: 4px solid #3b82f6;
+      color: #1e40af;
+      font-size: 2rem;
+    }
+
+    .node-output {
+      background: #dcfce7; /* light green */
+      border: 3px solid #4ade80;
+      color: #166534;
+    }
+
+    /* Lines using SVG for simplicity */
+    .connections {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .weight-label {
+      position: absolute;
+      background: white;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+      font-weight: 600;
+      z-index: 3;
+    }
+    
+    .controls-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-top: 2rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      box-shadow: var(--shadow);
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    .control-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .control-row label {
+      font-family: 'Fira Code', monospace;
+      font-weight: 600;
+      width: 40px;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      accent-color: var(--teal);
+    }
+    
+    .val-display {
+      font-family: 'Fira Code', monospace;
+      width: 45px;
+      text-align: right;
+    }
+
+    .equation-box {
+      margin-top: 2rem;
+      background: #f8fafc;
+      border-left: 4px solid #3b82f6;
+      padding: 1.5rem;
+      font-size: 1.2rem;
+      text-align: center;
+      font-family: 'Fira Code', monospace;
+      border-radius: 0 8px 8px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Neurais</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 1 · Slide 01</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">O Neurônio Computacional</h1>
+        <p class="slide-subtitle">
+          Inspirado na biologia: <strong>Dendritos</strong> (entradas e pesos), <strong>Soma</strong> (agregação) e <strong>Axônio</strong> (saída).
+        </p>
+      </div>
+
+      <div class="neuron-container" id="n-container">
+        <!-- SVG Connections -->
+        <svg class="connections" id="svg-layer">
+          <line id="line-x1" x1="0" y1="0" x2="0" y2="0" stroke="#94a3b8" stroke-width="3" />
+          <line id="line-x2" x1="0" y1="0" x2="0" y2="0" stroke="#94a3b8" stroke-width="3" />
+          <line id="line-out" x1="0" y1="0" x2="0" y2="0" stroke="#94a3b8" stroke-width="3" />
+        </svg>
+
+        <div class="inputs-col" id="col-in">
+          <div class="node node-input" id="node-x1">x₁</div>
+          <div class="node node-input" id="node-x2">x₂</div>
+        </div>
+        
+        <div class="node node-soma" id="node-s">Σ</div>
+        
+        <div class="node node-output" id="node-out">f(s)</div>
+
+        <div class="weight-label" id="lbl-w1" style="top: 0; left: 0;">w₁</div>
+        <div class="weight-label" id="lbl-w2" style="top: 0; left: 0;">w₂</div>
+      </div>
+
+      <div class="equation-box" id="eq-display">
+        s = (x₁ · w₁) + (x₂ · w₂) = ?
+      </div>
+
+      <div class="controls-panel">
+        <div class="control-group">
+          <h4 style="color: var(--text-dim); margin-bottom: 0.5rem; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.05em;">Entradas (Dendritos)</h4>
+          <div class="control-row">
+            <label>x₁</label>
+            <input type="range" id="x1" min="0" max="10" value="5" step="1">
+            <span class="val-display" id="vx1">5</span>
+          </div>
+          <div class="control-row">
+            <label>x₂</label>
+            <input type="range" id="x2" min="0" max="10" value="2" step="1">
+            <span class="val-display" id="vx2">2</span>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <h4 style="color: var(--text-dim); margin-bottom: 0.5rem; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.05em;">Pesos Sinápticos</h4>
+          <div class="control-row">
+            <label>w₁</label>
+            <input type="range" id="w1" min="-5" max="5" value="2" step="0.5">
+            <span class="val-display" id="vw1">2</span>
+          </div>
+          <div class="control-row">
+            <label>w₂</label>
+            <input type="range" id="w2" min="-5" max="5" value="-1" step="0.5">
+            <span class="val-display" id="vw2">-1</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="insight-box mt-4">
+        <span class="i-icon">💡</span>
+        <div class="i-text">
+          <strong>Como funciona?</strong> O neurônio calcula uma soma ponderada de suas entradas. Entradas com pesos maiores têm mais influência (força sináptica). Pesos negativos inibem o neurônio.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="index.html">← Índice</a>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+      </div>
+      <a class="btn-nav" href="b2-s01.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    const state = { x1: 5, x2: 2, w1: 2, w2: -1 };
+
+    function getCenter(el) {
+      const rect = el.getBoundingClientRect();
+      const parentRect = document.getElementById('n-container').getBoundingClientRect();
+      return {
+        x: rect.left - parentRect.left + rect.width / 2,
+        y: rect.top - parentRect.top + rect.height / 2
+      };
+    }
+
+    function drawLines() {
+      const pX1 = getCenter(document.getElementById('node-x1'));
+      const pX2 = getCenter(document.getElementById('node-x2'));
+      const pS = getCenter(document.getElementById('node-s'));
+      const pOut = getCenter(document.getElementById('node-out'));
+
+      document.getElementById('line-x1').setAttribute('x1', pX1.x);
+      document.getElementById('line-x1').setAttribute('y1', pX1.y);
+      document.getElementById('line-x1').setAttribute('x2', pS.x);
+      document.getElementById('line-x1').setAttribute('y2', pS.y);
+
+      document.getElementById('line-x2').setAttribute('x1', pX2.x);
+      document.getElementById('line-x2').setAttribute('y1', pX2.y);
+      document.getElementById('line-x2').setAttribute('x2', pS.x);
+      document.getElementById('line-x2').setAttribute('y2', pS.y);
+
+      document.getElementById('line-out').setAttribute('x1', pS.x);
+      document.getElementById('line-out').setAttribute('y1', pS.y);
+      document.getElementById('line-out').setAttribute('x2', pOut.x);
+      document.getElementById('line-out').setAttribute('y2', pOut.y);
+
+      const lblW1 = document.getElementById('lbl-w1');
+      lblW1.style.left = (pX1.x + pS.x) / 2 - 15 + 'px';
+      lblW1.style.top = (pX1.y + pS.y) / 2 - 25 + 'px';
+
+      const lblW2 = document.getElementById('lbl-w2');
+      lblW2.style.left = (pX2.x + pS.x) / 2 - 15 + 'px';
+      lblW2.style.top = (pX2.y + pS.y) / 2 + 5 + 'px';
+    }
+
+    function update() {
+      ['x1', 'x2', 'w1', 'w2'].forEach(id => {
+        state[id] = parseFloat(document.getElementById(id).value);
+        document.getElementById('v' + id).textContent = state[id];
+      });
+
+      document.getElementById('node-x1').textContent = state.x1;
+      document.getElementById('node-x2').textContent = state.x2;
+      document.getElementById('lbl-w1').textContent = 'w₁=' + state.w1;
+      document.getElementById('lbl-w2').textContent = 'w₂=' + state.w2;
+
+      const sum = (state.x1 * state.w1) + (state.x2 * state.w2);
+      
+      // In this simple slide, output is just the sum (linear activation)
+      document.getElementById('node-out').textContent = sum;
+      
+      document.getElementById('eq-display').innerHTML = `s = (<span style="color:#4f46e5">${state.x1}</span> · <strong>${state.w1}</strong>) + (<span style="color:#4f46e5">${state.x2}</span> · <strong>${state.w2}</strong>) = <strong style="color:#2563eb; font-size: 1.5rem">${sum}</strong>`;
+      
+      // Visual feedback for weights
+      document.getElementById('line-x1').setAttribute('stroke-width', Math.max(1, Math.abs(state.w1) * 2));
+      document.getElementById('line-x2').setAttribute('stroke-width', Math.max(1, Math.abs(state.w2) * 2));
+      
+      document.getElementById('line-x1').setAttribute('stroke', state.w1 >= 0 ? '#94a3b8' : '#f87171');
+      document.getElementById('line-x2').setAttribute('stroke', state.w2 >= 0 ? '#94a3b8' : '#f87171');
+    }
+
+    window.addEventListener('resize', drawLines);
+    ['x1', 'x2', 'w1', 'w2'].forEach(id => {
+      document.getElementById(id).addEventListener('input', update);
+    });
+
+    // Initial render
+    setTimeout(() => {
+      drawLines();
+      update();
+    }, 100);
+  </script>
+</body>
+</html>
