@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 5 — Regularização e Momentum</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .split-view {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      box-shadow: var(--shadow);
+    }
+    
+    .panel h3 {
+      font-size: 1.2rem;
+      color: var(--teal);
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .plot-area {
+      width: 100%;
+      height: 250px;
+      background: #fafafa;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Regularization Styles */
+    .reg-pt { fill: #3b82f6; }
+    .reg-curve-overfit { fill: none; stroke: #f43f5e; stroke-width: 2; transition: opacity 0.3s; }
+    .reg-curve-good { fill: none; stroke: #10b981; stroke-width: 3; transition: opacity 0.3s; }
+
+    /* Momentum Styles */
+    .mom-bg { fill: #f1f5f9; }
+    .mom-contour { fill: none; stroke: #cbd5e1; stroke-width: 1; }
+    .mom-path { fill: none; stroke-width: 2; stroke-dasharray: 4; }
+    .path-nomom { stroke: #f43f5e; }
+    .path-mom { stroke: #10b981; }
+    
+    .mom-ball { fill: #0f1724; }
+
+    .btn-group {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: auto;
+    }
+    
+    .btn {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      padding: 0.6rem 1rem;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
+    .btn.active { background: var(--teal); color: white; border-color: var(--teal); }
+
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Neurais</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 5 · Slide 01</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Tópicos Avançados: Otimizando o Aprendizado</h1>
+        <p class="slide-subtitle">
+          Na prática, as redes neurais lidam com problemas reais como <strong>Overfitting</strong> (decorar os dados) e lentidão na convergência.
+        </p>
+      </div>
+
+      <div class="split-view">
+        <!-- Panel 1: Regularization -->
+        <div class="panel">
+          <h3>1. Regularização (Overfitting)</h3>
+          <p style="font-size:0.9rem; color:var(--text-muted); text-align:center;">Se a rede for complexa demais, ela "decora" o ruído.</p>
+          
+          <div class="plot-area">
+            <svg viewBox="0 0 300 250" width="100%" height="100%">
+              <!-- Overfit curve (crazy polynomial) -->
+              <path id="curve-overfit" class="reg-curve-overfit" d="M 20 180 Q 40 80 60 200 T 120 100 T 180 220 T 240 50 T 280 150" opacity="1" />
+              <!-- Good curve (regularized) -->
+              <path id="curve-good" class="reg-curve-good" d="M 20 150 Q 100 220 180 150 T 280 80" opacity="0" />
+              
+              <!-- Data points -->
+              <circle cx="20" cy="180" r="4" class="reg-pt" />
+              <circle cx="60" cy="200" r="4" class="reg-pt" />
+              <circle cx="100" cy="190" r="4" class="reg-pt" />
+              <circle cx="140" cy="150" r="4" class="reg-pt" />
+              <circle cx="180" cy="130" r="4" class="reg-pt" />
+              <circle cx="220" cy="90" r="4" class="reg-pt" />
+              <circle cx="260" cy="110" r="4" class="reg-pt" />
+              <circle cx="280" cy="80" r="4" class="reg-pt" />
+            </svg>
+          </div>
+
+          <div class="btn-group">
+            <button class="btn active" id="btn-overfit" onclick="setReg('overfit')">Sem Regularização</button>
+            <button class="btn" id="btn-reg" onclick="setReg('reg')">Com Regularização (+ &lambda;)</button>
+          </div>
+        </div>
+
+        <!-- Panel 2: Momentum -->
+        <div class="panel">
+          <h3>2. Método do Momento</h3>
+          <p style="font-size:0.9rem; color:var(--text-muted); text-align:center;">Acelera a convergência acumulando velocidade.</p>
+          
+          <div class="plot-area">
+            <svg viewBox="0 0 300 250" width="100%" height="100%">
+              <rect width="300" height="250" class="mom-bg" />
+              <!-- Contours representing a ravine -->
+              <ellipse cx="150" cy="125" rx="140" ry="40" class="mom-contour" />
+              <ellipse cx="150" cy="125" rx="100" ry="25" class="mom-contour" />
+              <ellipse cx="150" cy="125" rx="60" ry="12" class="mom-contour" />
+              <circle cx="150" cy="125" r="3" fill="#cbd5e1" /> <!-- Minimum -->
+
+              <!-- Paths -->
+              <polyline id="path-nomom" points="20,80 80,160 120,90 160,150 180,105 210,140" class="mom-path path-nomom" opacity="1" />
+              <polyline id="path-mom" points="20,80 50,110 90,120 140,123 150,125" class="mom-path path-mom" opacity="0" />
+            </svg>
+          </div>
+
+          <div class="btn-group">
+            <button class="btn active" id="btn-nomom" onclick="setMom('nomom')">Gradiente Padrão</button>
+            <button class="btn" id="btn-mom" onclick="setMom('mom')">Com Momentum</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="insight-box mt-4">
+        <span class="i-icon">💡</span>
+        <div class="i-text">
+          A <strong>Regularização</strong> adiciona uma penalidade aos pesos da rede na função de custo, forçando pesos menores e modelos mais simples (evitando que "decore" ruído). <br>
+          O <strong>Momentum</strong> lembra a direção dos passos anteriores, ajudando a rede a não "ficar quicando" nas paredes de um vale e ir direto ao ponto de mínimo erro.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b4-s02.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+      </div>
+      <a class="btn-nav disabled" href="#">Próximo →</a>
+    </nav>
+    <div style="text-align:center; margin-bottom: 1rem;">
+      <a href="index.html" class="nav-home">← Voltar ao Índice</a>
+    </div>
+  </div>
+
+  <script>
+    function setReg(mode) {
+      document.getElementById('btn-overfit').classList.remove('active');
+      document.getElementById('btn-reg').classList.remove('active');
+      
+      const cOver = document.getElementById('curve-overfit');
+      const cGood = document.getElementById('curve-good');
+
+      if (mode === 'overfit') {
+        document.getElementById('btn-overfit').classList.add('active');
+        cOver.style.opacity = '1';
+        cGood.style.opacity = '0';
+      } else {
+        document.getElementById('btn-reg').classList.add('active');
+        cOver.style.opacity = '0';
+        cGood.style.opacity = '1';
+      }
+    }
+
+    function setMom(mode) {
+      document.getElementById('btn-nomom').classList.remove('active');
+      document.getElementById('btn-mom').classList.remove('active');
+      
+      const pNo = document.getElementById('path-nomom');
+      const pYes = document.getElementById('path-mom');
+
+      if (mode === 'nomom') {
+        document.getElementById('btn-nomom').classList.add('active');
+        pNo.style.opacity = '1';
+        pYes.style.opacity = '0';
+      } else {
+        document.getElementById('btn-mom').classList.add('active');
+        pNo.style.opacity = '0';
+        pYes.style.opacity = '1';
+      }
+    }
+  </script>
+</body>
+</html>

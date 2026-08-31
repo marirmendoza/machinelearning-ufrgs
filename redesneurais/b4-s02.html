@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 4.2 — Backpropagation</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .network-stage {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+      position: relative;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-top: 1rem;
+      min-height: 380px;
+    }
+
+    .node {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+      position: absolute;
+      z-index: 2;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transition: all 0.3s;
+    }
+
+    .node-title { font-size: 0.6rem; font-weight: 600; opacity: 0.8; margin-bottom: -2px; }
+
+    .n-in  { background: #e0e7ff; border: 3px solid #818cf8; color: #3730a3; left: 15%; }
+    .n-hid { background: #fae8ff; border: 3px solid #f472b6; color: #831843; left: 50%; transform: translateX(-50%); }
+    .n-out { background: #dcfce7; border: 3px solid #4ade80; color: #166534; right: 15%; top: 50%; transform: translateY(-50%); }
+
+    /* Node positioning */
+    #n-x1 { top: 20%; }
+    #n-x2 { bottom: 20%; }
+    #n-h1 { top: 20%; }
+    #n-h2 { bottom: 20%; }
+
+    .connections {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+    .conn-line {
+      stroke: #cbd5e1;
+      stroke-width: 2;
+      transition: stroke 0.3s, stroke-width 0.3s;
+    }
+    
+    /* Animation classes */
+    .pulse-error { stroke: #f43f5e; stroke-width: 4; }
+    
+    .weight-label {
+      position: absolute;
+      background: white;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      font-family: 'Fira Code', monospace;
+      font-size: 0.75rem;
+      font-weight: 600;
+      z-index: 3;
+      transition: all 0.3s;
+    }
+    .weight-label.updating {
+      background: #ffe4e6;
+      border-color: #f43f5e;
+      color: #e11d48;
+      transform: scale(1.15);
+    }
+
+    .error-box {
+      position: absolute;
+      right: 5%;
+      top: 15%;
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 2px solid #f87171;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-family: 'Fira Code', monospace;
+      font-weight: 700;
+      font-size: 0.9rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .btn-action {
+      background: #f43f5e;
+      color: white;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      display: block;
+      margin: 1.5rem auto 0;
+      transition: all 0.2s;
+    }
+    .btn-action:hover { background: #e11d48; transform: translateY(-2px); }
+    .btn-action:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; }
+
+    /* Explanation Box */
+    .explanation-panel {
+      background: #f8fafc;
+      border-left: 4px solid #f43f5e;
+      padding: 1.2rem;
+      margin-top: 1.5rem;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .explanation-panel h4 {
+      color: var(--text);
+      font-size: 1.05rem;
+      margin-bottom: 0.5rem;
+    }
+    .expl-step { display: none; }
+    .expl-step.active { display: block; animation: fadeIn 0.3s; }
+    
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Neurais</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 4 · Slide 02</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">A Intuição do Backpropagation</h1>
+        <p class="slide-subtitle">
+          Como a rede aprende? O erro da saída é <strong>dividido e propagado de trás pra frente</strong> (retropropagado). Cada neurônio recebe uma fatia de "culpa" proporcional à força da sua conexão.
+        </p>
+      </div>
+
+      <div class="network-stage" id="net-stage">
+        <svg class="connections">
+          <!-- In to Hidden -->
+          <line id="l-x1-h1" class="conn-line" />
+          <line id="l-x1-h2" class="conn-line" />
+          <line id="l-x2-h1" class="conn-line" />
+          <line id="l-x2-h2" class="conn-line" />
+          <!-- Hidden to Out -->
+          <line id="l-h1-o" class="conn-line" />
+          <line id="l-h2-o" class="conn-line" />
+        </svg>
+
+        <div class="node n-in" id="n-x1"><span class="node-title">x₁</span></div>
+        <div class="node n-in" id="n-x2"><span class="node-title">x₂</span></div>
+        
+        <div class="node n-hid" id="n-h1"><span class="node-title">h₁</span><span id="v-h1">0.4</span></div>
+        <div class="node n-hid" id="n-h2"><span class="node-title">h₂</span><span id="v-h2">0.6</span></div>
+        
+        <div class="node n-out" id="n-out"><span class="node-title">Saída</span><span id="v-out">0.2</span></div>
+
+        <!-- Only labels for Hidden -> Out for clarity -->
+        <div class="weight-label" id="w-h1-o">w₁=0.8</div>
+        <div class="weight-label" id="w-h2-o">w₂=0.2</div>
+
+        <div class="error-box" id="err-box">Erro: 0.8 (Alvo=1.0)</div>
+      </div>
+
+      <div class="explanation-panel">
+        <h4>O que está acontecendo?</h4>
+        <div id="expl-0" class="expl-step active">A rede fez uma previsão (0.2), mas o alvo era 1.0. Estamos prontos para corrigir os erros. Clique em <strong>"Retropropagar Erro"</strong>.</div>
+        <div id="expl-1" class="expl-step"><strong>1. Calculando a "culpa":</strong> Identificamos um erro de 0.8 na saída. A rede agora vai olhar para as conexões que geraram essa saída.</div>
+        <div id="expl-2" class="expl-step"><strong>2. Dividindo o Erro:</strong> O neurônio <strong>h₁</strong> tinha um peso forte (0.8), então ele recebe a <em>maior parte da culpa</em> pelo erro. O neurônio <strong>h₂</strong> tinha peso fraco (0.2), então recebe pouca culpa. Os pesos são ajustados de acordo!</div>
+        <div id="expl-3" class="expl-step"><strong>3. Retropropagando mais:</strong> Agora que <strong>h₁</strong> e <strong>h₂</strong> sabem sua parcela de erro (seus deltas &delta;), eles repetem o processo de passar a culpa para as conexões anteriores (entradas).</div>
+        <div id="expl-4" class="expl-step"><strong>4. Treino Iterativo:</strong> A rede concluiu um passo (época). A previsão já melhorou um pouco! Em redes reais, repetimos isso milhares de vezes até o erro se aproximar de zero.</div>
+      </div>
+
+      <button class="btn-action" id="btn-bp" onclick="runBackprop()">Retropropagar Erro (Backward)</button>
+
+      <div class="insight-box mt-4">
+        <span class="i-icon">💡</span>
+        <div class="i-text">
+          A sacada genial do <strong>Backpropagation</strong> é usar a regra da cadeia: não calculamos o erro do zero para as camadas iniciais. Nós reutilizamos a "culpa" já calculada nas camadas da frente, multiplicando pelo peso da conexão. Isso torna o aprendizado computacionalmente possível!
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b4-s01.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <a class="btn-nav" href="b5-s01.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    function getCenter(el) {
+      if (!el) return {x:0, y:0};
+      const rect = el.getBoundingClientRect();
+      const parentRect = document.getElementById('net-stage').getBoundingClientRect();
+      return {
+        x: rect.left - parentRect.left + rect.width / 2,
+        y: rect.top - parentRect.top + rect.height / 2
+      };
+    }
+
+    function drawLine(id, nodeA, nodeB) {
+      const line = document.getElementById(id);
+      const pA = getCenter(document.getElementById(nodeA));
+      const pB = getCenter(document.getElementById(nodeB));
+      line.setAttribute('x1', pA.x); line.setAttribute('y1', pA.y);
+      line.setAttribute('x2', pB.x); line.setAttribute('y2', pB.y);
+      return { pA, pB };
+    }
+
+    function draw() {
+      drawLine('l-x1-h1', 'n-x1', 'n-h1');
+      drawLine('l-x1-h2', 'n-x1', 'n-h2');
+      drawLine('l-x2-h1', 'n-x2', 'n-h1');
+      drawLine('l-x2-h2', 'n-x2', 'n-h2');
+
+      const lH1O = drawLine('l-h1-o', 'n-h1', 'n-out');
+      const lH2O = drawLine('l-h2-o', 'n-h2', 'n-out');
+
+      // Position labels
+      const w1 = document.getElementById('w-h1-o');
+      w1.style.left = (lH1O.pA.x + lH1O.pB.x)/2 - 25 + 'px';
+      w1.style.top = (lH1O.pA.y + lH1O.pB.y)/2 - 25 + 'px';
+
+      const w2 = document.getElementById('w-h2-o');
+      w2.style.left = (lH2O.pA.x + lH2O.pB.x)/2 - 25 + 'px';
+      w2.style.top = (lH2O.pA.y + lH2O.pB.y)/2 + 5 + 'px';
+    }
+
+    window.addEventListener('resize', draw);
+    setTimeout(draw, 100);
+
+    let step = 0;
+    let isRunning = false;
+
+    const simSteps = [
+      { 
+        err: 0.8, 
+        w1_up: 'w₁=0.88 (↑ forte)', 
+        w2_up: 'w₂=0.22 (↑ fraco)', 
+        out: '0.45', h1:'0.45', h2:'0.62' 
+      },
+      { 
+        err: 0.55, 
+        w1_up: 'w₁=0.92 (↑)', 
+        w2_up: 'w₂=0.25 (↑)', 
+        out: '0.70', h1:'0.5', h2:'0.65' 
+      },
+      { 
+        err: 0.30, 
+        w1_up: 'w₁=0.96 (↑)', 
+        w2_up: 'w₂=0.27 (↑)', 
+        out: '0.88', h1:'0.55', h2:'0.7' 
+      },
+      { 
+        err: 0.12, 
+        w1_up: 'w₁=0.98 (↑)', 
+        w2_up: 'w₂=0.28 (↑)', 
+        out: '0.96', h1:'0.6', h2:'0.72' 
+      }
+    ];
+
+    function showExpl(index) {
+      document.querySelectorAll('.expl-step').forEach(e => e.classList.remove('active'));
+      document.getElementById('expl-' + index).classList.add('active');
+    }
+
+    function runBackprop() {
+      if(isRunning || step >= simSteps.length) return;
+      isRunning = true;
+      const btn = document.getElementById('btn-bp');
+      btn.disabled = true;
+
+      const current = simSteps[step];
+
+      // 1. Show Error
+      showExpl(1);
+      const errBox = document.getElementById('err-box');
+      errBox.textContent = `Erro: ${current.err} (Alvo=1.0)`;
+      errBox.style.opacity = '1';
+
+      // 2. Pulse lines to Hidden and update weights
+      setTimeout(() => {
+        showExpl(2);
+        document.getElementById('l-h1-o').classList.add('pulse-error');
+        document.getElementById('l-h2-o').classList.add('pulse-error');
+        
+        document.getElementById('w-h1-o').classList.add('updating');
+        document.getElementById('w-h1-o').textContent = current.w1_up;
+
+        document.getElementById('w-h2-o').classList.add('updating');
+        document.getElementById('w-h2-o').textContent = current.w2_up;
+      }, 2000);
+
+      // 3. Pulse lines to Inputs
+      setTimeout(() => {
+        showExpl(3);
+        document.getElementById('l-h1-o').classList.remove('pulse-error');
+        document.getElementById('l-h2-o').classList.remove('pulse-error');
+        document.getElementById('w-h1-o').classList.remove('updating');
+        document.getElementById('w-h2-o').classList.remove('updating');
+        
+        // Pulse all previous connections
+        ['l-x1-h1', 'l-x1-h2', 'l-x2-h1', 'l-x2-h2'].forEach(id => {
+          document.getElementById(id).classList.add('pulse-error');
+        });
+      }, 5000);
+
+      // 4. Reset and show updated state
+      setTimeout(() => {
+        showExpl(4);
+        ['l-x1-h1', 'l-x1-h2', 'l-x2-h1', 'l-x2-h2'].forEach(id => {
+          document.getElementById(id).classList.remove('pulse-error');
+        });
+        
+        errBox.style.opacity = '0';
+        
+        document.getElementById('v-h1').textContent = current.h1;
+        document.getElementById('v-h2').textContent = current.h2;
+        document.getElementById('v-out').textContent = current.out;
+        
+        step++;
+        isRunning = false;
+
+        if (step >= simSteps.length) {
+          btn.textContent = 'Treinamento Concluído';
+        } else {
+          btn.textContent = 'Retropropagar Novamente';
+          btn.disabled = false;
+        }
+      }, 8000);
+    }
+  </script>
+</body>
+</html>
