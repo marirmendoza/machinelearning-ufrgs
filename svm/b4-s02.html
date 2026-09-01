@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 4.2 — A Ideia do Espaço de Características</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 900px) { .grid-2col { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Support Vector Machines</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 4 · Slide 02 / 03</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">A Ideia do Espaço de Características</h1>
+        <p class="slide-subtitle">
+          Projetando os dados para uma dimensão superior $\phi(x)$ onde o problema se torna linearmente separável.
+        </p>
+      </div>
+
+      <div class="concept-box">
+        <strong>A Mágica do Espaço de Características ($\phi(x)$):</strong>
+        <br/>• <strong>Espaço Original 2D $(x_1, x_2)$:</strong> Os dados azuis e laranjas estão misturados em círculos concêntricos. Nenhuma reta consegue separá-los.
+        <br/>• <strong>Mapeamento $\phi(x) = (x_1, z)$ com $z = x_1^2 + x_2^2$:</strong> A nova dimensão $z$ representa a distância ao quadrado da origem.
+        <br/>• <strong>Resultado:</strong> No espaço transformado, um <strong>hiperplano linear (linha horizontal)</strong> separa perfeitamente ambas as classes!
+      </div>
+
+      <div class="grid-2col">
+        <!-- Esquerda: Espaço Original 2D com Projeção da Fronteira Curva -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">1. Espaço Original (x₁, x₂) — Fronteira Curva Projetada</span>
+          </div>
+
+          <svg id="svg-orig" viewBox="0 0 380 240" style="width:100%; height:auto; background:#fafafa; border:1px solid #d1d9e8; border-radius:8px;">
+            <line x1="190" y1="20" x2="190" y2="220" stroke="#cbd5e1" stroke-width="1" />
+            <line x1="20" y1="120" x2="360" y2="120" stroke="#cbd5e1" stroke-width="1" />
+
+            <circle id="circle-boundary" cx="190" cy="120" r="72" fill="none" stroke="#0284c7" stroke-width="3" />
+            <g id="pts-orig-group"></g>
+          </svg>
+        </div>
+
+        <!-- Direita: Espaço Transformado phi(x) = (x1, z) com Reta Lineare -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">2. Espaço Transformado (x₁, z = x₁² + x₂²) — Linear!</span>
+          </div>
+
+          <svg id="svg-trans" viewBox="0 0 380 240" style="width:100%; height:auto; background:#fafafa; border:1px solid #d1d9e8; border-radius:8px;">
+            <line x1="40" y1="220" x2="360" y2="220" stroke="#0f1724" stroke-width="1.5" />
+            <line x1="40" y1="20" x2="40" y2="220" stroke="#0f1724" stroke-width="1.5" />
+            <text x="360" y="235" font-size="10" fill="#3d4f6e" text-anchor="end">x₁</text>
+            <text x="35" y="15" font-size="10" fill="#3d4f6e" text-anchor="start">z = x₁² + x₂²</text>
+
+            <line id="linear-boundary" x1="40" y1="120" x2="360" y2="120" stroke="#0284c7" stroke-width="3" />
+            <g id="pts-trans-group"></g>
+          </svg>
+
+          <div class="control-group">
+            <div class="control-label">
+              <span>Corte Z do Hiperplano:</span>
+              <span id="val-z-cut" class="control-val">r₀ = 72 px</span>
+            </div>
+            <input type="range" id="slider-z-cut" min="40" max="105" value="72" step="1" />
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="slide-footer">
+      <a href="b4-s01.html" class="nav-btn">← Anterior</a>
+      <a href="index.html" class="nav-center">Índice do Tópico</a>
+      <a href="b4-s03.html" class="nav-btn">Próximo →</a>
+    </footer>
+  </div>
+
+  <script>
+    const datasetTransform = [];
+    const cx = 190, cy = 120;
+
+    for (let i = 0; i < 14; i++) {
+      const ang = (i / 14) * 2 * Math.PI;
+      const r = 35 + Math.random() * 20;
+      datasetTransform.push({
+        origX: cx + r * Math.cos(ang),
+        origY: cy + r * Math.sin(ang),
+        r: r,
+        cls: -1
+      });
+    }
+
+    for (let i = 0; i < 18; i++) {
+      const ang = (i / 18) * 2 * Math.PI;
+      const r = 85 + Math.random() * 20;
+      datasetTransform.push({
+        origX: cx + r * Math.cos(ang),
+        origY: cy + r * Math.sin(ang),
+        r: r,
+        cls: 1
+      });
+    }
+
+    const sliderZ = document.getElementById('slider-z-cut');
+
+    function updateTransformPlot() {
+      const cutR = parseFloat(sliderZ.value);
+      document.getElementById('val-z-cut').textContent = `r₀ = ${cutR} px`;
+
+      document.getElementById('circle-boundary').setAttribute('r', cutR);
+
+      const yCut = 220 - (cutR / 130) * 200;
+      document.getElementById('linear-boundary').setAttribute('y1', yCut);
+      document.getElementById('linear-boundary').setAttribute('y2', yCut);
+
+      const ptsOrigG = document.getElementById('pts-orig-group');
+      ptsOrigG.innerHTML = '';
+      datasetTransform.forEach(p => {
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', p.origX); circle.setAttribute('cy', p.origY); circle.setAttribute('r', 6);
+        circle.setAttribute('fill', p.cls === 1 ? '#0284c7' : '#c2410c');
+        circle.setAttribute('stroke', '#fff'); circle.setAttribute('stroke-width', '1.5');
+        ptsOrigG.appendChild(circle);
+      });
+
+      const ptsTransG = document.getElementById('pts-trans-group');
+      ptsTransG.innerHTML = '';
+      datasetTransform.forEach(p => {
+        const transX = 40 + ((p.origX - 50) / 280) * 320;
+        const transY = 220 - (p.r / 130) * 200;
+
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', transX); circle.setAttribute('cy', transY); circle.setAttribute('r', 6);
+        circle.setAttribute('fill', p.cls === 1 ? '#0284c7' : '#c2410c');
+        circle.setAttribute('stroke', '#fff'); circle.setAttribute('stroke-width', '1.5');
+        ptsTransG.appendChild(circle);
+      });
+    }
+
+    sliderZ.addEventListener('input', updateTransformPlot);
+    updateTransformPlot();
+  </script>
+</body>
+</html>

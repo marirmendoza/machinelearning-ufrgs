@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 3.2 — O Efeito do Parâmetro C</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 900px) { .grid-2col { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Support Vector Machines</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 3 · Slide 02 / 03</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">O Efeito do Parâmetro C</h1>
+        <p class="slide-subtitle">
+          Explorando o impacto do hiperparâmetro de penalização C no compromisso entre acurácia no treino e capacidade de generalização.
+        </p>
+      </div>
+
+      <div class="concept-box">
+        <strong>Comportamento de C em Dados Ruidosos:</strong>
+        <br/>• <strong>C pequeno (ex: 0.01):</strong> Tolera mais violações na margem $\to$ Margem maior $\to$ Modelo mais simples e estável (maior viés, menor variância).
+        <br/>• <strong>C grande (ex: 100):</strong> Penaliza fortemente qualquer erro $\to$ Tenta classificar tudo perfeitamente $\to$ Margem menor (risco de <em>overfitting</em> ao ruído).
+      </div>
+
+      <div class="grid-2col">
+        <!-- Esquerda: SVG com Dados de Treino/Teste e Slider de C -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">1. Fronteira e Margem sob Diferentes Valores de C</span>
+            <button id="btn-gen-noise" class="btn btn-outline btn-sm">🎲 Adicionar Ruído/Outliers</button>
+          </div>
+
+          <svg id="svg-plot" viewBox="0 0 400 270" style="width:100%; height:auto; background:#fafafa; border:1px solid #d1d9e8; border-radius:8px;">
+            <g id="grid-lines" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="2,2"></g>
+            <line x1="40" y1="230" x2="380" y2="230" stroke="#0f1724" stroke-width="1.5" />
+            <line x1="40" y1="20" x2="40" y2="230" stroke="#0f1724" stroke-width="1.5" />
+
+            <polygon id="margin-band" fill="rgba(2, 132, 199, 0.12)" />
+            <line id="margin-plus" stroke="#0284c7" stroke-width="1.5" stroke-dasharray="4,4" />
+            <line id="margin-minus" stroke="#0284c7" stroke-width="1.5" stroke-dasharray="4,4" />
+            <line id="decision-line" stroke="#0284c7" stroke-width="3" />
+
+            <g id="pts-group"></g>
+          </svg>
+
+          <div class="control-group">
+            <div class="control-label">
+              <span>C = 0.01 <------------------------------> 100:</span>
+              <span id="val-c" class="control-val">1.0</span>
+            </div>
+            <input type="range" id="slider-c" min="0.01" max="100" value="1.0" step="0.05" />
+          </div>
+        </div>
+
+        <!-- Direita: Desempenho Treino vs Teste -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">2. Desempenho e Diagnóstico</span>
+          </div>
+
+          <div class="formula-card">
+            Acurácia no Treino: <strong id="lbl-acc-train" style="color:#4ade80;">90%</strong><br/>
+            Acurácia no Teste:  <strong id="lbl-acc-test" style="color:#38bdf8;">88%</strong>
+          </div>
+
+          <div class="info-card" id="lbl-c-diag" style="line-height:1.6;">
+            Mova o slider para experimentar o comportamento de C.
+          </div>
+
+          <div class="info-card" style="background:var(--bg3); line-height:1.6;">
+            <strong>Observação Importante:</strong><br/>
+            Ao aumentar $C$ com ruído presente, note como a acurácia de treino pode subir para 100%, mas a acurácia de teste cai. O modelo tenta desesperadamente se ajustar aos pontos anômalos!
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="slide-footer">
+      <a href="b3-s01.html" class="nav-btn">← Anterior</a>
+      <a href="index.html" class="nav-center">Índice do Tópico</a>
+      <a href="b3-s03.html" class="nav-btn">Próximo →</a>
+    </footer>
+  </div>
+
+  <script>
+    let trainDataset = [
+      { x: 70,  y: 60,  cls: 1 },
+      { x: 110, y: 80,  cls: 1 },
+      { x: 150, y: 100, cls: 1 },
+      { x: 180, y: 60,  cls: 1 },
+
+      { x: 240, y: 180, cls: -1 },
+      { x: 280, y: 160, cls: -1 },
+      { x: 310, y: 200, cls: -1 },
+      { x: 340, y: 150, cls: -1 }
+    ];
+
+    let testDataset = [
+      { x: 90,  y: 70,  cls: 1 },
+      { x: 130, y: 90,  cls: 1 },
+      { x: 260, y: 170, cls: -1 },
+      { x: 320, y: 190, cls: -1 }
+    ];
+
+    let hasNoise = false;
+
+    const sliderC = document.getElementById('slider-c');
+
+    function updatePlot() {
+      const cVal = parseFloat(sliderC.value);
+      document.getElementById('val-c').textContent = cVal < 1 ? cVal.toFixed(2) : cVal.toFixed(1);
+
+      const t = Math.min(1.0, Math.log10(cVal + 1) / 2.0);
+
+      let w1 = -0.75;
+      let b = 282;
+      let marginPx = 45 - 28 * t;
+
+      if (hasNoise) {
+        w1 = -0.75 - 0.45 * t;
+        b = 282 - 65 * t;
+      }
+
+      const xA = 40, xB = 380;
+      const yA = w1 * xA + b;
+      const yB = w1 * xB + b;
+
+      document.getElementById('decision-line').setAttribute('x1', xA);
+      document.getElementById('decision-line').setAttribute('y1', yA);
+      document.getElementById('decision-line').setAttribute('x2', xB);
+      document.getElementById('decision-line').setAttribute('y2', yB);
+
+      const yA_plus = yA - marginPx;
+      const yB_plus = yB - marginPx;
+      const yA_minus = yA + marginPx;
+      const yB_minus = yB + marginPx;
+
+      document.getElementById('margin-plus').setAttribute('x1', xA);
+      document.getElementById('margin-plus').setAttribute('y1', yA_plus);
+      document.getElementById('margin-plus').setAttribute('x2', xB);
+      document.getElementById('margin-plus').setAttribute('y2', yB_plus);
+
+      document.getElementById('margin-minus').setAttribute('x1', xA);
+      document.getElementById('margin-minus').setAttribute('y1', yA_minus);
+      document.getElementById('margin-minus').setAttribute('x2', xB);
+      document.getElementById('margin-minus').setAttribute('y2', yB_minus);
+
+      const poly = document.getElementById('margin-band');
+      poly.setAttribute('points', `${xA},${yA_plus} ${xB},${yB_plus} ${xB},${yB_minus} ${xA},${yA_minus}`);
+
+      const A = w1, B_eq = -1, C_eq = b;
+
+      let trainCorr = 0;
+      trainDataset.forEach(p => {
+        const val = A * p.x + B_eq * p.y + C_eq;
+        const pred = val > 0 ? 1 : -1;
+        if (pred === p.cls) trainCorr++;
+      });
+
+      let testCorr = 0;
+      testDataset.forEach(p => {
+        const val = A * p.x + B_eq * p.y + C_eq;
+        const pred = val > 0 ? 1 : -1;
+        if (pred === p.cls) testCorr++;
+      });
+
+      const accTr = (trainCorr / trainDataset.length * 100).toFixed(0);
+      const accTe = (testCorr / testDataset.length * 100).toFixed(0);
+
+      document.getElementById('lbl-acc-train').textContent = `${accTr}%`;
+      document.getElementById('lbl-acc-test').textContent = `${accTe}%`;
+
+      const diag = document.getElementById('lbl-c-diag');
+      if (cVal > 15 && hasNoise) {
+        diag.innerHTML = '<strong style="color:var(--red);">Alerta de Overfitting! (C alto)</strong><br/>O modelo está penalizando tão severamente os erros no treino que distorceu a reta para engolir os ruídos, prejudicando o teste.';
+      } else if (cVal < 0.1) {
+        diag.innerHTML = '<strong style="color:var(--yellow);">C Pequeno (Margem Larga)</strong><br/>O modelo tolera muitas violações na margem. A fronteira fica extremamente suave e robusta.';
+      } else {
+        diag.innerHTML = '<strong style="color:var(--green);">C Equilibrado</strong><br/>Bom compromisso entre margem de separação e acurácia preditiva.';
+      }
+
+      const ptsG = document.getElementById('pts-group');
+      ptsG.innerHTML = '';
+      trainDataset.forEach(p => {
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', p.x); circle.setAttribute('cy', p.y); circle.setAttribute('r', p.isNoise ? 8 : 6.5);
+        circle.setAttribute('fill', p.cls === 1 ? '#0284c7' : '#c2410c');
+        circle.setAttribute('stroke', p.isNoise ? '#b91c1c' : '#fff');
+        circle.setAttribute('stroke-width', p.isNoise ? '2.5' : '1.5');
+        ptsG.appendChild(circle);
+      });
+    }
+
+    document.getElementById('btn-gen-noise').addEventListener('click', () => {
+      if (!hasNoise) {
+        trainDataset.push({ x: 210, y: 135, cls: 1, isNoise: true });
+        trainDataset.push({ x: 190, y: 120, cls: -1, isNoise: true });
+        hasNoise = true;
+      }
+      updatePlot();
+    });
+
+    sliderC.addEventListener('input', updatePlot);
+    updatePlot();
+  </script>
+</body>
+</html>

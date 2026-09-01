@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 5.2 — Grid Search, Pipeline & Comparação (SVM vs KNN vs Árvore)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 900px) { .grid-2col { grid-template-columns: 1fr; } }
+
+    .grid-search-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      font-family: 'Fira Code', monospace;
+      text-align: center;
+    }
+    .grid-search-table th, .grid-search-table td {
+      border: 1px solid var(--border2);
+      padding: 0.45rem;
+    }
+    .grid-search-table th { background: var(--bg3); color: var(--text); font-weight: 700; }
+    .cell-opt { background: #dcfce7 !important; color: #166534; font-weight: 800; border: 2px solid #166534 !important; }
+
+    .comp-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+    .comp-table th, .comp-table td {
+      border: 1px solid var(--border2);
+      padding: 0.4rem 0.5rem;
+    }
+    .comp-table th { background: var(--bg3); font-weight: 700; text-align: left; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Support Vector Machines</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 5 · Slide 02 / 02</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Grid Search, Pipeline & Comparação (SVM vs KNN vs Árvore)</h1>
+        <p class="slide-subtitle">
+          Sintetizando a escolha prática de hiperparâmetros, pipelines com normalização e comparando os 3 grandes algoritmos da disciplina.
+        </p>
+      </div>
+
+      <div class="concept-box">
+        <strong>A Prática do Aprendizado de Máquina com SVM:</strong>
+        <br/>• <strong>Seleção de $C$ e $\gamma$ por Validação Cruzada:</strong> Não escolhemos hiperparâmetros no conjunto de teste! Usamos <code>GridSearchCV</code>.
+        <br/>• <strong>Normalização Indispensável:</strong> Como a margem e o kernel dependem de distâncias, <strong>StandardScaler() é obrigatório</strong> antes do SVM!
+      </div>
+
+      <div class="grid-2col">
+        <!-- Esquerda: Matriz de Grid Search + Pipeline Scikit-Learn -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">1. Matriz de Validação Cruzada (Grid Search C &times; &gamma;)</span>
+          </div>
+
+          <div style="overflow-x:auto;">
+            <table class="grid-search-table">
+              <thead>
+                <tr>
+                  <th>C \ &gamma;</th>
+                  <th>&gamma; = 0.01 (Baixo)</th>
+                  <th>&gamma; = 0.1 (Médio)</th>
+                  <th>&gamma; = 1.0 (Alto)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th>C = 0.1</th>
+                  <td style="background:#fee2e2;">0.72</td>
+                  <td style="background:#fef9c3;">0.81</td>
+                  <td style="background:#fef9c3;">0.83</td>
+                </tr>
+                <tr>
+                  <th>C = 1.0</th>
+                  <td style="background:#fef9c3;">0.80</td>
+                  <td class="cell-opt">⭐ 0.94</td>
+                  <td style="background:#dcfce7;">0.89</td>
+                </tr>
+                <tr>
+                  <th>C = 10.0</th>
+                  <td style="background:#fef9c3;">0.82</td>
+                  <td style="background:#dcfce7;">0.91</td>
+                  <td style="background:#fee2e2;">0.76 (Overfitting)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="formula-card">
+            // Pipeline Recomendado no Scikit-Learn:<br/>
+            <span style="color:#fbbf24;">from sklearn.pipeline import Pipeline</span><br/>
+            <span style="color:#fbbf24;">from sklearn.preprocessing import StandardScaler</span><br/>
+            <span style="color:#fbbf24;">from sklearn.svm import SVC</span><br/><br/>
+            model = Pipeline([<br/>
+            &nbsp;&nbsp;("<span style="color:#38bdf8;">scaler</span>", StandardScaler()),<br/>
+            &nbsp;&nbsp;("<span style="color:#38bdf8;">svm</span>", SVC(kernel="<span style="color:#4ade80;">rbf</span>", C=<span style="color:#4ade80;">1.0</span>, gamma=<span style="color:#4ade80;">0.1</span>))<br/>
+            ])
+          </div>
+        </div>
+
+        <!-- Direita: Tabela Comparativa (SVM vs KNN vs Árvore) -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">2. Comparativo Prático: KNN vs Árvore vs SVM</span>
+          </div>
+
+          <div style="overflow-x:auto;">
+            <table class="comp-table">
+              <thead>
+                <tr>
+                  <th>Critério</th>
+                  <th style="color:var(--blue);">KNN</th>
+                  <th style="color:var(--green);">Árvore</th>
+                  <th style="color:var(--teal);">SVM</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Ideia Central</strong></td>
+                  <td>Proximidade local</td>
+                  <td>Particionamento recursivo</td>
+                  <td>Máxima margem de separação</td>
+                </tr>
+                <tr>
+                  <td><strong>Fronteira</strong></td>
+                  <td>Voronoi / Vizinhos</td>
+                  <td>Ortogonal (em degraus)</td>
+                  <td>Hiperplano / Suave via Kernel</td>
+                </tr>
+                <tr>
+                  <td><strong>Sensível à Escala?</strong></td>
+                  <td><strong style="color:var(--red);">SIM (Crítico)</strong></td>
+                  <td><strong style="color:var(--green);">NÃO</strong></td>
+                  <td><strong style="color:var(--red);">SIM (Crítico)</strong></td>
+                </tr>
+                <tr>
+                  <td><strong>Não-Linearidade</strong></td>
+                  <td>Naturalmente</td>
+                  <td>Naturalmente</td>
+                  <td>Via Kernel Trick (RBF)</td>
+                </tr>
+                <tr>
+                  <td><strong>Hiperparâmetros</strong></td>
+                  <td>k, métrica distância</td>
+                  <td>profundidade, min_samples</td>
+                  <td>C, kernel, &gamma;</td>
+                </tr>
+                <tr>
+                  <td><strong>Interpretabilidade</strong></td>
+                  <td>Média</td>
+                  <td><strong style="color:var(--green);">Alta (Regras IF-THEN)</strong></td>
+                  <td>Menor (Espaço de Kernel)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="info-card" style="line-height:1.5; font-size:0.82rem;">
+            <strong>Síntese da Disciplina:</strong><br/>
+            O SVM oferece uma das fronteiras com melhor capacidade de generalização da literatura, mas exige obrigatoriamente padronização prévia dos dados e ajuste cuidadoso de $C$ e $\gamma$.
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="slide-footer">
+      <a href="b5-s01.html" class="nav-btn">← Anterior</a>
+      <a href="index.html" class="nav-center">Índice do Tópico</a>
+      <a href="#" class="nav-btn disabled">Próximo →</a>
+    </footer>
+  </div>
+</body>
+</html>

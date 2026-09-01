@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 4.1 — Um Problema Impossível para uma Reta</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 900px) { .grid-2col { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Support Vector Machines</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 4 · Slide 01 / 03</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Um Problema Impossível para uma Reta</h1>
+        <p class="slide-subtitle">
+          Quando a distribuição dos dados exige uma fronteira curva, classificadores estritamente lineares falham completamente.
+        </p>
+      </div>
+
+      <div class="concept-box">
+        <strong>A Limitação da Separação Linear em 2D:</strong>
+        <br/>• Tente mover ou girar a reta nos sliders abaixo para tentar separar a classe interna (laranja) da classe externa (azul).
+        <br/>• <strong>A pergunta fundamental:</strong> <em>Será que o problema está na impossibilidade do algoritmo, ou na forma como estamos REPRESENTANDO os dados?</em>
+      </div>
+
+      <div class="grid-2col">
+        <!-- Esquerda: Gráfico de Círculos Concêntricos com Reta Tentativa -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">1. Tentativa de Separação por Reta Linear</span>
+          </div>
+
+          <svg id="svg-plot" viewBox="0 0 400 270" style="width:100%; height:auto; background:#fafafa; border:1px solid #d1d9e8; border-radius:8px;">
+            <g id="grid-lines" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="2,2"></g>
+            <line x1="200" y1="20" x2="200" y2="250" stroke="#cbd5e1" stroke-width="1" />
+            <line x1="20" y1="135" x2="380" y2="135" stroke="#cbd5e1" stroke-width="1" />
+
+            <line id="decision-line" stroke="#0284c7" stroke-width="3" />
+            <g id="pts-group"></g>
+          </svg>
+
+          <div class="control-group">
+            <div class="control-label">
+              <span>Ângulo da Reta:</span>
+              <span id="val-angle" class="control-val">45°</span>
+            </div>
+            <input type="range" id="slider-angle" min="0" max="180" value="45" step="2" />
+          </div>
+
+          <div class="control-group">
+            <div class="control-label">
+              <span>Deslocamento ($b$):</span>
+              <span id="val-b" class="control-val">0</span>
+            </div>
+            <input type="range" id="slider-b" min="-100" max="100" value="0" step="2" />
+          </div>
+        </div>
+
+        <!-- Direita: Medidores e Pergunta de Motivação para Kernels -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">2. Desempenho e Diagnóstico</span>
+          </div>
+
+          <div class="formula-card">
+            Acurácia Máxima Possível por Reta:<br/>
+            <strong id="lbl-acc-linear" style="color:#f87171;">55% (Falha Grave!)</strong>
+          </div>
+
+          <div class="info-card" style="line-height:1.6;">
+            <strong>Diagnóstico:</strong><br/>
+            Nenhuma reta em 2D consegue isolar o círculo interior. Para resolver este problema, precisamos **projetar os dados para um espaço de características ($\phi(x)$) de maior dimensão**, onde uma fronteira plana volte a funcionar!
+          </div>
+
+          <div class="info-card" style="background:var(--bg3); line-height:1.6;">
+            <strong>Próximo Passo:</strong><br/>
+            No próximo slide, veremos como a transformação $z = x_1^2 + x_2^2$ projeta estes pontos para 3D e torna o problema trivialmente separável por um plano!
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="slide-footer">
+      <a href="b3-s03.html" class="nav-btn">← Anterior</a>
+      <a href="index.html" class="nav-center">Índice do Tópico</a>
+      <a href="b4-s02.html" class="nav-btn">Próximo →</a>
+    </footer>
+  </div>
+
+  <script>
+    const datasetCircles = [];
+    const cx = 200, cy = 135;
+
+    for (let i = 0; i < 14; i++) {
+      const ang = (i / 14) * 2 * Math.PI;
+      const r = 35 + Math.random() * 20;
+      datasetCircles.push({ x: cx + r * Math.cos(ang), y: cy + r * Math.sin(ang), cls: -1 });
+    }
+
+    for (let i = 0; i < 18; i++) {
+      const ang = (i / 18) * 2 * Math.PI;
+      const r = 90 + Math.random() * 20;
+      datasetCircles.push({ x: cx + r * Math.cos(ang), y: cy + r * Math.sin(ang), cls: 1 });
+    }
+
+    const sliderAngle = document.getElementById('slider-angle');
+    const sliderB = document.getElementById('slider-b');
+
+    function updatePlot() {
+      const angleDeg = parseFloat(sliderAngle.value);
+      const bOffset = parseFloat(sliderB.value);
+
+      document.getElementById('val-angle').textContent = `${angleDeg}°`;
+      document.getElementById('val-b').textContent = `${bOffset}`;
+
+      const rad = (angleDeg * Math.PI) / 180;
+
+      const xA = 20, xB = 380;
+      const yA = cy + bOffset + (xA - cx) * Math.tan(rad);
+      const yB = cy + bOffset + (xB - cx) * Math.tan(rad);
+
+      document.getElementById('decision-line').setAttribute('x1', xA);
+      document.getElementById('decision-line').setAttribute('y1', yA);
+      document.getElementById('decision-line').setAttribute('x2', xB);
+      document.getElementById('decision-line').setAttribute('y2', yB);
+
+      let correct = 0;
+      const A = Math.tan(rad), B_eq = -1, C_eq = (cy + bOffset) - A * cx;
+
+      datasetCircles.forEach(p => {
+        const val = A * p.x + B_eq * p.y + C_eq;
+        const pred = val > 0 ? 1 : -1;
+        if (pred === p.cls) correct++;
+      });
+
+      const acc = (correct / datasetCircles.length * 100).toFixed(0);
+      document.getElementById('lbl-acc-linear').textContent = `${acc}% (Incapaz de separar!)`;
+
+      const ptsG = document.getElementById('pts-group');
+      ptsG.innerHTML = '';
+      datasetCircles.forEach(p => {
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', p.x); circle.setAttribute('cy', p.y); circle.setAttribute('r', 6.5);
+        circle.setAttribute('fill', p.cls === 1 ? '#0284c7' : '#c2410c');
+        circle.setAttribute('stroke', '#fff'); circle.setAttribute('stroke-width', '1.5');
+        ptsG.appendChild(circle);
+      });
+    }
+
+    sliderAngle.addEventListener('input', updatePlot);
+    sliderB.addEventListener('input', updatePlot);
+    updatePlot();
+  </script>
+</body>
+</html>

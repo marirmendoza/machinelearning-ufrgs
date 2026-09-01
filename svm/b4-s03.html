@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 4.3 — O Truque do Kernel (Kernel Trick) & RBF</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 900px) { .grid-2col { grid-template-columns: 1fr; } }
+    .kernel-btn-group { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .kernel-btn {
+      padding: 0.45rem 0.85rem;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border);
+      background: var(--bg2);
+      color: var(--text);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .kernel-btn:hover { border-color: var(--teal); color: var(--teal); }
+    .kernel-btn.active { background: var(--teal); color: #fff; border-color: var(--teal); }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Support Vector Machines</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 4 · Slide 03 / 03</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">O Truque do Kernel (Kernel Trick) & RBF</h1>
+        <p class="slide-subtitle">
+          Calculando a similaridade no espaço transformado sem precisar computar explicitamente altas dimensões.
+        </p>
+      </div>
+
+      <div class="concept-box">
+        <strong>A Intuição do Kernel Trick:</strong>
+        <br/>1. Podemos transformar os dados para um espaço de dimensão muito maior...
+        <br/>2. Mas calcular essa transformação explicitamente seria **computacionalmente caríssimo**!
+        <br/>3. **O Truque:** Uma função de Kernel calcula diretamente o produto interno $K(x_i, x_j) = \phi(x_i)^T \phi(x_j)$ no espaço original sem construir o espaço transformado!
+      </div>
+
+      <div class="grid-2col">
+        <!-- Esquerda: Seletor de Kernel e Gráfico SVG da Fronteira Não-Linear -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">1. Seleção de Kernel e Fronteira Resultante</span>
+          </div>
+
+          <div class="control-group">
+            <span style="font-size:0.85rem; font-weight:700; color:var(--text);">Escolha o tipo de Kernel:</span>
+            <div class="kernel-btn-group">
+              <button class="kernel-btn" data-kernel="linear">Linear</button>
+              <button class="kernel-btn" data-kernel="poly">Polinomial (grau 2)</button>
+              <button class="kernel-btn active" data-kernel="rbf">RBF (Gaussiano)</button>
+            </div>
+          </div>
+
+          <svg id="svg-plot" viewBox="0 0 400 270" style="width:100%; height:auto; background:#fafafa; border:1px solid #d1d9e8; border-radius:8px;">
+            <g id="grid-lines" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="2,2"></g>
+            <path id="path-kernel-boundary" fill="rgba(2, 132, 199, 0.15)" stroke="#0284c7" stroke-width="3" />
+            <g id="pts-group"></g>
+          </svg>
+
+          <div class="control-group" id="gamma-control-container">
+            <div class="control-label">
+              <span>Gama RBF ($\gamma$):</span>
+              <span id="val-gamma" class="control-val">1.00</span>
+            </div>
+            <input type="range" id="slider-gamma" min="0.10" max="8.00" value="1.00" step="0.10" />
+          </div>
+        </div>
+
+        <!-- Direita: Fórmula Matemática e Diagnóstico de Gamma -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">2. Função de Similaridade e Parâmetros</span>
+          </div>
+
+          <div class="formula-card" id="formula-kernel-display">
+            Kernel RBF (Radial Basis Function):<br/>
+            $$K(x_i, x_j) = \exp(-\gamma \|x_i - x_j\|^2)$$
+          </div>
+
+          <div class="info-card" id="info-gamma-diag" style="line-height:1.6;">
+            Ajuste o slider de $\gamma$ para observar a escala de influência local de cada amostra.
+          </div>
+
+          <div class="info-card" style="background:var(--bg3); line-height:1.6;">
+            <strong>Efeito de $\gamma$:</strong><br/>
+            • <strong>$\gamma$ baixo:</strong> Influência global ampla $\to$ Fronteira suave e contínua.<br/>
+            • <strong>$\gamma$ alto:</strong> Influência extremamente local $\to$ Fronteira "cola" nos pontos de treino (risco de overfitting).
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="slide-footer">
+      <a href="b4-s02.html" class="nav-btn">← Anterior</a>
+      <a href="index.html" class="nav-center">Índice do Tópico</a>
+      <a href="b5-s01.html" class="nav-btn">Próximo →</a>
+    </footer>
+  </div>
+
+  <script>
+    let currentKernel = 'rbf';
+    let gammaVal = 1.0;
+
+    const datasetRbf = [
+      { x: 200, y: 135, cls: -1 },
+      { x: 180, y: 140, cls: -1 },
+      { x: 210, y: 120, cls: -1 },
+
+      { x: 90,  y: 70,  cls: 1 },
+      { x: 130, y: 50,  cls: 1 },
+      { x: 310, y: 70,  cls: 1 },
+      { x: 330, y: 190, cls: 1 },
+      { x: 90,  y: 200, cls: 1 },
+      { x: 270, y: 220, cls: 1 }
+    ];
+
+    function updateKernelPlot() {
+      const gCont = document.getElementById('gamma-control-container');
+      gCont.style.display = currentKernel === 'rbf' ? 'flex' : 'none';
+
+      const path = document.getElementById('path-kernel-boundary');
+      const formulaCard = document.getElementById('formula-kernel-display');
+      const diagCard = document.getElementById('info-gamma-diag');
+
+      if (currentKernel === 'linear') {
+        path.setAttribute('d', 'M 40 220 L 380 40 L 380 250 L 40 250 Z');
+        formulaCard.innerHTML = 'Kernel Linear:<br/>$$K(x_i, x_j) = x_i^T x_j$$';
+        diagCard.innerHTML = '<strong style="color:var(--teal);">Kernel Linear:</strong> Sem transformação de atributos. Gera um hiperplano reto simples.';
+      } else if (currentKernel === 'poly') {
+        path.setAttribute('d', 'M 50 250 Q 200 80 350 250 Z');
+        formulaCard.innerHTML = 'Kernel Polinomial (Grau 2):<br/>$$K(x_i, x_j) = (x_i^T x_j + 1)^2$$';
+        diagCard.innerHTML = '<strong style="color:var(--purple);">Kernel Polinomial:</strong> Cria fronteiras parabólicas / elípticas de grau 2.';
+      } else {
+        gammaVal = parseFloat(document.getElementById('slider-gamma').value);
+        document.getElementById('val-gamma').textContent = gammaVal.toFixed(2);
+
+        const radius = Math.max(30, 110 / Math.sqrt(gammaVal));
+        const cx = 200, cy = 135;
+
+        const dStr = `M ${cx-radius} ${cy} A ${radius} ${radius} 0 1 0 ${cx+radius} ${cy} A ${radius} ${radius} 0 1 0 ${cx-radius} ${cy}`;
+        path.setAttribute('d', dStr);
+
+        formulaCard.innerHTML = `Kernel RBF (Radial Basis Function):<br/>$$K(x_i, x_j) = \\exp(-\\gamma \\|x_i - x_j\\|^2)$$<br/>&gamma; atual = ${gammaVal.toFixed(2)}`;
+
+        if (gammaVal > 4.0) {
+          diagCard.innerHTML = `<strong style="color:var(--red);">&gamma; Alto (${gammaVal.toFixed(2)}):</strong> Influência extremamente local. A fronteira forma "ilhas" apertadas em torno de cada ponto.`;
+        } else if (gammaVal < 0.5) {
+          diagCard.innerHTML = `<strong style="color:var(--yellow);">&gamma; Baixo (${gammaVal.toFixed(2)}):</strong> Influência ampla e suave. A fronteira abrange uma região muito vasta.`;
+        } else {
+          diagCard.innerHTML = `<strong style="color:var(--green);">&gamma; Equilibrado (${gammaVal.toFixed(2)}):</strong> Curvatura suave que separa bem as amostras.`;
+        }
+      }
+
+      const ptsG = document.getElementById('pts-group');
+      ptsG.innerHTML = '';
+      datasetRbf.forEach(p => {
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', p.x); circle.setAttribute('cy', p.y); circle.setAttribute('r', 6.5);
+        circle.setAttribute('fill', p.cls === 1 ? '#0284c7' : '#c2410c');
+        circle.setAttribute('stroke', '#fff'); circle.setAttribute('stroke-width', '1.5');
+        ptsG.appendChild(circle);
+      });
+
+      if (window.renderMathInElement) {
+        renderMathInElement(formulaCard, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false}
+          ],
+          throwOnError: false
+        });
+      }
+    }
+
+    document.querySelectorAll('.kernel-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.kernel-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentKernel = btn.getAttribute('data-kernel');
+        updateKernelPlot();
+      });
+    });
+
+    document.getElementById('slider-gamma').addEventListener('input', updateKernelPlot);
+    updateKernelPlot();
+  </script>
+</body>
+</html>

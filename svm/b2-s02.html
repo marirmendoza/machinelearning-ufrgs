@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 2.2 — Da Margem para a Função Objetivo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 900px) { .grid-2col { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Support Vector Machines</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 2 · Slide 02 / 02</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Da Margem para a Função Objetivo</h1>
+        <p class="slide-subtitle">
+          Como a busca geométrica pela maior margem se transforma no problema de otimização $\min \frac{1}{2} \|w\|^2$.
+        </p>
+      </div>
+
+      <div class="concept-box">
+        <strong>A Transição da Geometria para a Matemática:</strong>
+        <br/>• <strong>Distância de um ponto ao hiperplano:</strong> $$d = \frac{|w^T x + b|}{\|w\|}$$
+        <br/>• Fixando a escala dos Support Vectors para que $y_i (w^T x_i + b) = 1$, a largura da margem total torna-se:
+        <br/>$$\text{Margem Total} = \frac{2}{\|w\|}$$
+        <br/>• Portanto, <strong>maximizar a margem $\frac{2}{\|w\|}$ é matematicamente equivalente a minimizar $\|w\|$, ou seja, $\min \frac{1}{2} \|w\|^2$!</strong>
+      </div>
+
+      <div class="grid-2col">
+        <!-- Esquerda: Gráfico SVG Reativo ao Slider de ||w|| -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">1. Relação Inversa entre ||w|| e a Margem</span>
+          </div>
+
+          <svg id="svg-plot" viewBox="0 0 400 270" style="width:100%; height:auto; background:#fafafa; border:1px solid #d1d9e8; border-radius:8px;">
+            <g id="grid-lines" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="2,2"></g>
+            <line x1="40" y1="230" x2="380" y2="230" stroke="#0f1724" stroke-width="1.5" />
+            <line x1="40" y1="20" x2="40" y2="230" stroke="#0f1724" stroke-width="1.5" />
+
+            <polygon id="margin-band" fill="rgba(2, 132, 199, 0.12)" />
+            <line id="margin-plus" stroke="#0284c7" stroke-width="1.5" stroke-dasharray="4,4" />
+            <line id="margin-minus" stroke="#0284c7" stroke-width="1.5" stroke-dasharray="4,4" />
+            <line id="decision-line" stroke="#0284c7" stroke-width="3" />
+
+            <g id="pts-group"></g>
+          </svg>
+
+          <div class="control-group">
+            <div class="control-label">
+              <span>Norma do Vetor de Pesos ($\|w\|$):</span>
+              <span id="val-norm-w" class="control-val">1.00</span>
+            </div>
+            <input type="range" id="slider-norm-w" min="0.40" max="2.50" value="1.00" step="0.05" />
+          </div>
+        </div>
+
+        <!-- Direita: Formulação Prática e Conexão de Otimização -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">2. Formulação Prática de Otimização</span>
+          </div>
+
+          <div class="formula-card">
+            Formulação Canônica Primal:<br/>
+            $$\min_{w, b} \frac{1}{2} \|w\|^2$$
+            sujeito a:<br/>
+            $$y_i (w^T x_i + b) \geq 1, \quad \forall i=1,\dots,N$$
+          </div>
+
+          <div class="info-card">
+            Largura da Margem Calculada: <strong id="lbl-margin-calc" style="color:var(--teal); font-family:'Fira Code', monospace;">2.00</strong> unidades.<br/>
+            Custo $\frac{1}{2} \|w\|^2$: <strong id="lbl-cost-calc" style="color:var(--purple); font-family:'Fira Code', monospace;">0.500</strong>
+          </div>
+
+          <div class="info-card" style="line-height:1.6;">
+            <strong>Resumo Geométrico:</strong><br/>
+            • <strong>$\|w\|$ Aumentando:</strong> O vetor $w$ "estica", tornando a rampa mais inclinada e a margem no espaço <strong>mais estreita</strong>.<br/>
+            • <strong>$\|w\|$ Diminuindo:</strong> O erro de margem exige menor módulo de $w$, tornando a margem <strong>mais larga</strong>.
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="slide-footer">
+      <a href="b2-s01.html" class="nav-btn">← Anterior</a>
+      <a href="index.html" class="nav-center">Índice do Tópico</a>
+      <a href="b3-s01.html" class="nav-btn">Próximo →</a>
+    </footer>
+  </div>
+
+  <script>
+    const dataset = [
+      { x: 90,  y: 70,  cls: 1 },
+      { x: 140, y: 80,  cls: 1 },
+      { x: 100, y: 120, cls: 1 },
+
+      { x: 260, y: 200, cls: -1 },
+      { x: 290, y: 170, cls: -1 },
+      { x: 310, y: 210, cls: -1 }
+    ];
+
+    const sliderNormW = document.getElementById('slider-norm-w');
+
+    function updatePlot() {
+      const normW = parseFloat(sliderNormW.value);
+      document.getElementById('val-norm-w').textContent = normW.toFixed(2);
+
+      const marginPx = Math.max(10, Math.min(90, 45 / normW));
+      const cost = 0.5 * normW * normW;
+
+      document.getElementById('lbl-margin-calc').textContent = (2.0 / normW).toFixed(2);
+      document.getElementById('lbl-cost-calc').textContent = cost.toFixed(3);
+
+      const xA = 40, xB = 380;
+      const yA = -0.75 * xA + 282;
+      const yB = -0.75 * xB + 282;
+
+      document.getElementById('decision-line').setAttribute('x1', xA);
+      document.getElementById('decision-line').setAttribute('y1', yA);
+      document.getElementById('decision-line').setAttribute('x2', xB);
+      document.getElementById('decision-line').setAttribute('y2', yB);
+
+      const yA_plus = yA - marginPx;
+      const yB_plus = yB - marginPx;
+      const yA_minus = yA + marginPx;
+      const yB_minus = yB + marginPx;
+
+      document.getElementById('margin-plus').setAttribute('x1', xA);
+      document.getElementById('margin-plus').setAttribute('y1', yA_plus);
+      document.getElementById('margin-plus').setAttribute('x2', xB);
+      document.getElementById('margin-plus').setAttribute('y2', yB_plus);
+
+      document.getElementById('margin-minus').setAttribute('x1', xA);
+      document.getElementById('margin-minus').setAttribute('y1', yA_minus);
+      document.getElementById('margin-minus').setAttribute('x2', xB);
+      document.getElementById('margin-minus').setAttribute('y2', yB_minus);
+
+      const poly = document.getElementById('margin-band');
+      poly.setAttribute('points', `${xA},${yA_plus} ${xB},${yB_plus} ${xB},${yB_minus} ${xA},${yA_minus}`);
+
+      const ptsG = document.getElementById('pts-group');
+      ptsG.innerHTML = '';
+      dataset.forEach(p => {
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', p.x); circle.setAttribute('cy', p.y); circle.setAttribute('r', 6.5);
+        circle.setAttribute('fill', p.cls === 1 ? '#0284c7' : '#c2410c');
+        circle.setAttribute('stroke', '#fff'); circle.setAttribute('stroke-width', '1.5');
+        ptsG.appendChild(circle);
+      });
+    }
+
+    sliderNormW.addEventListener('input', updatePlot);
+    updatePlot();
+  </script>
+</body>
+</html>

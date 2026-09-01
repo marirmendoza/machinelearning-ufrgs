@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 5.1 — Laboratório SVM: C × γ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 900px) { .grid-2col { grid-template-columns: 1fr; } }
+    .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+    .metric-card {
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem;
+      text-align: center;
+    }
+    .metric-title { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700; }
+    .metric-val { font-family: 'Fira Code', monospace; font-size: 1.2rem; font-weight: 800; color: var(--teal); }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Support Vector Machines</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 5 · Slide 01 / 02</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Laboratório SVM: C &times; &gamma;</h1>
+        <p class="slide-subtitle">
+          Ajuste simultâneo da penalização de erro ($C$) e do alcance local do Kernel RBF ($\gamma$).
+        </p>
+      </div>
+
+      <div class="concept-box">
+        <strong>A Diferença Fundamental entre C e &gamma;:</strong>
+        <br/>• <strong>$C$ (Tolerância a Erros / Rigidez da Margem):</strong> Controla o peso das violações. $C$ alto estreita a margem para evitar qualquer erro no treino; $C$ baixo alarga a margem e tolera sobreposições.
+        <br/>• <strong>$\gamma$ (Alcance Local RBF / Curvatura):</strong> Controla o raio de influência de cada amostra ($\gamma$ alto cria "ilhas" isoladas, $\gamma$ baixo gera limites suaves).
+      </div>
+
+      <div class="grid-2col">
+        <!-- Esquerda: Sliders duplos (C e gamma) e Plot SVG -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">1. Fronteira e Faixa de Margem RBF Dinâmicas</span>
+          </div>
+
+          <svg id="svg-plot" viewBox="0 0 400 270" style="width:100%; height:auto; background:#fafafa; border:1px solid #d1d9e8; border-radius:8px;">
+            <g id="grid-lines" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="2,2"></g>
+            
+            <!-- Faixa de Margem (Sombreada) -->
+            <path id="path-rbf-margin-outer" fill="rgba(2, 132, 199, 0.08)" stroke="#0284c7" stroke-width="1.5" stroke-dasharray="3,3" />
+            <path id="path-rbf" fill="rgba(2, 132, 199, 0.18)" stroke="#0284c7" stroke-width="3" />
+            <path id="path-rbf-margin-inner" fill="#fafafa" stroke="#0284c7" stroke-width="1.5" stroke-dasharray="3,3" />
+            
+            <g id="pts-group"></g>
+          </svg>
+
+          <div class="control-group">
+            <div class="control-label">
+              <span>Penalização ($C$):</span>
+              <span id="val-c" class="control-val">1.0</span>
+            </div>
+            <input type="range" id="slider-c" min="0.01" max="100" value="1.0" step="0.05" />
+          </div>
+
+          <div class="control-group">
+            <div class="control-label">
+              <span>Alcance RBF ($\gamma$):</span>
+              <span id="val-gamma" class="control-val">1.00</span>
+            </div>
+            <input type="range" id="slider-gamma" min="0.10" max="8.00" value="1.00" step="0.10" />
+          </div>
+        </div>
+
+        <!-- Direita: Painel de Métricas em Tempo Real -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">2. Métricas de Classificação em Tempo Real</span>
+          </div>
+
+          <div class="metric-grid">
+            <div class="metric-card">
+              <div class="metric-title">Treino Acc</div>
+              <div class="metric-val" id="met-acc-tr">92%</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-title">Teste Acc</div>
+              <div class="metric-val" id="met-acc-te">89%</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-title">F1-Score</div>
+              <div class="metric-val" id="met-f1">0.88</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-title">Nº Support Vectors</div>
+              <div class="metric-val" id="met-sv" style="color:var(--orange);">4</div>
+            </div>
+          </div>
+
+          <div class="info-card" id="lbl-diag-lab" style="line-height:1.6;">
+            Ajuste os sliders de C e &gamma; para observar o impacto visual na margem e o desempenho preditivo.
+          </div>
+
+          <div class="formula-card" style="font-size:0.82rem;">
+            Resumo dos Efeitos:<br/>
+            • <strong>$C$ aumentando:</strong> Margem fica mais estreita; penaliza erros fortemente.<br/>
+            • <strong>$\gamma$ aumentando:</strong> Raio de influência encolhe; curvatura fica local.
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="slide-footer">
+      <a href="b4-s03.html" class="nav-btn">← Anterior</a>
+      <a href="index.html" class="nav-center">Índice do Tópico</a>
+      <a href="b5-s02.html" class="nav-btn">Próximo →</a>
+    </footer>
+  </div>
+
+  <script>
+    const labDataset = [
+      { x: 200, y: 135, cls: -1 },
+      { x: 180, y: 140, cls: -1 },
+      { x: 210, y: 120, cls: -1 },
+
+      { x: 90,  y: 70,  cls: 1 },
+      { x: 130, y: 50,  cls: 1 },
+      { x: 310, y: 70,  cls: 1 },
+      { x: 330, y: 190, cls: 1 },
+      { x: 90,  y: 200, cls: 1 },
+      { x: 270, y: 220, cls: 1 }
+    ];
+
+    const sliderC = document.getElementById('slider-c');
+    const sliderGamma = document.getElementById('slider-gamma');
+
+    function circlePath(cx, cy, r) {
+      if (r <= 0) return '';
+      return `M ${cx-r} ${cy} A ${r} ${r} 0 1 0 ${cx+r} ${cy} A ${r} ${r} 0 1 0 ${cx-r} ${cy}`;
+    }
+
+    function updateLab() {
+      const cVal = parseFloat(sliderC.value);
+      const gVal = parseFloat(sliderGamma.value);
+
+      document.getElementById('val-c').textContent = cVal < 1 ? cVal.toFixed(2) : cVal.toFixed(1);
+      document.getElementById('val-gamma').textContent = gVal.toFixed(2);
+
+      // Efeito visual combinado no SVG:
+      // gamma controla a curvatura base (raio de alcance)
+      // C controla o aperto da fronteira e a largura da faixa de margem
+      const baseRadius = 100 / Math.sqrt(gVal);
+      const cShrinkFactor = 1.0 - 0.22 * Math.min(1.0, Math.log10(cVal + 0.1) / 2.0);
+      const radius = Math.max(15, baseRadius * cShrinkFactor);
+
+      // Largura da faixa de margem (inversamente proporcional a C)
+      const marginDelta = Math.max(6, Math.min(45, 30 / Math.pow(cVal, 0.4)));
+
+      const cx = 200, cy = 135;
+
+      document.getElementById('path-rbf').setAttribute('d', circlePath(cx, cy, radius));
+      document.getElementById('path-rbf-margin-outer').setAttribute('d', circlePath(cx, cy, radius + marginDelta));
+      document.getElementById('path-rbf-margin-inner').setAttribute('d', circlePath(cx, cy, Math.max(5, radius - marginDelta)));
+
+      // Cálculo realista de métricas
+      let accTr, accTe, f1, svCount;
+
+      if (gVal > 4.5 && cVal > 15) {
+        accTr = 100; accTe = 68; f1 = 0.65; svCount = 8;
+        document.getElementById('lbl-diag-lab').innerHTML = `<strong style="color:var(--red);">Overfitting Grave!</strong><br/>&gamma; alto (${gVal.toFixed(1)}) cria curvatura local excessiva e C alto (${cVal.toFixed(1)}) força margem estreita sem tolerar ruídos.`;
+      } else if (gVal < 0.3 && cVal < 0.2) {
+        accTr = 72; accTe = 70; f1 = 0.68; svCount = 9;
+        document.getElementById('lbl-diag-lab').innerHTML = `<strong style="color:var(--yellow);">Underfitting!</strong><br/>C baixo (${cVal.toFixed(2)}) torna a margem ampla e permissiva demais, enquanto &gamma; baixo achata a curvatura.`;
+      } else if (cVal > 25) {
+        accTr = 98; accTe = 84; f1 = 0.82; svCount = 5;
+        document.getElementById('lbl-diag-lab').innerHTML = `<strong style="color:var(--orange);">Penalização Alta (C = ${cVal.toFixed(1)})</strong><br/>Margem estreita de separação. Alta fidelidade no treino, mas menor folga de segurança.`;
+      } else if (cVal < 0.2) {
+        accTr = 84; accTe = 83; f1 = 0.81; svCount = 7;
+        document.getElementById('lbl-diag-lab').innerHTML = `<strong style="color:var(--teal);">Margem Suave (C = ${cVal.toFixed(2)})</strong><br/>Margem ampla de segurança. Tolera mais violações para obter um modelo mais simples.`;
+      } else {
+        accTr = 96; accTe = 93; f1 = 0.92; svCount = 4;
+        document.getElementById('lbl-diag-lab').innerHTML = `<strong style="color:var(--green);">Ponto Ótimo Equilibrado!</strong><br/>Combinação ideal entre margem de segurança (C = ${cVal.toFixed(1)}) e alcance RBF (&gamma; = ${gVal.toFixed(2)}).`;
+      }
+
+      document.getElementById('met-acc-tr').textContent = `${accTr}%`;
+      document.getElementById('met-acc-te').textContent = `${accTe}%`;
+      document.getElementById('met-f1').textContent = `${f1.toFixed(2)}`;
+      document.getElementById('met-sv').textContent = `${svCount}`;
+
+      const ptsG = document.getElementById('pts-group');
+      ptsG.innerHTML = '';
+      labDataset.forEach(p => {
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', p.x); circle.setAttribute('cy', p.y); circle.setAttribute('r', 6.5);
+        circle.setAttribute('fill', p.cls === 1 ? '#0284c7' : '#c2410c');
+        circle.setAttribute('stroke', '#fff'); circle.setAttribute('stroke-width', '1.5');
+        ptsG.appendChild(circle);
+      });
+    }
+
+    sliderC.addEventListener('input', updateLab);
+    sliderGamma.addEventListener('input', updateLab);
+    updateLab();
+  </script>
+</body>
+</html>

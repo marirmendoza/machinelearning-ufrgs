@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 1.1 — Muitas Fronteiras Podem Separar os Dados</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 900px) { .grid-2col { grid-template-columns: 1fr; } }
+    .preset-btn-group { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Support Vector Machines</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 1 · Slide 01 / 02</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Muitas Fronteiras Podem Separar os Dados</h1>
+        <p class="slide-subtitle">
+          Em um conjunto de dados linearmente separável, existem infinitas retas capazes de obter 100% de acurácia no treino.
+        </p>
+      </div>
+
+      <div class="concept-box">
+        <strong>O Dilema da Escolha da Fronteira:</strong>
+        <br/>• Mova ou incline a reta separadora nos sliders abaixo ou clique nos botões de predefinição.
+        <br/>• <strong>A pergunta fundamental:</strong> <em>Se todas estas fronteiras classificam 100% dos exemplos de treino corretamente, qual delas devemos escolher para o nosso modelo?</em>
+      </div>
+
+      <div class="grid-2col">
+        <!-- Esquerda: Gráfico de Dispersão 2D -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">1. Ajuste Manual da Fronteira de Decisão</span>
+          </div>
+
+          <div class="preset-btn-group">
+            <button class="btn btn-outline btn-sm" id="btn-preset-a">Fronteira A (Muito perto do Azul)</button>
+            <button class="btn btn-outline btn-sm" id="btn-preset-b">Fronteira B (Muito perto do Laranja)</button>
+            <button class="btn btn-outline btn-sm" id="btn-preset-c">Fronteira C (Equilibrada / Central)</button>
+          </div>
+
+          <svg id="svg-plot" viewBox="0 0 400 270" style="width:100%; height:auto; background:#fafafa; border:1px solid #d1d9e8; border-radius:8px;">
+            <g id="grid-lines" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="2,2"></g>
+            <line x1="40" y1="230" x2="380" y2="230" stroke="#0f1724" stroke-width="1.5" />
+            <line x1="40" y1="20" x2="40" y2="230" stroke="#0f1724" stroke-width="1.5" />
+
+            <line id="decision-line" stroke="#0284c7" stroke-width="3" />
+            <g id="pts-group"></g>
+          </svg>
+
+          <div class="control-group">
+            <div class="control-label">
+              <span>Inclinação ($w_1$):</span>
+              <span id="val-w1" class="control-val">-0.75</span>
+            </div>
+            <input type="range" id="slider-w1" min="-2.00" max="0.20" value="-0.75" step="0.05" />
+          </div>
+
+          <div class="control-group">
+            <div class="control-label">
+              <span>Deslocamento ($b$):</span>
+              <span id="val-b" class="control-val">282</span>
+            </div>
+            <input type="range" id="slider-b" min="180" max="380" value="282" step="1" />
+          </div>
+        </div>
+
+        <!-- Direita: Diagnóstico e Análise da Fronteira -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">2. Análise da Fronteira Selecionada</span>
+          </div>
+
+          <div class="formula-card">
+            Equação da Fronteira:<br/>
+            $$w_1 x_1 + w_2 x_2 + b = 0$$
+            Status no Treino: <strong id="lbl-acc" style="color:#4ade80;">10 / 10 (100%)</strong>
+          </div>
+
+          <div class="info-card">
+            <strong>Menor Distância aos Dados (Margem Atual):</strong><br/>
+            Distância ao ponto mais próximo: <span id="lbl-min-dist" style="font-family:'Fira Code', monospace; font-weight:700; color:var(--teal);">--</span> px.
+          </div>
+
+          <div class="info-card" style="line-height:1.6;">
+            <strong>Reflexão Conceitual:</strong><br/>
+            Fronteiras coladas nos dados de treino funcionam perfeitamente no treino, mas são <strong>frágeis a ruídos em dados futuros</strong>. O SVM resolve esse dilema buscando a fronteira com a <strong>maior folga possível</strong> (Fronteira C).
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="slide-footer">
+      <a href="index.html" class="nav-btn">← Índice</a>
+      <a href="index.html" class="nav-center">Índice do Tópico</a>
+      <a href="b1-s02.html" class="nav-btn">Próximo →</a>
+    </footer>
+  </div>
+
+  <script>
+    const dataset = [
+      // Classe +1 (Azul)
+      { x: 80,  y: 60,  cls: 1 },
+      { x: 120, y: 70,  cls: 1 },
+      { x: 90,  y: 110, cls: 1 },
+      { x: 150, y: 90,  cls: 1 },
+      { x: 170, y: 50,  cls: 1 },
+      // Classe -1 (Laranja)
+      { x: 230, y: 190, cls: -1 },
+      { x: 280, y: 170, cls: -1 },
+      { x: 260, y: 210, cls: -1 },
+      { x: 320, y: 180, cls: -1 },
+      { x: 340, y: 140, cls: -1 }
+    ];
+
+    const sliderW1 = document.getElementById('slider-w1');
+    const sliderB = document.getElementById('slider-b');
+
+    function drawPlot() {
+      const w1 = parseFloat(sliderW1.value);
+      const b = parseFloat(sliderB.value);
+
+      document.getElementById('val-w1').textContent = w1.toFixed(2);
+      document.getElementById('val-b').textContent = b.toFixed(0);
+
+      const xA = 40;
+      const yA = w1 * xA + b;
+      const xB = 380;
+      const yB = w1 * xB + b;
+
+      const line = document.getElementById('decision-line');
+      line.setAttribute('x1', xA); line.setAttribute('y1', yA);
+      line.setAttribute('x2', xB); line.setAttribute('y2', yB);
+
+      const A = w1, B = -1, C = b;
+      const norm = Math.sqrt(A*A + B*B);
+
+      let correctCount = 0;
+      let minDist = Infinity;
+
+      const ptsG = document.getElementById('pts-group');
+      ptsG.innerHTML = '';
+
+      dataset.forEach(p => {
+        const dist = Math.abs(A * p.x + B * p.y + C) / norm;
+        if (dist < minDist) minDist = dist;
+
+        const val = A * p.x + B * p.y + C;
+        const pred = val > 0 ? 1 : -1;
+        if (pred === p.cls) correctCount++;
+
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', p.x); circle.setAttribute('cy', p.y); circle.setAttribute('r', 7);
+        circle.setAttribute('fill', p.cls === 1 ? '#0284c7' : '#c2410c');
+        circle.setAttribute('stroke', '#fff'); circle.setAttribute('stroke-width', '2');
+        ptsG.appendChild(circle);
+      });
+
+      document.getElementById('lbl-acc').textContent = `${correctCount} / ${dataset.length} (${(correctCount/dataset.length*100).toFixed(0)}%)`;
+      document.getElementById('lbl-acc').style.color = correctCount === dataset.length ? '#4ade80' : '#f87171';
+      document.getElementById('lbl-min-dist').textContent = minDist.toFixed(1);
+    }
+
+    sliderW1.addEventListener('input', drawPlot);
+    sliderB.addEventListener('input', drawPlot);
+
+    // Presets corrigidos:
+    // A: Muito perto do Azul (b ~ 215)
+    // B: Muito perto do Laranja (b ~ 350)
+    // C: Equilibrado no centro (b ~ 282)
+    document.getElementById('btn-preset-a').addEventListener('click', () => {
+      sliderW1.value = -0.75; sliderB.value = 215; drawPlot();
+    });
+    document.getElementById('btn-preset-b').addEventListener('click', () => {
+      sliderW1.value = -0.75; sliderB.value = 350; drawPlot();
+    });
+    document.getElementById('btn-preset-c').addEventListener('click', () => {
+      sliderW1.value = -0.75; sliderB.value = 282; drawPlot();
+    });
+
+    drawPlot();
+  </script>
+</body>
+</html>

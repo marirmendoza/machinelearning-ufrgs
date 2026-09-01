@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Support Vector Machines (SVM) — Índice dos Slides</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f8f9fb; --bg2: #ffffff; --bg3: #f0f2f6;
+      --border: #c7d0e0; --border2: #d1d9e8;
+      --text: #0f1724; --text-muted: #3d4f6e; --text-dim: #6b7fa3;
+      --teal: #0284c7; --grad: linear-gradient(135deg, #0284c7, #6366f1);
+    }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 3rem 1.5rem;
+    }
+    .hero { text-align: center; margin-bottom: 2.5rem; max-width: 680px; }
+    .badge {
+      display: inline-block;
+      padding: 0.3rem 1rem;
+      border-radius: 999px;
+      background: rgba(2,132,199,0.08);
+      border: 1px solid rgba(2,132,199,0.25);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 1.2rem;
+    }
+    h1 {
+      font-size: 2.3rem;
+      font-weight: 800;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+    .prof-name {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.88rem;
+      color: var(--text-dim);
+      margin: 0.4rem 0 0.8rem 0;
+    }
+    .hero-sub {
+      color: var(--text-muted);
+      font-size: 1rem;
+      max-width: 580px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 1.2rem;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      text-decoration: none;
+      font-family: 'Fira Code', monospace;
+    }
+    .back-link:hover { color: var(--teal); }
+
+    .blocks {
+      display: flex; flex-direction: column;
+      gap: 2rem;
+      max-width: 880px; width: 100%;
+    }
+    .block-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--teal);
+      margin-bottom: 1rem;
+      padding-left: 0.5rem;
+      border-left: 3px solid var(--teal);
+    }
+    .slides-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1rem;
+    }
+    .slide-link {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 1.1rem 1.25rem;
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      text-decoration: none;
+      color: var(--text);
+      transition: all 0.2s ease;
+    }
+    .slide-link:hover {
+      border-color: var(--teal);
+      box-shadow: 0 4px 16px rgba(2,132,199,0.12);
+      transform: translateY(-2px);
+    }
+    .slide-num {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--teal);
+    }
+    .slide-name {
+      font-size: 0.98rem;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+    .slide-desc {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+  <div style="width: 100%; max-width: 880px;">
+    <a href="../index.html" class="back-link">← Voltar para o Índice Geral</a>
+  </div>
+
+  <header class="hero">
+    <span class="badge">UFRGS — Aprendizado de Máquina</span>
+    <h1>Support Vector Machines (SVM)</h1>
+    <p class="prof-name">Profa. Mariana Recamonde-Mendoza</p>
+    <p class="hero-sub">
+      Coleção de slides interativos cobrindo a motivação da máxima margem, identificação de support vectors, formulação de otimização, soft margin ($C$), variáveis de folga, kernel trick (RBF, $\gamma$), laboratório prático $C \times \gamma$, Grid Search e comparação entre SVM, KNN e Árvores.
+    </p>
+  </header>
+
+  <main class="blocks">
+    <!-- Bloco 1 -->
+    <section>
+      <div class="block-title">Bloco 1 — A Ideia Central: Qual Fronteira Escolher?</div>
+      <div class="slides-grid">
+        <a href="b1-s01.html" class="slide-link">
+          <span class="slide-num">Slide 1.1</span>
+          <span class="slide-name">Muitas Fronteiras Podem Separar os Dados</span>
+          <span class="slide-desc">Desloque e rotacione retas separadoras para descobrir o dilema de escolha da melhor fronteira.</span>
+        </a>
+        <a href="b1-s02.html" class="slide-link">
+          <span class="slide-num">Slide 1.2</span>
+          <span class="slide-name">A Margem: “Mais Longe” é Melhor?</span>
+          <span class="slide-desc">Descubra visualmente a margem de separação e a importância da distância perpendicular ao ponto mais próximo.</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- Bloco 2 -->
+    <section>
+      <div class="block-title">Bloco 2 — Support Vectors e a Matemática</div>
+      <div class="slides-grid">
+        <a href="b2-s01.html" class="slide-link">
+          <span class="slide-num">Slide 2.1</span>
+          <span class="slide-name">Quem Realmente Importa? (Support Vectors)</span>
+          <span class="slide-desc">Clique para remover/adicionar pontos e descubra quais dados sustentam a fronteira de decisão.</span>
+        </a>
+        <a href="b2-s02.html" class="slide-link">
+          <span class="slide-num">Slide 2.2</span>
+          <span class="slide-name">Da Margem para a Função Objetivo</span>
+          <span class="slide-desc">Conecte a distância geométrica à otimização matemática relacionando ||w|| com a largura da margem.</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- Bloco 3 -->
+    <section>
+      <div class="block-title">Bloco 3 — Quando os Dados Não São Separáveis (Soft Margin)</div>
+      <div class="slides-grid">
+        <a href="b3-s01.html" class="slide-link">
+          <span class="slide-num">Slide 3.1</span>
+          <span class="slide-name">E Se Não Existir uma Fronteira Perfeita?</span>
+          <span class="slide-desc">Motivação da margem suave (Soft Margin) diante de dados ruidosos e sobrepostos.</span>
+        </a>
+        <a href="b3-s02.html" class="slide-link">
+          <span class="slide-num">Slide 3.2</span>
+          <span class="slide-name">O Efeito do Parâmetro C</span>
+          <span class="slide-desc">Slider de C (tolerância vs penalização de erros), acurácia de treino/teste e gerador de ruído.</span>
+        </a>
+        <a href="b3-s03.html" class="slide-link">
+          <span class="slide-num">Slide 3.3</span>
+          <span class="slide-name">Variáveis de Folga (&xi;ᵢ)</span>
+          <span class="slide-desc">Visualização das três situações de erro (&xi;ᵢ = 0, 0 &lt; &xi;ᵢ &lt; 1, &xi;ᵢ &gt; 1) na função objetivo.</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- Bloco 4 -->
+    <section>
+      <div class="block-title">Bloco 4 — E Quando a Fronteira Não É Linear? (Kernels)</div>
+      <div class="slides-grid">
+        <a href="b4-s01.html" class="slide-link">
+          <span class="slide-num">Slide 4.1</span>
+          <span class="slide-name">Um Problema Impossível para uma Reta</span>
+          <span class="slide-desc">Círculos concêntricos e a limitação de classificadores estritamente lineares.</span>
+        </a>
+        <a href="b4-s02.html" class="slide-link">
+          <span class="slide-num">Slide 4.2</span>
+          <span class="slide-name">A Ideia do Espaço de Características</span>
+          <span class="slide-desc">Mapeando dados 2D para dimensões superiores &phi;(x) onde se tornam separáveis por um plano.</span>
+        </a>
+        <a href="b4-s03.html" class="slide-link">
+          <span class="slide-num">Slide 4.3</span>
+          <span class="slide-name">O Truque do Kernel (Kernel Trick) & RBF</span>
+          <span class="slide-desc">Seletor de Kernels (Linear, Polinomial, RBF) e o impacto do parâmetro &gamma; na influência local.</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- Bloco 5 -->
+    <section>
+      <div class="block-title">Bloco 5 — Hiperparâmetros e Prática</div>
+      <div class="slides-grid">
+        <a href="b5-s01.html" class="slide-link">
+          <span class="slide-num">Slide 5.1</span>
+          <span class="slide-name">Laboratório SVM: C &times; &gamma;</span>
+          <span class="slide-desc">Ajuste simultâneo de C e &gamma; com métricas completas de classificação em tempo real.</span>
+        </a>
+        <a href="b5-s02.html" class="slide-link">
+          <span class="slide-num">Slide 5.2</span>
+          <span class="slide-name">Grid Search, Pipeline & Comparação (SVM vs KNN vs Árvore)</span>
+          <span class="slide-desc">Matriz de validação cruzada, pipeline scikit-learn e comparação das 3 fronteiras no mesmo dataset.</span>
+        </a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

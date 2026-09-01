@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 2.1 — Quem Realmente Importa? (Support Vectors)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 900px) { .grid-2col { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Support Vector Machines</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 2 · Slide 01 / 02</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Quem Realmente Importa? (Support Vectors)</h1>
+        <p class="slide-subtitle">
+          Descubra por que a fronteira de decisão do SVM é sustentada exclusivamente por uma pequena fração de pontos críticos.
+        </p>
+      </div>
+
+      <div class="concept-box">
+        <strong>Experimento Interativo de Remoção de Pontos:</strong>
+        <br/>• <strong>Clique em qualquer ponto no gráfico abaixo</strong> para desativá-lo ou reativá-lo.
+        <br/>• Observe o comportamento da fronteira de decisão (linha azul):
+        <br/>&nbsp;&nbsp;&ndash; <strong>Remover um ponto distante:</strong> Quase nada muda na fronteira!
+        <br/>&nbsp;&nbsp;&ndash; <strong>Remover um Support Vector (ponto destacado com aura):</strong> A fronteira se desloca drasticamente!
+      </div>
+
+      <div class="grid-2col">
+        <!-- Esquerda: Gráfico Interativo com Clique para Ativar/Desativar -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">1. Clique nos Pontos para Testar o Impacto</span>
+            <button id="btn-reset-pts" class="btn btn-outline btn-sm">↺ Restaurar Todos</button>
+          </div>
+
+          <svg id="svg-plot" viewBox="0 0 400 270" style="width:100%; height:auto; background:#fafafa; border:1px solid #d1d9e8; border-radius:8px; cursor:pointer;">
+            <g id="grid-lines" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="2,2"></g>
+            <line x1="40" y1="230" x2="380" y2="230" stroke="#0f1724" stroke-width="1.5" />
+            <line x1="40" y1="20" x2="40" y2="230" stroke="#0f1724" stroke-width="1.5" />
+
+            <polygon id="margin-band" fill="rgba(2, 132, 199, 0.12)" />
+            <line id="margin-plus" stroke="#0284c7" stroke-width="1.5" stroke-dasharray="4,4" />
+            <line id="margin-minus" stroke="#0284c7" stroke-width="1.5" stroke-dasharray="4,4" />
+            <line id="decision-line" stroke="#0284c7" stroke-width="3" />
+
+            <g id="sv-halos-group"></g>
+            <g id="pts-group"></g>
+          </svg>
+        </div>
+
+        <!-- Direita: Diagnóstico dos Support Vectors -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">2. Status dos Vetores de Suporte</span>
+          </div>
+
+          <div class="formula-card">
+            Status dos Dados:<br/>
+            Pontos Ativos no Treino: <strong id="lbl-active-count" style="color:#38bdf8;">10 / 10</strong><br/>
+            Support Vectors Identificados: <strong id="lbl-sv-count" style="color:#fbbf24;">3</strong>
+          </div>
+
+          <div class="info-card" id="exp-feedback" style="line-height:1.6;">
+            Clique nos pontos do gráfico para testar a sensibilidade do modelo.
+          </div>
+
+          <div class="info-card" style="background:var(--bg3); line-height:1.6;">
+            <strong>A Intuição por trás de "Support Vectors":</strong><br/>
+            Diferente de classificadores probabilísticos que usam todos os exemplos para estimar médias/variâncias, o SVM é <strong>esparso</strong>: ele descarta todos os pontos não-essenciais e é <strong>"sustentado" apenas pelos pontos que tocam as margens</strong>.
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="slide-footer">
+      <a href="b1-s02.html" class="nav-btn">← Anterior</a>
+      <a href="index.html" class="nav-center">Índice do Tópico</a>
+      <a href="b2-s02.html" class="nav-btn">Próximo →</a>
+    </footer>
+  </div>
+
+  <script>
+    const initialDataset = [
+      { id: 1, x: 70,  y: 50,  cls: 1, active: true },
+      { id: 2, x: 110, y: 70,  cls: 1, active: true },
+      { id: 3, x: 150, y: 90,  cls: 1, active: true }, // SV 1
+      { id: 4, x: 80,  y: 110, cls: 1, active: true },
+      { id: 5, x: 170, y: 50,  cls: 1, active: true },
+
+      { id: 6, x: 230, y: 190, cls: -1, active: true }, // SV 2
+      { id: 7, x: 280, y: 170, cls: -1, active: true }, // SV 3
+      { id: 8, x: 260, y: 210, cls: -1, active: true },
+      { id: 9, x: 320, y: 180, cls: -1, active: true },
+      { id: 10,x: 340, y: 140, cls: -1, active: true }
+    ];
+
+    let dataset = JSON.parse(JSON.stringify(initialDataset));
+    let lastToggledPoint = null;
+
+    function computeHardMarginSVM(activePts) {
+      const pos = activePts.filter(p => p.cls === 1);
+      const neg = activePts.filter(p => p.cls === -1);
+
+      if (pos.length === 0 || neg.length === 0) {
+        return { w1: -0.75, b: 282, margin: 40, svs: [], norm: 1.25 };
+      }
+
+      let minDistance = Infinity;
+      let sv1 = null, sv2 = null;
+
+      pos.forEach(p => {
+        neg.forEach(n => {
+          const dx = n.x - p.x;
+          const dy = n.y - p.y;
+          const d = Math.sqrt(dx*dx + dy*dy);
+          if (d < minDistance) {
+            minDistance = d;
+            sv1 = p;
+            sv2 = n;
+          }
+        });
+      });
+
+      if (!sv1 || !sv2) return { w1: -0.75, b: 282, margin: 40, svs: [], norm: 1.25 };
+
+      const midX = (sv1.x + sv2.x) / 2;
+      const midY = (sv1.y + sv2.y) / 2;
+
+      const dx = sv2.x - sv1.x;
+      const dy = sv2.y - sv1.y;
+
+      let w1 = Math.abs(dy) > 0.001 ? -dx / dy : -0.75;
+      let b = midY - w1 * midX;
+
+      const A = w1, B = -1, C = b;
+      const norm = Math.sqrt(A*A + B*B);
+
+      let minP = Infinity, minN = Infinity;
+      activePts.forEach(p => {
+        const d = Math.abs(A*p.x + B*p.y + C) / norm;
+        if (p.cls === 1 && d < minP) minP = d;
+        if (p.cls === -1 && d < minN) minN = d;
+      });
+
+      const margin = (minP + minN) / 2;
+      const svs = activePts.filter(p => {
+        const d = Math.abs(A*p.x + B*p.y + C) / norm;
+        return Math.abs(d - (p.cls === 1 ? minP : minN)) < 8.0;
+      });
+
+      return { w1, b, margin, svs, norm };
+    }
+
+    function updateView() {
+      const activePts = dataset.filter(p => p.active);
+      const res = computeHardMarginSVM(activePts);
+
+      document.getElementById('lbl-active-count').textContent = `${activePts.length} / ${dataset.length}`;
+      document.getElementById('lbl-sv-count').textContent = `${res.svs.length}`;
+
+      const xA = 40, xB = 380;
+      const yA = res.w1 * xA + res.b;
+      const yB = res.w1 * xB + res.b;
+
+      document.getElementById('decision-line').setAttribute('x1', xA);
+      document.getElementById('decision-line').setAttribute('y1', yA);
+      document.getElementById('decision-line').setAttribute('x2', xB);
+      document.getElementById('decision-line').setAttribute('y2', yB);
+
+      const offset = res.margin;
+      const yA_plus = yA - offset * res.norm;
+      const yB_plus = yB - offset * res.norm;
+      const yA_minus = yA + offset * res.norm;
+      const yB_minus = yB + offset * res.norm;
+
+      document.getElementById('margin-plus').setAttribute('x1', xA);
+      document.getElementById('margin-plus').setAttribute('y1', yA_plus);
+      document.getElementById('margin-plus').setAttribute('x2', xB);
+      document.getElementById('margin-plus').setAttribute('y2', yB_plus);
+
+      document.getElementById('margin-minus').setAttribute('x1', xA);
+      document.getElementById('margin-minus').setAttribute('y1', yA_minus);
+      document.getElementById('margin-minus').setAttribute('x2', xB);
+      document.getElementById('margin-minus').setAttribute('y2', yB_minus);
+
+      const poly = document.getElementById('margin-band');
+      poly.setAttribute('points', `${xA},${yA_plus} ${xB},${yB_plus} ${xB},${yB_minus} ${xA},${yA_minus}`);
+
+      const halosG = document.getElementById('sv-halos-group');
+      halosG.innerHTML = '';
+      res.svs.forEach(sv => {
+        const halo = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        halo.setAttribute('cx', sv.x); halo.setAttribute('cy', sv.y); halo.setAttribute('r', 13);
+        halo.setAttribute('fill', 'none'); halo.setAttribute('stroke', '#fbbf24');
+        halo.setAttribute('stroke-width', '2.5');
+        halo.setAttribute('stroke-dasharray', '2,2');
+        halosG.appendChild(halo);
+      });
+
+      const ptsG = document.getElementById('pts-group');
+      ptsG.innerHTML = '';
+
+      dataset.forEach(p => {
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', p.x); circle.setAttribute('cy', p.y); circle.setAttribute('r', 7.5);
+        circle.setAttribute('fill', p.active ? (p.cls === 1 ? '#0284c7' : '#c2410c') : '#cbd5e1');
+        circle.setAttribute('stroke', p.active ? '#fff' : '#94a3b8');
+        circle.setAttribute('stroke-width', '2');
+        circle.style.opacity = p.active ? '1' : '0.35';
+        circle.style.cursor = 'pointer';
+
+        circle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          p.active = !p.active;
+          lastToggledPoint = p;
+          updateView();
+        });
+
+        ptsG.appendChild(circle);
+      });
+
+      const fb = document.getElementById('exp-feedback');
+      if (lastToggledPoint) {
+        const wasSV = res.svs.some(sv => sv.id === lastToggledPoint.id);
+        if (!lastToggledPoint.active) {
+          if (wasSV) {
+            fb.innerHTML = `<strong style="color:var(--red);">Você removeu um Support Vector!</strong><br/>A fronteira de decisão foi imediatamente recalculada e mudou de posição.`;
+          } else {
+            fb.innerHTML = `<strong style="color:var(--teal);">Você removeu um ponto distante.</strong><br/>A fronteira permaneceu inalterada! Apenas os Support Vectors afetam o modelo.`;
+          }
+        } else {
+          fb.innerHTML = `Ponto reativado no conjunto de dados de treino.`;
+        }
+      }
+    }
+
+    document.getElementById('btn-reset-pts').addEventListener('click', () => {
+      dataset = JSON.parse(JSON.stringify(initialDataset));
+      lastToggledPoint = null;
+      updateView();
+    });
+
+    updateView();
+  </script>
+</body>
+</html>
