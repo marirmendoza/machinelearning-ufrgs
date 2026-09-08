@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 1.2 — Curvas ROC e PR</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .layout-split {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 2rem;
+      margin-top: 1rem;
+    }
+
+    .plots-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .plot-box {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.2rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .plot-title {
+      font-weight: 700;
+      color: var(--teal);
+      margin-bottom: 0.5rem;
+      font-size: 1.1rem;
+    }
+
+    .svg-plot {
+      width: 100%;
+      height: 200px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+    }
+
+    .axis { stroke: #cbd5e1; stroke-width: 2; }
+    .grid-line { stroke: #e2e8f0; stroke-width: 1; stroke-dasharray: 4; }
+    .curve-line { fill: none; stroke: var(--teal); stroke-width: 3; stroke-linejoin: round; }
+    .baseline { fill: none; stroke: #94a3b8; stroke-width: 2; stroke-dasharray: 6; }
+    .plot-dot { fill: #f43f5e; stroke: white; stroke-width: 2; transition: all 0.2s ease-out; }
+    .axis-label { font-family: 'Inter', sans-serif; font-size: 11px; fill: #64748b; }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: var(--bg2);
+      padding: 1.5rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    .slider-row input[type="range"] { flex: 1; accent-color: var(--teal); }
+    .thresh-val { font-family: 'Fira Code', monospace; font-weight: 700; color: var(--teal); background: var(--teal-lt); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 1.2rem; }
+
+    .metrics-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .confusion-matrix {
+      display: grid;
+      grid-template-columns: auto 1fr 1fr;
+      grid-template-rows: auto 1fr 1fr;
+      gap: 0.4rem;
+      text-align: center;
+      font-size: 0.85rem;
+    }
+    .cm-header-col { grid-column: 2 / 4; grid-row: 1; font-weight: 600; color: var(--text-muted); }
+    .cm-header-row { grid-column: 1; grid-row: 2 / 4; display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--text-muted); writing-mode: vertical-rl; transform: rotate(180deg); }
+    .cm-label-pos { font-weight: 600; color: var(--teal); }
+    .cm-label-neg { font-weight: 600; color: var(--text-muted); }
+    .cm-cell {
+      padding: 0.8rem;
+      border-radius: 6px;
+      font-family: 'Fira Code', monospace;
+      font-size: 1.2rem;
+      font-weight: 700;
+      border: 1px solid var(--border2);
+    }
+    .cm-vp { background: #dcfce7; color: #166534; }
+    .cm-fp { background: #fee2e2; color: #991b1b; }
+    .cm-fn { background: #fef08a; color: #854d0e; }
+    .cm-vn { background: #f1f5f9; color: #334155; }
+
+    .metrics-list { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem; }
+    .m-item { display: flex; justify-content: space-between; font-weight: 600; color: var(--text-muted); font-size: 0.95rem; }
+    .m-val { font-family: 'Fira Code', monospace; color: var(--teal); }
+
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Métricas de Avaliação</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 3 · Slide 02</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Curvas ROC e Precision-Recall</h1>
+        <p class="slide-subtitle">
+          Ao invés de testar um único limiar, as curvas avaliam o modelo em <strong>todos os limiares possíveis</strong> simultaneamente. Mova o limiar abaixo para ver como o ponto se desloca sobre as curvas.
+        </p>
+      </div>
+
+      <div class="layout-split">
+        <!-- Left: Plots and Slider -->
+        <div class="plots-container">
+          
+          <div class="slider-row">
+            <label style="font-weight:700;">Limiar (Threshold):</label>
+            <input type="range" id="thresh-slider" min="0" max="1" step="0.05" value="0.5" />
+            <span class="thresh-val" id="thresh-display">0.50</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <!-- ROC Plot -->
+            <div class="plot-box">
+              <div class="plot-title">Curva ROC</div>
+              <svg viewBox="0 0 300 200" class="svg-plot" id="roc-svg">
+                <!-- Grid -->
+                <line x1="40" y1="20" x2="40" y2="170" class="axis" />
+                <line x1="40" y1="170" x2="280" y2="170" class="axis" />
+                <text x="120" y="195" class="axis-label">FPR (1 - Especificidade)</text>
+                <text x="15" y="110" class="axis-label" transform="rotate(-90 15,110)">TPR (Sensibilidade)</text>
+                
+                <line x1="40" y1="170" x2="280" y2="20" class="baseline" />
+                <path id="roc-path" class="curve-line" d="" />
+                <circle id="roc-dot" cx="40" cy="170" r="6" class="plot-dot" />
+              </svg>
+            </div>
+
+            <!-- PR Plot -->
+            <div class="plot-box">
+              <div class="plot-title">Curva Precision-Recall</div>
+              <svg viewBox="0 0 300 200" class="svg-plot" id="pr-svg">
+                <line x1="40" y1="20" x2="40" y2="170" class="axis" />
+                <line x1="40" y1="170" x2="280" y2="170" class="axis" />
+                <text x="140" y="195" class="axis-label">Recall (TVP)</text>
+                <text x="15" y="110" class="axis-label" transform="rotate(-90 15,110)">Precisão</text>
+                
+                <line x1="40" y1="95" x2="280" y2="95" class="baseline" /> <!-- Baseline at 0.5 -->
+                <path id="pr-path" class="curve-line" d="" />
+                <circle id="pr-dot" cx="40" cy="20" r="6" class="plot-dot" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Confusion Matrix -->
+        <div class="metrics-panel">
+          <div style="font-weight: 700; color: var(--teal); border-bottom: 2px solid var(--teal-lt); padding-bottom: 0.5rem; margin-bottom: 1rem;">
+            Desempenho no limiar atual
+          </div>
+
+          <div class="confusion-matrix">
+            <div class="cm-header-col">Classe Predita</div>
+            <div class="cm-header-row">Real</div>
+            
+            <div class="cm-label-pos">+</div>
+            <div class="cm-label-neg">-</div>
+
+            <div class="cm-label-pos">+</div>
+            <div class="cm-cell cm-vp" id="c-vp">0</div>
+            <div class="cm-cell cm-fn" id="c-fn">0</div>
+
+            <div class="cm-label-neg">-</div>
+            <div class="cm-cell cm-fp" id="c-fp">0</div>
+            <div class="cm-cell cm-vn" id="c-vn">0</div>
+          </div>
+
+          <div class="metrics-list">
+            <div class="m-item"><span>TPR (Sensibilidade):</span> <span class="m-val" id="m-tpr">0.00</span></div>
+            <div class="m-item"><span>FPR (1 - Especif.):</span> <span class="m-val" id="m-fpr">0.00</span></div>
+            <div class="m-item"><span>Precisão:</span> <span class="m-val" id="m-prec">0.00</span></div>
+            <div class="m-item"><span>Acurácia:</span> <span class="m-val" id="m-acc">0.00</span></div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b3-s01.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <a class="btn-nav" href="b3-s03.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    // Synthetic dataset
+    const data = [
+      { prob: 0.95, real: 1 }, { prob: 0.85, real: 1 },
+      { prob: 0.75, real: 0 }, { prob: 0.70, real: 1 },
+      { prob: 0.65, real: 1 }, { prob: 0.50, real: 0 },
+      { prob: 0.40, real: 0 }, { prob: 0.30, real: 1 },
+      { prob: 0.20, real: 0 }, { prob: 0.10, real: 0 }
+    ];
+
+    const P = 5; // Total positives
+    const N = 5; // Total negatives
+
+    // Precompute curve paths
+    // ROC mapping: X = FPR (0 to 1) -> 40 to 280
+    // ROC mapping: Y = TPR (0 to 1) -> 170 to 20
+    function mapRoc(fpr, tpr) { return `${40 + fpr*240},${170 - tpr*150}`; }
+    
+    // PR mapping: X = Recall (0 to 1) -> 40 to 280
+    // PR mapping: Y = Precision (0 to 1) -> 170 to 20
+    function mapPr(rec, prec) { return `${40 + rec*240},${170 - prec*150}`; }
+
+    let rocPoints = [];
+    let prPoints = [];
+    
+    // Calculate for every threshold from 1.0 down to 0.0
+    for(let t = 1.0; t >= 0.0; t -= 0.02) {
+      let vp=0, fp=0;
+      data.forEach(d => {
+        if(d.prob >= t) { if(d.real===1) vp++; else fp++; }
+      });
+      let fpr = fp / N;
+      let tpr = vp / P;
+      let prec = (vp+fp) === 0 ? 1.0 : vp/(vp+fp);
+      
+      rocPoints.push({ t, fpr, tpr });
+      prPoints.push({ t, rec: tpr, prec });
+    }
+
+    // Build SVG paths
+    let rocPathD = `M ${mapRoc(rocPoints[0].fpr, rocPoints[0].tpr)}`;
+    rocPoints.forEach(pt => { rocPathD += ` L ${mapRoc(pt.fpr, pt.tpr)}`; });
+    document.getElementById('roc-path').setAttribute('d', rocPathD);
+
+    let prPathD = `M ${mapPr(prPoints[0].rec, prPoints[0].prec)}`;
+    prPoints.forEach(pt => { prPathD += ` L ${mapPr(pt.rec, pt.prec)}`; });
+    document.getElementById('pr-path').setAttribute('d', prPathD);
+
+    const slider = document.getElementById('thresh-slider');
+    const display = document.getElementById('thresh-display');
+
+    function update() {
+      const thresh = parseFloat(slider.value);
+      display.textContent = thresh.toFixed(2);
+
+      let vp=0, fp=0, fn=0, vn=0;
+      data.forEach(d => {
+        if (d.prob >= thresh) { if(d.real===1) vp++; else fp++; }
+        else { if(d.real===1) fn++; else vn++; }
+      });
+
+      // Update CM
+      document.getElementById('c-vp').textContent = vp;
+      document.getElementById('c-fp').textContent = fp;
+      document.getElementById('c-fn').textContent = fn;
+      document.getElementById('c-vn').textContent = vn;
+
+      // Metrics
+      const tpr = vp / P;
+      const fpr = fp / N;
+      const prec = (vp+fp) === 0 ? 1.0 : vp/(vp+fp);
+      const acc = (vp+vn) / (P+N);
+
+      document.getElementById('m-tpr').textContent = tpr.toFixed(2);
+      document.getElementById('m-fpr').textContent = fpr.toFixed(2);
+      document.getElementById('m-prec').textContent = prec.toFixed(2);
+      document.getElementById('m-acc').textContent = acc.toFixed(2);
+
+      // Move dots
+      const rocDot = document.getElementById('roc-dot');
+      rocDot.setAttribute('cx', 40 + fpr*240);
+      rocDot.setAttribute('cy', 170 - tpr*150);
+
+      const prDot = document.getElementById('pr-dot');
+      prDot.setAttribute('cx', 40 + tpr*240); // recall is TPR
+      prDot.setAttribute('cy', 170 - prec*150);
+    }
+
+    slider.addEventListener('input', update);
+    update();
+  </script>
+</body>
+</html>

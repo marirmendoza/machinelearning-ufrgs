@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 3.3 — "ROC vs PR": A Mesma Mudança Vista por Duas Lentes</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 900px) { .grid-2col { grid-template-columns: 1fr; } }
+    .btn-group { display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1rem; }
+    .btn-imb {
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      padding: 0.4rem 0.9rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
+    .btn-imb.active { background: var(--indigo); color: white; border-color: var(--indigo); }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Métricas de Avaliação</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 3 · Slide 03 / 08</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">"ROC vs PR": A Mesma Mudança Vista por Duas Lentes</h1>
+        <p class="slide-subtitle">
+          Em datasets altamente desbalanceados (classe positiva rara), a curva ROC pode ser ilusória. A curva Precision-Recall revela a realidade.
+        </p>
+      </div>
+
+      <div class="concept-box">
+        <strong>Duas Perguntas Diferentes sobre o Modelo:</strong>
+        <br/>• <strong>Curva ROC (FPR vs TPR):</strong> <em>"Quanto dos positivos eu encontro sem estourar a taxa de falsos alarmes em relação ao total de negativos?"</em>
+        <br/>• <strong>Curva Precision-Recall (Recall vs Precisão):</strong> <em>"Quando o modelo dispara um alarme positivo, qual é a chance real de ele estar correto?"</em>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn-imb active" id="btn-50" onclick="setImbalance('50')">50% Positivos (Equilibrado)</button>
+        <button class="btn-imb" id="btn-10" onclick="setImbalance('10')">10% Positivos (Desbalanceado)</button>
+        <button class="btn-imb" id="btn-1" onclick="setImbalance('1')">1% Positivos (Classe Rara)</button>
+      </div>
+
+      <div class="grid-2col">
+        <!-- Esquerda: Curva ROC -->
+        <div class="exp-panel">
+          <div class="exp-heading" style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="exp-title-small">1. Curva ROC (ROC-AUC = <span id="lbl-roc-auc">0.90</span>)</span>
+          </div>
+
+          <svg id="svg-roc" viewBox="0 0 300 240" style="width:100%; height:auto; background:#fafafa; border:1px solid #d1d9e8; border-radius:8px;">
+            <line x1="40" y1="200" x2="280" y2="200" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="40" y1="20" x2="40" y2="200" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="40" y1="200" x2="280" y2="20" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3,3" />
+
+            <text x="160" y="230" font-size="10" fill="#3d4f6e" text-anchor="middle">FPR</text>
+            <text x="15" y="110" font-size="10" fill="#3d4f6e" transform="rotate(-90 15 110)" text-anchor="middle">TPR (Recall)</text>
+
+            <path id="path-roc" fill="none" stroke="#4338ca" stroke-width="2.5" />
+            <circle id="pt-roc" r="5" fill="#db2777" />
+          </svg>
+        </div>
+
+        <!-- Direita: Curva PR -->
+        <div class="exp-panel">
+          <div class="exp-heading" style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="exp-title-small">2. Curva Precision-Recall (PR-AUC = <span id="lbl-pr-auc">0.90</span>)</span>
+          </div>
+
+          <svg id="svg-pr" viewBox="0 0 300 240" style="width:100%; height:auto; background:#fafafa; border:1px solid #d1d9e8; border-radius:8px;">
+            <line x1="40" y1="200" x2="280" y2="200" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="40" y1="20" x2="40" y2="200" stroke="#cbd5e1" stroke-width="1.5" />
+
+            <text x="160" y="230" font-size="10" fill="#3d4f6e" text-anchor="middle">Recall</text>
+            <text x="15" y="110" font-size="10" fill="#3d4f6e" transform="rotate(-90 15 110)" text-anchor="middle">Precisão</text>
+
+            <path id="path-pr" fill="none" stroke="#0e7490" stroke-width="2.5" />
+            <circle id="pt-pr" r="5" fill="#db2777" />
+          </svg>
+        </div>
+      </div>
+
+      <div class="control-group" style="margin-top:1rem;">
+        <div class="control-label">
+          <span>Threshold de Decisão (t):</span>
+          <span id="val-t" class="control-val">0.50</span>
+        </div>
+        <input type="range" id="slider-t" min="0.01" max="0.99" value="0.50" step="0.01" />
+      </div>
+    </main>
+
+    <footer class="slide-footer">
+      <a href="b3-s02.html" class="nav-btn">← Anterior</a>
+      <a href="index.html" class="nav-center">Índice do Tópico</a>
+      <a href="b3-s04.html" class="nav-btn">Próximo →</a>
+    </footer>
+  </div>
+
+  <script>
+    let currentMode = '50';
+
+    const datasets = {
+      '50': {
+        rocAuc: 0.91, prAuc: 0.90,
+        roc: [{fpr:0,tpr:0},{fpr:0.05,tpr:0.40},{fpr:0.15,tpr:0.85},{fpr:0.40,tpr:0.96},{fpr:1,tpr:1}],
+        pr:  [{rec:0,prec:1},{rec:0.40,prec:0.95},{rec:0.85,prec:0.90},{rec:0.96,prec:0.75},{rec:1,prec:0.50}]
+      },
+      '10': {
+        rocAuc: 0.90, prAuc: 0.62,
+        roc: [{fpr:0,tpr:0},{fpr:0.05,tpr:0.40},{fpr:0.15,tpr:0.85},{fpr:0.40,tpr:0.96},{fpr:1,tpr:1}],
+        pr:  [{rec:0,prec:1},{rec:0.40,prec:0.80},{rec:0.85,prec:0.55},{rec:0.96,prec:0.30},{rec:1,prec:0.10}]
+      },
+      '1': {
+        rocAuc: 0.89, prAuc: 0.22,
+        roc: [{fpr:0,tpr:0},{fpr:0.05,tpr:0.40},{fpr:0.15,tpr:0.85},{fpr:0.40,tpr:0.96},{fpr:1,tpr:1}],
+        pr:  [{rec:0,prec:1},{rec:0.40,prec:0.45},{rec:0.85,prec:0.18},{rec:0.96,prec:0.06},{rec:1,prec:0.01}]
+      }
+    };
+
+    function toSvgRoc(fpr, tpr) {
+      return { x: 40 + fpr * 240, y: 200 - tpr * 180 };
+    }
+    function toSvgPr(rec, prec) {
+      return { x: 40 + rec * 240, y: 200 - prec * 180 };
+    }
+
+    function setImbalance(mode) {
+      currentMode = mode;
+      document.querySelectorAll('.btn-imb').forEach(b => b.classList.remove('active'));
+      document.getElementById('btn-' + mode).classList.add('active');
+
+      const data = datasets[mode];
+      document.getElementById('lbl-roc-auc').textContent = data.rocAuc.toFixed(2);
+      document.getElementById('lbl-pr-auc').textContent = data.prAuc.toFixed(2);
+
+      let dRoc = 'M ' + toSvgRoc(data.roc[0].fpr, data.roc[0].tpr).x + ' ' + toSvgRoc(data.roc[0].fpr, data.roc[0].tpr).y;
+      data.roc.forEach(p => { const pt = toSvgRoc(p.fpr, p.tpr); dRoc += ` L ${pt.x} ${pt.y}`; });
+      document.getElementById('path-roc').setAttribute('d', dRoc);
+
+      let dPr = 'M ' + toSvgPr(data.pr[0].rec, data.pr[0].prec).x + ' ' + toSvgPr(data.pr[0].rec, data.pr[0].prec).y;
+      data.pr.forEach(p => { const pt = toSvgPr(p.rec, p.prec); dPr += ` L ${pt.x} ${pt.y}`; });
+      document.getElementById('path-pr').setAttribute('d', dPr);
+
+      updateDots();
+    }
+
+    function updateDots() {
+      const tVal = parseFloat(document.getElementById('slider-t').value);
+      document.getElementById('val-t').textContent = tVal.toFixed(2);
+
+      const data = datasets[currentMode];
+      const idx = Math.min(Math.floor((1 - tVal) * (data.roc.length - 1)), data.roc.length - 1);
+
+      const ptRocSvg = toSvgRoc(data.roc[idx].fpr, data.roc[idx].tpr);
+      document.getElementById('pt-roc').setAttribute('cx', ptRocSvg.x);
+      document.getElementById('pt-roc').setAttribute('cy', ptRocSvg.y);
+
+      const ptPrSvg = toSvgPr(data.pr[idx].rec, data.pr[idx].prec);
+      document.getElementById('pt-pr').setAttribute('cx', ptPrSvg.x);
+      document.getElementById('pt-pr').setAttribute('cy', ptPrSvg.y);
+    }
+
+    document.getElementById('slider-t').addEventListener('input', updateDots);
+    setImbalance('50');
+  </script>
+</body>
+</html>

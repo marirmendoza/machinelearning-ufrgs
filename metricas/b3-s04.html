@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 3.4 — "Escolha seu Threshold": Decisão Operacional e Custo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .grid-2col { display: grid; grid-template-columns: 1fr 1.2fr; gap: 1.5rem; }
+    @media (max-width: 900px) { .grid-2col { grid-template-columns: 1fr; } }
+    .btn-group-strat { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+    .btn-strat {
+      background: var(--bg3); border: 1px solid var(--border2);
+      padding: 0.45rem 0.85rem; border-radius: var(--radius-sm);
+      font-size: 0.8rem; font-weight: 600; cursor: pointer; color: var(--text-muted); transition: all 0.2s;
+    }
+    .btn-strat.active { background: var(--indigo); color: white; border-color: var(--indigo); }
+    .table-cost { width: 100%; border-collapse: collapse; font-family: 'Fira Code', monospace; font-size: 0.82rem; }
+    .table-cost th { background: var(--bg3); padding: 0.5rem; text-align: center; border-bottom: 2px solid var(--border); }
+    .table-cost td { padding: 0.5rem; text-align: center; border-bottom: 1px solid var(--border2); }
+    .table-cost tr.selected-row { background: var(--indigo-lt); font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Métricas de Avaliação</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 3 · Slide 04 / 08</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">"Escolha seu Threshold": Decisão Operacional e Análise de Custo</h1>
+        <p class="slide-subtitle">
+          Como definir o threshold ótimo com base no impacto financeiro ou médico: a Matriz de Custo Esperado.
+        </p>
+      </div>
+
+      <div class="concept-box">
+        <strong>A Fórmula do Custo Esperado da Decisão Operacional:</strong>
+        <br/>• $$\text{Custo Total} = c_{\text{FP}} \cdot \text{FP} + c_{\text{FN}} \cdot \text{FN}$$
+        <br/>• Em diagnósticos médicos graves, um **Falso Negativo (paciente doente não tratado)** tem custo $c_{\text{FN}} = R\$ 1.000$, enquanto um **Falso Positivo (exame confirmatório extra)** custa $c_{\text{FP}} = R\$ 50$.
+      </div>
+
+      <div class="btn-group-strat">
+        <button class="btn-strat active" id="btn-cost" onclick="setStrategy('min-cost')">💰 Minimizar Custo Esperado</button>
+        <button class="btn-strat" id="btn-rec" onclick="setStrategy('rec-90')">🏥 Garantir Recall ≥ 90% (Médico)</button>
+        <button class="btn-strat" id="btn-prec" onclick="setStrategy('prec-80')">🔒 Garantir Precisão ≥ 80% (Fraude)</button>
+        <button class="btn-strat" id="btn-f1" onclick="setStrategy('max-f1')">⚖️ Maximizar F1-Score</button>
+      </div>
+
+      <div class="grid-2col">
+        <!-- Esquerda: Sliders de Custo e Controle -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">1. Configuração dos Custos Operacionais</span>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label"><span>Custo de Falso Positivo (c_FP):</span><span id="val-cfp" class="control-val">R$ 50</span></div>
+            <input type="range" id="slider-cfp" min="10" max="200" value="50" step="10" />
+          </div>
+
+          <div class="control-group" style="margin-top:1rem;">
+            <div class="control-label"><span>Custo de Falso Negativo (c_FN):</span><span id="val-cfn" class="control-val">R$ 1000</span></div>
+            <input type="range" id="slider-cfn" min="100" max="2000" value="1000" step="50" />
+          </div>
+
+          <div class="control-group" style="margin-top:1rem;">
+            <div class="control-label"><span>Threshold Selecionado Manualmente:</span><span id="val-t" class="control-val">0.20</span></div>
+            <input type="range" id="slider-t" min="0.10" max="0.90" value="0.20" step="0.10" />
+          </div>
+        </div>
+
+        <!-- Direita: Tabela de Trade-off -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">2. Tabela de Desempenho e Custo Operacional</span>
+          </div>
+
+          <table class="table-cost">
+            <thead>
+              <tr>
+                <th>Threshold</th>
+                <th>Recall</th>
+                <th>Precisão</th>
+                <th>FN</th>
+                <th>FP</th>
+                <th>Custo Total</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-cost"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <footer class="slide-footer">
+      <a href="b3-s03.html" class="nav-btn">← Anterior</a>
+      <a href="index.html" class="nav-center">Índice do Tópico</a>
+      <a href="b3-s05.html" class="nav-btn">Próximo →</a>
+    </footer>
+  </div>
+
+  <script>
+    const costData = [
+      { t: 0.10, rec: 0.98, prec: 0.28, fn: 2,  fp: 52 },
+      { t: 0.20, rec: 0.95, prec: 0.38, fn: 5,  fp: 31 },
+      { t: 0.30, rec: 0.90, prec: 0.47, fn: 10, fp: 20 },
+      { t: 0.40, rec: 0.84, prec: 0.58, fn: 16, fp: 12 },
+      { t: 0.50, rec: 0.75, prec: 0.68, fn: 25, fp: 7 },
+      { t: 0.60, rec: 0.62, prec: 0.78, fn: 38, fp: 4 },
+      { t: 0.70, rec: 0.48, prec: 0.85, fn: 52, fp: 2 },
+      { t: 0.80, rec: 0.30, prec: 0.92, fn: 70, fp: 1 }
+    ];
+
+    function updateTable() {
+      const cFP = parseInt(document.getElementById('slider-cfp').value);
+      const cFN = parseInt(document.getElementById('slider-cfn').value);
+      const tSel = parseFloat(document.getElementById('slider-t').value);
+
+      document.getElementById('val-cfp').textContent = `R$ ${cFP}`;
+      document.getElementById('val-cfn').textContent = `R$ ${cFN}`;
+      document.getElementById('val-t').textContent = tSel.toFixed(2);
+
+      const tbody = document.getElementById('tbody-cost');
+      tbody.innerHTML = '';
+
+      costData.forEach(row => {
+        const totalCost = row.fp * cFP + row.fn * cFN;
+        const tr = document.createElement('tr');
+        if (Math.abs(row.t - tSel) < 0.05) tr.classList.add('selected-row');
+
+        tr.innerHTML = `
+          <td>${row.t.toFixed(2)}</td>
+          <td>${(row.rec*100).toFixed(0)}%</td>
+          <td>${(row.prec*100).toFixed(0)}%</td>
+          <td style="color:var(--red); font-weight:bold;">${row.fn}</td>
+          <td style="color:var(--orange); font-weight:bold;">${row.fp}</td>
+          <td style="color:var(--indigo); font-weight:bold;">R$ ${totalCost.toLocaleString('pt-BR')}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function setStrategy(mode) {
+      document.querySelectorAll('.btn-strat').forEach(b => b.classList.remove('active'));
+      const cFP = parseInt(document.getElementById('slider-cfp').value);
+      const cFN = parseInt(document.getElementById('slider-cfn').value);
+      const sliderT = document.getElementById('slider-t');
+
+      if (mode === 'min-cost') {
+        document.getElementById('btn-cost').classList.add('active');
+        let minC = 9999999, bestT = 0.20;
+        costData.forEach(r => {
+          const cost = r.fp * cFP + r.fn * cFN;
+          if (cost < minC) { minC = cost; bestT = r.t; }
+        });
+        sliderT.value = bestT;
+      } else if (mode === 'rec-90') {
+        document.getElementById('btn-rec').classList.add('active');
+        sliderT.value = 0.30;
+      } else if (mode === 'prec-80') {
+        document.getElementById('btn-prec').classList.add('active');
+        sliderT.value = 0.60;
+      } else if (mode === 'max-f1') {
+        document.getElementById('btn-f1').classList.add('active');
+        sliderT.value = 0.50;
+      }
+      updateTable();
+    }
+
+    document.getElementById('slider-cfp').addEventListener('input', updateTable);
+    document.getElementById('slider-cfn').addEventListener('input', updateTable);
+    document.getElementById('slider-t').addEventListener('input', updateTable);
+
+    setStrategy('min-cost');
+  </script>
+</body>
+</html>
