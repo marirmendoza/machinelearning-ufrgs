@@ -448,8 +448,8 @@ html, body {
 .interp strong { color: var(--text); }
 .interp em { color: var(--indigo); font-style: normal; font-weight: 600; }
 
-/* Navigation */
-.slide-nav {
+/* — Navigation — */
+.slide-nav, .slide-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -457,7 +457,7 @@ html, body {
   flex-shrink: 0;
   border-top: 1px solid var(--border);
 }
-.btn-nav {
+.btn-nav, .nav-btn {
   background: var(--bg3);
   border: 1.5px solid var(--border2);
   color: var(--text);
@@ -471,32 +471,21 @@ html, body {
   text-decoration: none;
   display: inline-block;
 }
-.btn-nav:hover:not(.disabled) {
+.btn-nav:hover:not(.disabled), .nav-btn:hover:not(.disabled) {
   background: var(--indigo);
   border-color: var(--indigo);
   color: #fff;
   transform: scale(1.04);
 }
-.btn-nav.disabled { opacity: 0.3; pointer-events: none; }
-.nav-dots { display: flex; gap: 0.6rem; align-items: center; }
-.dot {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  background: var(--border2);
-  transition: all 0.2s;
-}
-.dot.active {
-  background: var(--indigo);
-  width: 24px;
-  border-radius: 5px;
-}
-.nav-home {
+.btn-nav.disabled, .nav-btn.disabled { opacity: 0.35; pointer-events: none; }
+.nav-center, .nav-home {
   font-size: 0.85rem;
   color: var(--text-dim);
   text-decoration: none;
   font-family: 'Fira Code', monospace;
+  font-weight: 600;
 }
-.nav-home:hover { color: var(--indigo); }
+.nav-center:hover, .nav-home:hover { color: var(--indigo); }
 
 .mono { font-family: 'Fira Code', monospace; }
 .text-indigo { color: var(--indigo); }

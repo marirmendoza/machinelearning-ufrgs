@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 3.7 — Laboratório Brier Score: Acertar a Classe Não É Suficiente</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 900px) { .grid-2col { grid-template-columns: 1fr; } }
+    .card-mod { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 1rem; }
+    .table-bs { width: 100%; border-collapse: collapse; font-family: 'Fira Code', monospace; font-size: 0.85rem; }
+    .table-bs th { background: var(--bg3); padding: 0.5rem; border-bottom: 2px solid var(--border); }
+    .table-bs td { padding: 0.45rem; text-align: center; border-bottom: 1px solid var(--border2); }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Métricas de Avaliação</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 3 · Slide 07 / 08</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Laboratório Brier Score: Calibração de Probabilidades</h1>
+        <p class="slide-subtitle">
+          Acertar quem é positivo ou negativo não é suficiente. As probabilidades previstas pelo modelo refletem a incerteza real?
+        </p>
+      </div>
+
+      <div class="concept-box">
+        <strong>Discriminação vs. Calibração:</strong>
+        <br/>• <strong>Brier Score (BS):</strong> $$BS = \frac{1}{N} \sum_{i=1}^N (p_i - y_i)^2$$
+        <br/>• <strong>O que ele mede?</strong> O erro quadrático médio entre a probabilidade estimada $p_i \in [0, 1]$ e o resultado real $y_i \in \{0, 1\}$.
+        <br/>• Quanto **menor** o Brier Score, melhor calibradas são as probabilidades ($BS = 0.0$ é o modelo perfeito com $100\%$ de confiança nos acertos).
+      </div>
+
+      <div class="grid-2col">
+        <!-- Esquerda: Modelo A (Tímido) vs Modelo B (Confiante) -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">1. Probabilidades Previstas pelos Modelos A e B</span>
+          </div>
+
+          <table class="table-bs">
+            <thead>
+              <tr>
+                <th>Exemplo</th>
+                <th>Real ($y_i$)</th>
+                <th>Modelo A ($p_A$)</th>
+                <th>Modelo B ($p_B$)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>1</td><td>1</td><td>0.51</td><td id="b-p1">0.95</td></tr>
+              <tr><td>2</td><td>1</td><td>0.52</td><td id="b-p2">0.91</td></tr>
+              <tr><td>3</td><td>0</td><td>0.48</td><td id="b-p3">0.05</td></tr>
+              <tr><td>4</td><td>0</td><td>0.49</td><td id="b-p4">0.08</td></tr>
+            </tbody>
+          </table>
+
+          <div class="control-group" style="margin-top:1rem;">
+            <div class="control-label"><span>Ajustar Nível de Confiança do Modelo B:</span><span id="val-conf" class="control-val">0.95</span></div>
+            <input type="range" id="slider-conf" min="0.55" max="0.99" value="0.95" step="0.02" />
+          </div>
+        </div>
+
+        <!-- Direita: Comparativo de Discriminação vs Calibração -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">2. Discriminação vs. Calibração</span>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+            <div class="card-mod" style="text-align:center;">
+              <h4 style="color:var(--text-muted); font-size:0.85rem;">MODELO A (Hesitante)</h4>
+              <p style="font-family:'Fira Code', monospace; font-size:0.8rem; margin-top:0.4rem;">
+                Acurácia: <strong>100%</strong><br/>
+                ROC-AUC: <strong>1.00</strong><br/>
+                Brier Score: <strong style="color:var(--orange);">0.240</strong>
+              </p>
+            </div>
+
+            <div class="card-mod" style="text-align:center; border:2px solid var(--indigo);">
+              <h4 style="color:var(--indigo); font-size:0.85rem;">MODELO B (Calibrado)</h4>
+              <p style="font-family:'Fira Code', monospace; font-size:0.8rem; margin-top:0.4rem;">
+                Acurácia: <strong>100%</strong><br/>
+                ROC-AUC: <strong>1.00</strong><br/>
+                Brier Score: <strong id="lbl-bs-b" style="color:var(--green);">0.005</strong>
+              </p>
+            </div>
+          </div>
+
+          <div class="info-card" style="margin-top:1rem; line-height:1.5;">
+            <strong>A Grande Lição Pedagógica:</strong><br/>
+            Ambos os modelos classificam com $100\%$ de acurácia em $t = 0.50$ e ambos atingem $\text{ROC-AUC} = 1.00$.<br/><br/>
+            Porém, o **Modelo A** está hesitante (prevê $0.51$ para positivos), enquanto o **Modelo B** é confiante e preciso. O **Brier Score** é a única métrica que expõe essa diferença essencial de calibração!
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="slide-footer">
+      <a href="b3-s06.html" class="nav-btn">← Anterior</a>
+      <a href="index.html" class="nav-center">Índice do Tópico</a>
+      <a href="b3-s08.html" class="nav-btn">Próximo →</a>
+    </footer>
+  </div>
+
+  <script>
+    const sliderConf = document.getElementById('slider-conf');
+
+    function updateCalib() {
+      const conf = parseFloat(sliderConf.value);
+      document.getElementById('val-conf').textContent = conf.toFixed(2);
+
+      const p1 = conf;
+      const p2 = conf - 0.04;
+      const p3 = 1 - conf;
+      const p4 = 1 - conf + 0.03;
+
+      document.getElementById('b-p1').textContent = p1.toFixed(2);
+      document.getElementById('b-p2').textContent = p2.toFixed(2);
+      document.getElementById('b-p3').textContent = p3.toFixed(2);
+      document.getElementById('b-p4').textContent = p4.toFixed(2);
+
+      const bsB = ((p1 - 1)**2 + (p2 - 1)**2 + (p3 - 0)**2 + (p4 - 0)**2) / 4;
+      document.getElementById('lbl-bs-b').textContent = bsB.toFixed(3);
+    }
+
+    sliderConf.addEventListener('input', updateCalib);
+    updateCalib();
+  </script>
+</body>
+</html>

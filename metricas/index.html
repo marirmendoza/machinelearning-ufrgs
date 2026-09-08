@@ -130,7 +130,7 @@
     <div class="badge">UFRGS · Aprendizado de Máquina</div>
     <h1>Métricas de Avaliação</h1>
     <div class="prof-name">Profa. Mariana Recamonde-Mendoza</div>
-    <p class="hero-sub">Como sumarizar o desempenho de um modelo — em classificação (matriz de confusão, acurácia, sensibilidade, precisão, F1) e em regressão (MAE, MSE). Cada métrica responde uma pergunta diferente.</p>
+    <p class="hero-sub">Como avaliar modelos de Machine Learning — da Matriz de Confusão e métricas pontuais (Acurácia, Sensibilidade, Precisão, F1) a Regressão (MAE, MSE) e Métricas Avançadas (Thresholds, Curvas ROC/PR, MCC, Brier Score e Análise de Custo Operacional).</p>
   </div>
 
   <div class="blocks">
@@ -191,6 +191,61 @@
           <div class="sl-icon">📏</div>
           <div class="sl-title">MAE e MSE</div>
           <div class="sl-desc">Duas formas de agregar resíduos: erro médio absoluto (MAE) e erro médio quadrático (MSE). Diferentes sensibilidades a outliers.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <div class="block-section">
+      <div class="block-title">Bloco 3 — Thresholds, Curvas e Métricas Avançadas</div>
+      <div class="slides-grid">
+        <a href="b3-s01.html" class="slide-link">
+          <div class="sl-num">Slide 01</div>
+          <div class="sl-icon">📏</div>
+          <div class="sl-title">"Do Score à Classe": O Threshold</div>
+          <div class="sl-desc">Como a régua do threshold transforma probabilidades contínuas em decisões binárias e altera a matriz de confusão.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="b3-s02.html" class="slide-link">
+          <div class="sl-num">Slide 02</div>
+          <div class="sl-icon">📈</div>
+          <div class="sl-title">A Curva ROC & ROC-AUC</div>
+          <div class="sl-desc">Acompanhe a curva FPR vs TPR ao varrer todos os thresholds e compreenda a área sob a curva (ROC-AUC).</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="b3-s03.html" class="slide-link">
+          <div class="sl-num">Slide 03</div>
+          <div class="sl-icon">🔍</div>
+          <div class="sl-title">ROC vs Precision-Recall</div>
+          <div class="sl-desc">Por que a curva Precision-Recall (PR-AUC) é superior à ROC quando a classe positiva é extremamente rara.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="b3-s04.html" class="slide-link">
+          <div class="sl-num">Slide 04</div>
+          <div class="sl-icon">💰</div>
+          <div class="sl-title">Decisão Operacional e Custo</div>
+          <div class="sl-desc">Selecione o threshold ótimo minimizando a matriz de custo assimétrico entre Falsos Negativos e Falsos Positivos.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="b3-s05.html" class="slide-link">
+          <div class="sl-num">Slide 05</div>
+          <div class="sl-icon">🧱</div>
+          <div class="sl-title">Threshold vs. Modelo</div>
+          <div class="sl-desc">Entenda que mudar o threshold não significa alterar o modelo, mas sim adaptar a política de decisão.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="b3-s06.html" class="slide-link">
+          <div class="sl-num">Slide 06</div>
+          <div class="sl-icon">📊</div>
+          <div class="sl-title">Laboratório MCC (Matthews)</div>
+          <div class="sl-desc">Uma métrica simétrica baseada nos 4 quadrantes da matriz de confusão, imune a ilusões de acurácia.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="b3-s07.html" class="slide-link">
+          <div class="sl-num">Slide 07</div>
+          <div class="sl-icon">🎯</div>
+          <div class="sl-title">Laboratório Brier Score</div>
+          <div class="sl-desc">Aprenda a diferença entre discriminação (AUC) e calibração de probabilidades (Brier Score).</div>
           <div class="sl-tag">interativo</div>
         </a>
       </div>

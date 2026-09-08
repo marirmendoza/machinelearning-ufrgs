@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 3.6 — Laboratório MCC: A Matriz de Confusão Inteira Importa</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 900px) { .grid-2col { grid-template-columns: 1fr; } }
+    .btn-group-mcc { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-bottom: 1rem; }
+    .btn-mcc {
+      background: var(--bg3); border: 1px solid var(--border2);
+      padding: 0.45rem 0.85rem; border-radius: var(--radius-sm);
+      font-size: 0.8rem; font-weight: 600; cursor: pointer; color: var(--text-muted); transition: all 0.2s;
+    }
+    .btn-mcc.active { background: var(--indigo); color: white; border-color: var(--indigo); }
+    .input-cell { width: 70px; font-family: 'Fira Code', monospace; font-size: 1.1rem; text-align: center; padding: 0.3rem; border: 1px solid var(--border); border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Métricas de Avaliação</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 3 · Slide 06 / 08</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Laboratório MCC: A Matriz de Confusão Inteira Importa</h1>
+        <p class="slide-subtitle">
+          O Coeficiente de Correlação de Matthews (MCC) considera simultaneamente VP, VN, FP e FN em um único coeficiente entre -1 e +1.
+        </p>
+      </div>
+
+      <div class="concept-box">
+        <strong>A Formulação Matemática do MCC:</strong>
+        <br/>$$MCC = \frac{VP \cdot VN - FP \cdot FN}{\sqrt{(VP+FP)(VP+FN)(VN+FP)(VN+FN)}}$$
+        <br/>• <strong>Por que o MCC é superior em dados desbalanceados?</strong> Acurácia, Precisão e F1-Score podem ser enganados por modificações na proporção de classes. O MCC só atinge pontuação alta se o modelo acertar bem a maioria das previsões positivas E negativas!
+      </div>
+
+      <div class="btn-group-mcc">
+        <button class="btn-mcc active" id="btn-perf" onclick="setPreset('perfect')">🌟 Modelo Perfeito (MCC = +1.0)</button>
+        <button class="btn-mcc" id="btn-rand" onclick="setPreset('random')">🎲 Chute Aleatório (MCC = 0.0)</button>
+        <button class="btn-mcc" id="btn-triv" onclick="setPreset('trivial')">⚠️ Classificador Trivial (Acc 90% vs MCC 0.0)</button>
+        <button class="btn-mcc" id="btn-inv" onclick="setPreset('inverse')">🔄 Inversão Total (MCC = -1.0)</button>
+      </div>
+
+      <div class="grid-2col">
+        <!-- Esquerda: Matriz 2x2 com Inputs -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">1. Matriz de Confusão 2×2 (Editável)</span>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; text-align:center;">
+            <div class="cm-cell vp">
+              <span class="cell-code">VP (Verdadeiro Positivo)</span>
+              <input type="number" id="in-vp" class="input-cell" value="50" min="0" />
+            </div>
+            <div class="cm-cell fp">
+              <span class="cell-code">FP (Falso Positivo)</span>
+              <input type="number" id="in-fp" class="input-cell" value="0" min="0" />
+            </div>
+            <div class="cm-cell fn">
+              <span class="cell-code">FN (Falso Negativo)</span>
+              <input type="number" id="in-fn" class="input-cell" value="0" min="0" />
+            </div>
+            <div class="cm-cell vn">
+              <span class="cell-code">VN (Verdadeiro Negativo)</span>
+              <input type="number" id="in-vn" class="input-cell" value="50" min="0" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Direita: Comparativo de Métricas -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">2. Comparativo de Métricas Resultantes</span>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:0.6rem; font-family:'Fira Code', monospace; font-size:0.9rem;">
+            <div class="mini-card" style="display:flex; justify-space-between; align-items:center; padding:0.6rem 1rem;">
+              <span>Acurácia:</span> <strong id="m-acc" style="color:var(--indigo);">100%</strong>
+            </div>
+            <div class="mini-card" style="display:flex; justify-space-between; align-items:center; padding:0.6rem 1rem;">
+              <span>Precisão:</span> <strong id="m-prec" style="color:var(--teal);">100%</strong>
+            </div>
+            <div class="mini-card" style="display:flex; justify-space-between; align-items:center; padding:0.6rem 1rem;">
+              <span>Recall:</span> <strong id="m-rec" style="color:var(--blue);">100%</strong>
+            </div>
+            <div class="mini-card" style="display:flex; justify-space-between; align-items:center; padding:0.6rem 1rem;">
+              <span>F1-Score:</span> <strong id="m-f1" style="color:var(--purple);">1.00</strong>
+            </div>
+            <div class="mini-card" style="display:flex; justify-space-between; align-items:center; padding:0.6rem 1rem; border:2px solid var(--indigo); background:var(--indigo-lt);">
+              <span>MCC (Matthews):</span> <strong id="m-mcc" style="color:var(--indigo); font-size:1.2rem;">+1.00</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="slide-footer">
+      <a href="b3-s05.html" class="nav-btn">← Anterior</a>
+      <a href="index.html" class="nav-center">Índice do Tópico</a>
+      <a href="b3-s07.html" class="nav-btn">Próximo →</a>
+    </footer>
+  </div>
+
+  <script>
+    function updateMcc() {
+      const vp = parseInt(document.getElementById('in-vp').value) || 0;
+      const fp = parseInt(document.getElementById('in-fp').value) || 0;
+      const fn = parseInt(document.getElementById('in-fn').value) || 0;
+      const vn = parseInt(document.getElementById('in-vn').value) || 0;
+
+      const total = vp + fp + fn + vn;
+      const acc = total > 0 ? (vp + vn) / total : 0;
+      const prec = (vp + fp) > 0 ? vp / (vp + fp) : 0;
+      const rec = (vp + fn) > 0 ? vp / (vp + fn) : 0;
+      const f1 = (prec + rec) > 0 ? 2 * (prec * rec) / (prec + rec) : 0;
+
+      const denom = Math.sqrt((vp + fp) * (vp + fn) * (vn + fp) * (vn + fn));
+      const mcc = denom > 0 ? (vp * vn - fp * fn) / denom : 0;
+
+      document.getElementById('m-acc').textContent = `${(acc*100).toFixed(0)}%`;
+      document.getElementById('m-prec').textContent = `${(prec*100).toFixed(0)}%`;
+      document.getElementById('m-rec').textContent = `${(rec*100).toFixed(0)}%`;
+      document.getElementById('m-f1').textContent = f1.toFixed(2);
+      document.getElementById('m-mcc').textContent = (mcc >= 0 ? '+' : '') + mcc.toFixed(2);
+    }
+
+    function setPreset(type) {
+      document.querySelectorAll('.btn-mcc').forEach(b => b.classList.remove('active'));
+
+      if (type === 'perfect') {
+        document.getElementById('btn-perf').classList.add('active');
+        document.getElementById('in-vp').value = 50; document.getElementById('in-fp').value = 0;
+        document.getElementById('in-fn').value = 0;  document.getElementById('in-vn').value = 50;
+      } else if (type === 'random') {
+        document.getElementById('btn-rand').classList.add('active');
+        document.getElementById('in-vp').value = 25; document.getElementById('in-fp').value = 25;
+        document.getElementById('in-fn').value = 25; document.getElementById('in-vn').value = 25;
+      } else if (type === 'trivial') {
+        document.getElementById('btn-triv').classList.add('active');
+        // Classificador que sempre prevê +1 em dados onde 90 são +1 e 10 são 0:
+        document.getElementById('in-vp').value = 90; document.getElementById('in-fp').value = 10;
+        document.getElementById('in-fn').value = 0;  document.getElementById('in-vn').value = 0;
+      } else if (type === 'inverse') {
+        document.getElementById('btn-inv').classList.add('active');
+        document.getElementById('in-vp').value = 0;  document.getElementById('in-fp').value = 50;
+        document.getElementById('in-fn').value = 50; document.getElementById('in-vn').value = 0;
+      }
+      updateMcc();
+    }
+
+    ['in-vp', 'in-fp', 'in-fn', 'in-vn'].forEach(id => {
+      document.getElementById(id).addEventListener('input', updateMcc);
+    });
+
+    updateMcc();
+  </script>
+</body>
+</html>

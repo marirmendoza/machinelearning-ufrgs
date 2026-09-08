@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 3.2 — Bootstrap</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .bs-container {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .pool-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      min-height: 44px;
+      padding: 1rem;
+      border-radius: 8px;
+      background: var(--bg);
+      border: 1px dashed var(--border);
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .pool-title {
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .data-item {
+      width: 36px;
+      height: 36px;
+      background: var(--blue);
+      color: white;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Fira Code', monospace;
+      font-weight: 700;
+      font-size: 0.85rem;
+      transition: all 0.3s;
+    }
+
+    .btn-action {
+      background: var(--teal);
+      color: white;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-action:hover { background: #5b21b6; transform: translateY(-2px); }
+
+    .oob-box {
+      background: var(--orange-lt);
+      border-color: var(--orange);
+    }
+    .oob-box .data-item { background: var(--orange); }
+
+    .stats {
+      font-family: monospace;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-top: 1rem;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Estratégias de Divisão</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 1 · Slide 04</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Bootstrap (Amostragem com Reposição)</h1>
+        <p class="slide-subtitle">
+          Geramos um conjunto de treinamento escolhendo aleatoriamente instâncias do dataset original <strong>com reposição</strong>. As instâncias que não foram sorteadas nenhuma vez formam o conjunto de teste (<em>Out-of-bag</em>).
+        </p>
+      </div>
+
+      <div class="bs-container">
+        
+        <div style="width: 100%;">
+          <div class="pool-title">Dataset Original (N=10)</div>
+          <div class="pool-row" id="orig-pool">
+            <div class="data-item">x1</div><div class="data-item">x2</div><div class="data-item">x3</div>
+            <div class="data-item">x4</div><div class="data-item">x5</div><div class="data-item">x6</div>
+            <div class="data-item">x7</div><div class="data-item">x8</div><div class="data-item">x9</div>
+            <div class="data-item">x10</div>
+          </div>
+        </div>
+
+        <button class="btn-action" onclick="runBootstrap()">Gerar Amostra Bootstrap</button>
+
+        <div style="display: flex; gap: 2rem; width: 100%; max-width: 800px; justify-content: center;">
+          
+          <div style="flex: 2;">
+            <div class="pool-title" style="color: var(--blue);">Conjunto de Treinamento (B)</div>
+            <div class="pool-row" id="train-pool" style="border-color: var(--blue); background: var(--blue-lt);">
+            </div>
+            <div class="stats" id="train-stats"></div>
+          </div>
+
+          <div style="flex: 1;">
+            <div class="pool-title" style="color: var(--orange);">Teste (Out-of-bag)</div>
+            <div class="pool-row oob-box" id="oob-pool">
+            </div>
+            <div class="stats" id="oob-stats"></div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="insight-box mt-4">
+        <span class="i-icon">💡</span>
+        <div class="i-text">
+          Matematicamente, em grandes datasets, cerca de <strong>63.2%</strong> das instâncias únicas do dataset original acabarão no conjunto de Treinamento Bootstrap, e as <strong>36.8%</strong> restantes comporão o conjunto de Teste (Out-of-Bag).
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b1-s03.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <a class="btn-nav" href="index.html">Início do Módulo 🏠</a>
+    </nav>
+  </div>
+
+  <script>
+    const N = 10;
+    
+    function runBootstrap() {
+      const orig = [1,2,3,4,5,6,7,8,9,10];
+      const train = [];
+      const uniqueSelected = new Set();
+
+      // Sample with replacement N times
+      for(let i=0; i<N; i++) {
+        let r = Math.floor(Math.random() * N);
+        train.push(orig[r]);
+        uniqueSelected.add(orig[r]);
+      }
+
+      // Find OOB (not in uniqueSelected)
+      const oob = orig.filter(x => !uniqueSelected.has(x));
+
+      // Sort train just for nicer display, or leave unordered. Unordered is better to show randomness.
+      
+      // Render
+      const tp = document.getElementById('train-pool');
+      tp.innerHTML = '';
+      train.forEach(id => {
+        tp.innerHTML += `<div class="data-item" style="animation: cardSlide 0.3s ease-out;">x${id}</div>`;
+      });
+
+      const op = document.getElementById('oob-pool');
+      op.innerHTML = '';
+      oob.forEach(id => {
+        op.innerHTML += `<div class="data-item" style="animation: cardSlide 0.3s ease-out;">x${id}</div>`;
+      });
+
+      // Stats
+      document.getElementById('train-stats').innerHTML = `Tamanho: ${N}<br>Únicos: ${uniqueSelected.size} (${(uniqueSelected.size/N*100).toFixed(0)}%)`;
+      document.getElementById('oob-stats').innerHTML = `Tamanho: ${oob.length}<br>Únicos: ${oob.length} (${(oob.length/N*100).toFixed(0)}%)`;
+    }
+  </script>
+</body>
+</html>

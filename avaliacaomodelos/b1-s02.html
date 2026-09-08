@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 2.2 — k-fold Cross-Validation</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .kfold-container {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .folds-display {
+      display: flex;
+      gap: 1rem;
+      width: 100%;
+      max-width: 800px;
+    }
+
+    .fold-box {
+      flex: 1;
+      height: 80px;
+      border: 2px solid var(--border2);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: var(--text-muted);
+      background: var(--bg);
+      transition: all 0.3s;
+    }
+
+    .fold-train { background: var(--blue-lt); border-color: var(--blue); color: var(--blue); }
+    .fold-test  { background: var(--orange-lt); border-color: var(--orange); color: var(--orange); transform: translateY(-10px); box-shadow: 0 10px 15px -3px rgba(194, 65, 12, 0.3); }
+
+    .btn-action {
+      background: var(--teal);
+      color: white;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-action:hover:not(:disabled) { background: #5b21b6; transform: translateY(-2px); }
+    .btn-action:disabled { background: var(--border2); cursor: not-allowed; }
+
+    .results-table {
+      width: 100%;
+      max-width: 800px;
+      border-collapse: collapse;
+      text-align: center;
+    }
+    .results-table th, .results-table td {
+      padding: 0.8rem;
+      border-bottom: 1px solid var(--border2);
+    }
+    .results-table th { color: var(--text-muted); font-size: 0.9rem; }
+    .results-table td { font-family: 'Fira Code', monospace; font-weight: 600; }
+    
+    .final-result {
+      background: var(--teal-lt);
+      color: var(--teal);
+      font-size: 1.2rem;
+      font-weight: 800;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+      text-align: center;
+      width: 100%;
+      max-width: 800px;
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+
+    .alert-box {
+      background: #fee2e2;
+      border-left: 5px solid #ef4444;
+      padding: 1rem 1.5rem;
+      border-radius: 4px 8px 8px 4px;
+      width: 100%;
+      max-width: 800px;
+      margin-top: 2rem;
+      font-size: 0.95rem;
+    }
+    .alert-box strong { color: #b91c1c; }
+
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Estratégias de Divisão</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 1 · Slide 02</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">k-fold Cross-Validation</h1>
+        <p class="slide-subtitle">
+          O conjunto de dados é dividido em <strong>k</strong> partições disjuntas. O processo de treino/teste é iterado <strong>k vezes</strong>. Em cada iteração, um fold diferente é usado para teste e os demais para treinamento.
+        </p>
+      </div>
+
+      <div class="kfold-container">
+        
+        <div class="folds-display" id="folds">
+          <div class="fold-box" id="f-1">Fold 1</div>
+          <div class="fold-box" id="f-2">Fold 2</div>
+          <div class="fold-box" id="f-3">Fold 3</div>
+          <div class="fold-box" id="f-4">Fold 4</div>
+          <div class="fold-box" id="f-5">Fold 5</div>
+        </div>
+
+        <button class="btn-action" id="btn-iter" onclick="nextIteration()">Iniciar 1ª Iteração</button>
+
+        <table class="results-table" id="res-table" style="display: none;">
+          <thead>
+            <tr>
+              <th>Iteração</th>
+              <th>Modelo Gerado</th>
+              <th>Fold de Teste</th>
+              <th>Acurácia Estimada</th>
+            </tr>
+          </thead>
+          <tbody id="res-body">
+            <!-- JS Injected -->
+          </tbody>
+        </table>
+
+        <div class="final-result" id="final-res">
+          Desempenho Final (k=5): <span id="final-val"></span>
+        </div>
+
+        <div class="alert-box">
+          <strong>⚠️ IMPORTANTE:</strong> O k-fold gerou 5 modelos de aprendizado. Onde está o modelo final?<br><br>
+          <em>Nenhum destes 5 modelos é o modelo final!</em> Eles são temporários e servem <strong>apenas</strong> para estimar o desempenho médio. Após a validação cruzada atestar que o algoritmo é bom, o modelo final para produção será treinado usando <strong>100% de todos os dados</strong>.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b1-s01.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b1-s03.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    let iter = 0;
+    let accuracies = [];
+
+    function nextIteration() {
+      iter++;
+      if(iter > 5) return;
+
+      document.getElementById('res-table').style.display = 'table';
+
+      // Reset styles
+      for(let i=1; i<=5; i++) {
+        let f = document.getElementById('f-'+i);
+        if (i === iter) {
+          f.className = 'fold-box fold-test';
+          f.innerHTML = `Fold ${i}<br><span style="font-size:0.75rem">TESTE</span>`;
+        } else {
+          f.className = 'fold-box fold-train';
+          f.innerHTML = `Fold ${i}<br><span style="font-size:0.75rem">TREINO</span>`;
+        }
+      }
+
+      // Generate random acc between 0.75 and 0.90
+      let acc = 0.75 + Math.random() * 0.15;
+      accuracies.push(acc);
+
+      let tbody = document.getElementById('res-body');
+      let row = `
+        <tr>
+          <td>${iter}</td>
+          <td>M<sub>${iter}</sub></td>
+          <td>Fold ${iter}</td>
+          <td>${(acc * 100).toFixed(1)}%</td>
+        </tr>
+      `;
+      tbody.insertAdjacentHTML('beforeend', row);
+
+      const btn = document.getElementById('btn-iter');
+      if (iter < 5) {
+        btn.textContent = `Avançar para Iteração ${iter+1}`;
+      } else {
+        btn.textContent = 'Processo Concluído';
+        btn.disabled = true;
+
+        // Calc final mean and std
+        let mean = accuracies.reduce((a,b)=>a+b, 0) / 5;
+        let std = Math.sqrt(accuracies.reduce((a,b) => a + Math.pow(b - mean, 2), 0) / 5);
+        
+        document.getElementById('final-val').textContent = `${(mean*100).toFixed(1)}% ± ${(std*100).toFixed(1)}`;
+        document.getElementById('final-res').style.opacity = '1';
+        
+        // Reset visually after a moment to show final step
+        setTimeout(() => {
+          for(let i=1; i<=5; i++) {
+            document.getElementById('f-'+i).className = 'fold-box';
+            document.getElementById('f-'+i).innerHTML = `Fold ${i}<br><span style="font-size:0.75rem">USADO EM MODELO FINAL</span>`;
+          }
+        }, 1500);
+      }
+    }
+  </script>
+</body>
+</html>

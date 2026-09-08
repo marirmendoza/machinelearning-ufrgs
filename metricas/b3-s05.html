@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 3.5 — "O Modelo Está Errado?": Threshold vs. Modelo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 900px) { .grid-2col { grid-template-columns: 1fr; } }
+    .table-pat { width: 100%; border-collapse: collapse; font-family: 'Fira Code', monospace; font-size: 0.9rem; }
+    .table-pat th { background: var(--bg3); padding: 0.6rem; text-align: center; border-bottom: 2px solid var(--border); }
+    .table-pat td { padding: 0.55rem; text-align: center; border-bottom: 1px solid var(--border2); }
+    .pos-dec { color: var(--green); font-weight: bold; background: var(--green-lt); }
+    .neg-dec { color: var(--orange); font-weight: bold; background: var(--orange-lt); }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Métricas de Avaliação</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 3 · Slide 05 / 08</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">"O Modelo Está Errado?": Threshold vs. Modelo</h1>
+        <p class="slide-subtitle">
+          Distinguindo o aprendizado de padrões (scores) da decisão operacional (threshold).
+        </p>
+      </div>
+
+      <div class="concept-box">
+        <strong>A Arquitetura de Decisão em 3 Níveis:</strong>
+        <br/>$$\boxed{\text{1. Modelo (Aprendizado de Padrões)}} \longrightarrow \boxed{\text{2. Score / Probabilidade}} \longrightarrow \boxed{\text{3. Regra de Decisão (Threshold)}}$$
+        <br/>• <strong>Nível 1 & 2 (Modelo/Score):</strong> Atribui uma pontuação $p_i \in [0, 1]$ que quantifica o quanto cada exemplo parece pertencer à classe positiva.
+        <br/>• <strong>Nível 3 (Threshold):</strong> Converte a probabilidade em uma ação binária ($+1$ ou $-1$).
+      </div>
+
+      <div class="grid-2col">
+        <!-- Esquerda: Tabela de Pacientes -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">1. Probabilidades Previstas dos Pacientes</span>
+          </div>
+
+          <table class="table-pat">
+            <thead>
+              <tr>
+                <th>Paciente</th>
+                <th>Score do Modelo ($p_i$)</th>
+                <th>Decisão Resultante</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-pat"></tbody>
+          </table>
+        </div>
+
+        <!-- Direita: Seletor de Política e Diagnóstico -->
+        <div class="exp-panel">
+          <div class="exp-heading">
+            <span class="exp-title-small">2. Alternador de Política de Decisão</span>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:0.75rem;">
+            <button class="btn-nav" id="btn-pol-50" onclick="setPolicy(0.50)">Politica Padrão (t = 0.50)</button>
+            <button class="btn-nav" id="btn-pol-70" onclick="setPolicy(0.70)">Politica Conservadora (t = 0.70)</button>
+            <button class="btn-nav" id="btn-pol-40" onclick="setPolicy(0.40)">Politica Preventiva (t = 0.40)</button>
+          </div>
+
+          <div class="info-card" style="margin-top:1.25rem; line-height:1.6;">
+            <strong>Observação Crucial:</strong><br/>
+            As probabilidades calculadas pelo modelo para os pacientes A, B, C, D, E, F e G <strong>permaneceu 100% idênticas</strong> em todas as três políticas acima!<br/><br/>
+            Se o custo de um Falso Negativo for muito alto, não há nada "errado" com um modelo que atribui $0.45$ a determinado paciente. A decisão operacional adequada pode ser considerar $0.45$ suficiente para encaminhar o paciente para investigação!
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="slide-footer">
+      <a href="b3-s04.html" class="nav-btn">← Anterior</a>
+      <a href="index.html" class="nav-center">Índice do Tópico</a>
+      <a href="b3-s06.html" class="nav-btn">Próximo →</a>
+    </footer>
+  </div>
+
+  <script>
+    const patients = [
+      { id: 'A', score: 0.91 },
+      { id: 'B', score: 0.83 },
+      { id: 'C', score: 0.72 },
+      { id: 'D', score: 0.61 },
+      { id: 'E', score: 0.48 },
+      { id: 'F', score: 0.31 },
+      { id: 'G', score: 0.12 }
+    ];
+
+    function setPolicy(tVal) {
+      document.getElementById('btn-pol-50').classList.remove('active');
+      document.getElementById('btn-pol-70').classList.remove('active');
+      document.getElementById('btn-pol-40').classList.remove('active');
+
+      if (tVal === 0.50) document.getElementById('btn-pol-50').classList.add('active');
+      if (tVal === 0.70) document.getElementById('btn-pol-70').classList.add('active');
+      if (tVal === 0.40) document.getElementById('btn-pol-40').classList.add('active');
+
+      const tbody = document.getElementById('tbody-pat');
+      tbody.innerHTML = '';
+
+      patients.forEach(p => {
+        const pred = p.score >= tVal ? 1 : 0;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>Paciente ${p.id}</strong></td>
+          <td>${p.score.toFixed(2)}</td>
+          <td class="${pred === 1 ? 'pos-dec' : 'neg-dec'}">${pred === 1 ? 'POSITIVO (+1)' : 'NEGATIVO (0)'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    setPolicy(0.50);
+  </script>
+</body>
+</html>

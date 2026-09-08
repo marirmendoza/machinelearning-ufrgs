@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 1.1 — Matriz de Confusão e Threshold</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .layout-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-top: 1rem;
+    }
+
+    .data-table-container {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border2);
+    }
+    .slider-row input[type="range"] { flex: 1; accent-color: var(--teal); }
+    .thresh-val { font-family: 'Fira Code', monospace; font-weight: 700; color: var(--teal); background: var(--teal-lt); padding: 0.2rem 0.5rem; border-radius: 4px; }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .data-table th, .data-table td {
+      padding: 0.5rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border2);
+    }
+    .data-table th { font-weight: 600; color: var(--text-muted); }
+    .data-table tbody tr { transition: background-color 0.2s; }
+    
+    .pred-pos { background-color: var(--teal-lt); }
+    .pred-neg { background-color: var(--bg); }
+    
+    .icon-true { color: #166534; font-weight: bold; }
+    .icon-false { color: #b91c1c; font-weight: bold; }
+
+    .metrics-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .confusion-matrix {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-columns: auto 1fr 1fr;
+      grid-template-rows: auto 1fr 1fr;
+      gap: 0.5rem;
+      text-align: center;
+    }
+
+    .cm-header-col { grid-column: 2 / 4; grid-row: 1; font-weight: 600; color: var(--text-muted); }
+    .cm-header-row { grid-column: 1; grid-row: 2 / 4; display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--text-muted); writing-mode: vertical-rl; transform: rotate(180deg); }
+    
+    .cm-label-pos { font-weight: 600; color: var(--teal); }
+    .cm-label-neg { font-weight: 600; color: var(--text-muted); }
+
+    .cm-cell {
+      padding: 1rem;
+      border-radius: 8px;
+      font-family: 'Fira Code', monospace;
+      font-size: 1.5rem;
+      font-weight: 700;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border2);
+      transition: all 0.3s;
+    }
+    .cm-cell span { font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: 600; margin-top: 0.5rem; text-transform: uppercase; }
+
+    .cm-vp { background: #dcfce7; border-color: #86efac; color: #166534; }
+    .cm-fp { background: #fee2e2; border-color: #fca5a5; color: #991b1b; }
+    .cm-fn { background: #fef08a; border-color: #fde047; color: #854d0e; }
+    .cm-vn { background: #f1f5f9; border-color: #cbd5e1; color: #334155; }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .metric-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 1rem;
+      text-align: center;
+    }
+    .metric-card h4 { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+    .metric-card .val { font-family: 'Fira Code', monospace; font-size: 1.5rem; font-weight: 700; color: var(--teal); }
+
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Métricas de Avaliação</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 3 · Slide 01</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Matriz de Confusão e Limiar (Threshold)</h1>
+        <p class="slide-subtitle">
+          Modelos como Regressão Logística retornam <strong>probabilidades</strong>. Ao movermos o limiar de decisão (o ponto de corte para dizer "Sim" ou "Não"), alteramos completamente a Matriz de Confusão.
+        </p>
+      </div>
+
+      <div class="layout-split">
+        <!-- Panel 1: Data Table & Slider -->
+        <div class="data-table-container">
+          <div class="slider-row">
+            <label><strong>Limiar de Decisão:</strong></label>
+            <input type="range" id="thresh-slider" min="0" max="1" step="0.05" value="0.5" />
+            <span class="thresh-val" id="thresh-display">0.50</span>
+          </div>
+
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+            Tabela ordenada por probabilidade predita descrescente.
+          </p>
+
+          <table class="data-table" id="instances-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Probabilidade Predita</th>
+                <th>Classe Real</th>
+                <th>Classe Predita (Baseado no Limiar)</th>
+                <th>Resultado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Injected by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Panel 2: Confusion Matrix & Metrics -->
+        <div class="metrics-container">
+          <div class="confusion-matrix">
+            <div class="cm-header-col">Classe Predita</div>
+            <div class="cm-header-row">Classe Real</div>
+            
+            <div class="cm-label-pos">Positiva (+)</div>
+            <div class="cm-label-neg">Negativa (-)</div>
+
+            <div class="cm-label-pos">Positiva (+)</div>
+            <div class="cm-cell cm-vp" id="cell-vp">0 <span>Verdadeiro Positivo</span></div>
+            <div class="cm-cell cm-fn" id="cell-fn">0 <span>Falso Negativo</span></div>
+
+            <div class="cm-label-neg">Negativa (-)</div>
+            <div class="cm-cell cm-fp" id="cell-fp">0 <span>Falso Positivo</span></div>
+            <div class="cm-cell cm-vn" id="cell-vn">0 <span>Verdadeiro Negativo</span></div>
+          </div>
+
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <h4>Acurácia</h4>
+              <div class="val" id="val-acc">0.00</div>
+            </div>
+            <div class="metric-card">
+              <h4>Precisão (PPV)</h4>
+              <div class="val" id="val-prec">0.00</div>
+            </div>
+            <div class="metric-card">
+              <h4>Recall (Sensibilidade)</h4>
+              <div class="val" id="val-rec">0.00</div>
+            </div>
+            <div class="metric-card">
+              <h4>Especificidade (TNR)</h4>
+              <div class="val" id="val-spec">0.00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="index.html">← Índice</a>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b3-s02.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    // Synthetic dataset
+    const data = [
+      { id: 1, prob: 0.95, real: 1 },
+      { id: 2, prob: 0.88, real: 1 },
+      { id: 3, prob: 0.75, real: 0 }, // FP if threshold < 0.75
+      { id: 4, prob: 0.60, real: 1 },
+      { id: 5, prob: 0.45, real: 0 },
+      { id: 6, prob: 0.40, real: 0 },
+      { id: 7, prob: 0.35, real: 1 }, // FN if threshold > 0.35
+      { id: 8, prob: 0.20, real: 0 },
+      { id: 9, prob: 0.15, real: 0 },
+      { id: 10, prob: 0.05, real: 0 }
+    ];
+
+    const tbody = document.querySelector('#instances-table tbody');
+    const slider = document.getElementById('thresh-slider');
+    const display = document.getElementById('thresh-display');
+
+    function update() {
+      const thresh = parseFloat(slider.value);
+      display.textContent = thresh.toFixed(2);
+
+      let vp = 0, fp = 0, fn = 0, vn = 0;
+      let html = '';
+
+      data.forEach(d => {
+        const pred = d.prob >= thresh ? 1 : 0;
+        let resClass = '';
+        let resLabel = '';
+        let rowClass = pred === 1 ? 'pred-pos' : 'pred-neg';
+
+        if (pred === 1 && d.real === 1) { vp++; resClass = 'icon-true'; resLabel = 'VP'; }
+        if (pred === 1 && d.real === 0) { fp++; resClass = 'icon-false'; resLabel = 'FP'; }
+        if (pred === 0 && d.real === 1) { fn++; resClass = 'icon-false'; resLabel = 'FN'; }
+        if (pred === 0 && d.real === 0) { vn++; resClass = 'icon-true'; resLabel = 'VN'; }
+
+        html += `
+          <tr class="${rowClass}">
+            <td>${d.id}</td>
+            <td style="font-family: monospace; font-weight:bold;">${d.prob.toFixed(2)}</td>
+            <td>${d.real === 1 ? 'Positiva (1)' : 'Negativa (0)'}</td>
+            <td><strong>${pred === 1 ? 'Positiva (1)' : 'Negativa (0)'}</strong></td>
+            <td class="${resClass}">${resLabel}</td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+
+      // Update Matrix
+      document.getElementById('cell-vp').innerHTML = `${vp} <span>Verdadeiro Positivo</span>`;
+      document.getElementById('cell-fp').innerHTML = `${fp} <span>Falso Positivo</span>`;
+      document.getElementById('cell-fn').innerHTML = `${fn} <span>Falso Negativo</span>`;
+      document.getElementById('cell-vn').innerHTML = `${vn} <span>Verdadeiro Negativo</span>`;
+
+      // Calculate Metrics
+      const total = data.length;
+      const acc = (vp + vn) / total;
+      const prec = (vp + fp) === 0 ? 0 : vp / (vp + fp);
+      const rec = (vp + fn) === 0 ? 0 : vp / (vp + fn);
+      const spec = (vn + fp) === 0 ? 0 : vn / (vn + fp);
+
+      document.getElementById('val-acc').textContent = acc.toFixed(2);
+      document.getElementById('val-prec').textContent = prec.toFixed(2);
+      document.getElementById('val-rec').textContent = rec.toFixed(2);
+      document.getElementById('val-spec').textContent = spec.toFixed(2);
+    }
+
+    slider.addEventListener('input', update);
+    update();
+  </script>
+</body>
+</html>
