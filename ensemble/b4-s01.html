@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 4.1 — Stacking: Generalização em Pilha</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .stack-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      box-shadow: var(--shadow);
+      margin-top: 1rem;
+    }
+
+    .data-box {
+      background: #e2e8f0;
+      border: 2px dashed #94a3b8;
+      padding: 0.8rem 2rem;
+      border-radius: 8px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .layer-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--teal);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      align-self: flex-start;
+      margin-left: 20%;
+    }
+
+    .models-row {
+      display: flex;
+      gap: 2rem;
+    }
+
+    .model-node {
+      width: 100px;
+      height: 70px;
+      background: white;
+      border: 2px solid var(--border2);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: var(--text);
+      transition: all 0.3s;
+      position: relative;
+    }
+    
+    .model-sub {
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      font-weight: 400;
+    }
+
+    .pred-box {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+      background: #f1f5f9;
+      border: 1px solid var(--border2);
+      padding: 0.3rem 0.6rem;
+      border-radius: 4px;
+      position: absolute;
+      bottom: -35px;
+      opacity: 0;
+      transition: all 0.3s;
+    }
+
+    .arrow-down {
+      width: 2px;
+      height: 30px;
+      background: var(--border2);
+      position: relative;
+    }
+    .arrow-down::after {
+      content: '';
+      position: absolute;
+      bottom: -4px; left: -4px;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 6px solid var(--border2);
+    }
+
+    .meta-learner {
+      width: 220px;
+      height: 80px;
+      background: var(--teal-lt);
+      border: 2px solid var(--teal);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: var(--teal);
+      margin-top: 30px;
+      transition: all 0.3s;
+    }
+
+    .final-pred {
+      background: #10b981;
+      color: white;
+      padding: 0.8rem 2rem;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 1.2rem;
+      opacity: 0;
+      transition: all 0.5s;
+    }
+
+    .controls-row {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+      width: 100%;
+    }
+
+    .btn-action {
+      flex: 1;
+      background: var(--teal);
+      color: white;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-action:hover:not(:disabled) { background: #047857; transform: translateY(-2px); }
+    .btn-action:disabled { background: var(--border2); cursor: not-allowed; }
+
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Métodos Ensemble</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 4 · Slide 01</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Stacking: Generalização em Pilha</h1>
+        <p class="slide-subtitle">
+          Em vez de combinar predições usando regras simples (como Votação ou Média), o <em>Stacking</em> treina um <strong>Meta-Learner</strong> (um novo algoritmo) que usa as saídas dos modelos anteriores como suas <em>features</em> de entrada.
+        </p>
+      </div>
+
+      <div class="stack-container">
+        
+        <div class="data-box" id="data">Nova Instância (X)</div>
+        
+        <div style="display:flex; gap:90px;">
+          <div class="arrow-down" id="arr1" style="opacity: 0.2;"></div>
+          <div class="arrow-down" id="arr2" style="opacity: 0.2;"></div>
+          <div class="arrow-down" id="arr3" style="opacity: 0.2;"></div>
+        </div>
+
+        <div class="layer-title">Nível 0 (Modelos Base)</div>
+        <div class="models-row">
+          <div class="model-node" id="m1">
+            M₁
+            <span class="model-sub">Decision Tree</span>
+            <div class="pred-box" id="p1">P₁ = 0</div>
+          </div>
+          <div class="model-node" id="m2">
+            M₂
+            <span class="model-sub">SVM</span>
+            <div class="pred-box" id="p2">P₂ = 1</div>
+          </div>
+          <div class="model-node" id="m3">
+            M₃
+            <span class="model-sub">KNN</span>
+            <div class="pred-box" id="p3">P₃ = 0</div>
+          </div>
+        </div>
+
+        <div class="layer-title" style="margin-top:20px;">Nível 1 (Meta-Learner)</div>
+        <div class="meta-learner" id="m4">
+          M₄ (Combinador)
+          <span class="model-sub">Regressão Logística</span>
+        </div>
+
+        <div class="arrow-down" id="arr4" style="opacity: 0.2; margin-top: -10px;"></div>
+
+        <div class="final-pred" id="final">Classe Predita: 1</div>
+
+        <!-- Controls -->
+        <div class="controls-row">
+          <button class="btn-action" id="btn1" onclick="step1()">1. Predições do Nível 0</button>
+          <button class="btn-action" id="btn2" onclick="step2()" disabled>2. Alimentar Meta-Learner</button>
+          <button class="btn-action" id="btn3" onclick="step3()" disabled>3. Decisão Final</button>
+        </div>
+      </div>
+
+      <div class="insight-box mt-4">
+        <span class="i-icon">💡</span>
+        <div class="i-text" id="desc">
+          No treinamento de um Stacking, usa-se Validação Cruzada K-fold. Os classificadores do Nível 0 geram predições para dados de validação, e essas predições criam um novo "dataset" onde as colunas são as saídas dos modelos. O Nível 1 é treinado nesse novo dataset.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b3-s02.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b4-s02.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    function step1() {
+      document.getElementById('arr1').style.opacity = 1;
+      document.getElementById('arr2').style.opacity = 1;
+      document.getElementById('arr3').style.opacity = 1;
+      
+      document.getElementById('arr1').style.background = 'var(--teal)';
+      document.getElementById('arr2').style.background = 'var(--teal)';
+      document.getElementById('arr3').style.background = 'var(--teal)';
+      
+      setTimeout(() => {
+        document.getElementById('m1').style.borderColor = 'var(--teal)';
+        document.getElementById('m2').style.borderColor = 'var(--teal)';
+        document.getElementById('m3').style.borderColor = 'var(--teal)';
+        
+        document.getElementById('p1').style.opacity = 1;
+        document.getElementById('p2').style.opacity = 1;
+        document.getElementById('p3').style.opacity = 1;
+      }, 500);
+
+      document.getElementById('desc').innerHTML = "A nova instância é submetida a cada um dos classificadores base (Nível 0). Eles retornam suas predições independentes. Se fosse uma Votação Majoritária simples, a classe 0 ganharia (2 votos a 1).";
+      
+      document.getElementById('btn1').disabled = true;
+      document.getElementById('btn2').disabled = false;
+    }
+
+    function step2() {
+      document.getElementById('p1').style.transform = 'translateY(40px)';
+      document.getElementById('p2').style.transform = 'translateY(40px)';
+      document.getElementById('p3').style.transform = 'translateY(40px)';
+      
+      setTimeout(() => {
+        document.getElementById('m4').style.background = 'var(--teal)';
+        document.getElementById('m4').style.color = 'white';
+        document.getElementById('m4').querySelector('.model-sub').style.color = 'rgba(255,255,255,0.8)';
+      }, 500);
+
+      document.getElementById('desc').innerHTML = "O Meta-Learner (Nível 1) recebe [0, 1, 0] como suas <em>features</em> de entrada. Durante o treino, o Meta-Learner pode ter aprendido que o SVM (M₂) é muito mais confiável que os outros, ou que quando M₁ e M₃ dizem 0 juntos, eles costumam errar.";
+
+      document.getElementById('btn2').disabled = true;
+      document.getElementById('btn3').disabled = false;
+    }
+
+    function step3() {
+      document.getElementById('arr4').style.opacity = 1;
+      document.getElementById('arr4').style.background = 'var(--teal)';
+
+      setTimeout(() => {
+        document.getElementById('final').style.opacity = 1;
+      }, 300);
+
+      document.getElementById('desc').innerHTML = "<strong>Resultado:</strong> O Meta-Learner contrariou a maioria! Ele pesou a inteligência dos modelos anteriores e decidiu que a classe correta é a Classe 1. Essa é a magia do Stacking: ele aprende <em>como</em> os modelos base erram e acertam.";
+
+      document.getElementById('btn3').disabled = true;
+    }
+  </script>
+</body>
+</html>

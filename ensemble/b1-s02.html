@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 1.2 — Sabedoria das Multidões</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .crowd-container {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .truth-box {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--teal);
+      background: var(--teal-lt);
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      border: 2px dashed var(--teal);
+      text-align: center;
+    }
+
+    .guesses-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+    }
+
+    .guess-card {
+      background: var(--bg);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+      width: 130px;
+      transition: all 0.3s;
+    }
+    .g-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .g-val { font-family: 'Fira Code', monospace; font-size: 1.2rem; font-weight: 700; color: var(--text); }
+    .g-err { font-size: 0.8rem; color: #ef4444; font-weight: 600; margin-top: 0.2rem; }
+
+    .btn-action {
+      background: var(--teal);
+      color: white;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-action:hover { background: #047857; transform: translateY(-2px); }
+
+    .ensemble-result {
+      width: 100%;
+      background: #f8fafc;
+      border: 2px solid var(--indigo);
+      border-radius: 8px;
+      padding: 1.5rem;
+      text-align: center;
+      display: none;
+      animation: slideDown 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .e-title { font-weight: 700; color: var(--indigo); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+    .e-val { font-family: 'Fira Code', monospace; font-size: 2.5rem; font-weight: 800; color: var(--text); }
+    .e-err { font-size: 1.1rem; color: #10b981; font-weight: 700; margin-top: 0.5rem; }
+
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Métodos Ensemble</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 1 · Slide 02</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">A Sabedoria das Multidões</h1>
+        <p class="slide-subtitle">
+          O conhecimento que emerge de uma <strong>decisão coletiva</strong> frequentemente tem desempenho melhor do que aquele obtido por membros individualmente.
+        </p>
+      </div>
+
+      <div class="crowd-container">
+        
+        <div class="truth-box">
+          Pote de Jelly Beans<br>
+          <span style="font-size: 1rem; color: var(--text-muted); font-weight: 600;">Valor Real: 1.116 balas</span>
+        </div>
+
+        <div style="width: 100%; text-align: center; color: var(--text-dim); font-size: 0.9rem; margin-bottom: -1rem;">
+          Palpites Individuais (Modelos Independentes):
+        </div>
+
+        <div class="guesses-grid" id="guesses-grid">
+          <!-- Injected via JS -->
+        </div>
+
+        <button class="btn-action" onclick="combineGuesses()">Agrupar Opiniões (Média)</button>
+
+        <div class="ensemble-result" id="ensemble-result">
+          <div class="e-title">Previsão do Ensemble (Média Aritmética)</div>
+          <div class="e-val" id="eval">--</div>
+          <div class="e-err" id="eerr">--</div>
+        </div>
+      </div>
+
+      <div class="insight-box mt-4">
+        <span class="i-icon">💡</span>
+        <div class="i-text">
+          Para que a "multidão" seja sábia, são necessárias 4 condições: <strong>Diversidade de Opiniões</strong>, <strong>Independência</strong> (um não copia o outro), <strong>Descentralização</strong> e um mecanismo de <strong>Agregação</strong>.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b1-s01.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <a class="btn-nav" href="b2-s01.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    const REAL_VALUE = 1116;
+    // Let's create an array of guesses that average out close to 1151 (per the slide experiment)
+    const guesses = [250, 4100, 800, 1500, 500, 2000, 950, 600, 1800, 300, 1200, 750];
+    
+    const grid = document.getElementById('guesses-grid');
+    const icons = ['🧑‍🦱', '👩‍🦰', '🧔', '👩‍🦳', '👱‍♂️', '👨‍🦲'];
+
+    let totalSum = 0;
+
+    guesses.forEach((g, i) => {
+      totalSum += g;
+      let errPerc = Math.abs(g - REAL_VALUE) / REAL_VALUE * 100;
+      let card = `
+        <div class="guess-card">
+          <div class="g-icon">${icons[i % icons.length]}</div>
+          <div class="g-val">${g}</div>
+          <div class="g-err">Erro: ${errPerc.toFixed(0)}%</div>
+        </div>
+      `;
+      grid.innerHTML += card;
+    });
+
+    const mean = totalSum / guesses.length;
+    const finalErr = Math.abs(mean - REAL_VALUE) / REAL_VALUE * 100;
+
+    function combineGuesses() {
+      document.getElementById('ensemble-result').style.display = 'block';
+      
+      // Animate counting up
+      let current = 0;
+      let interval = setInterval(() => {
+        current += 50;
+        if(current >= mean) {
+          current = mean;
+          clearInterval(interval);
+          document.getElementById('eerr').textContent = `Erro Final: apenas ${finalErr.toFixed(1)}%!`;
+        }
+        document.getElementById('eval').textContent = current.toFixed(0);
+      }, 20);
+    }
+  </script>
+</body>
+</html>

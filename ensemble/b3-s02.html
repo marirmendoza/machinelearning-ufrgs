@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 3.2 — Gradient Boosting</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .layout-split {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 2rem;
+      margin-top: 1rem;
+    }
+
+    .visual-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .plot-area {
+      width: 100%;
+      height: 200px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    
+    .plot-title {
+      position: absolute;
+      top: 10px; left: 15px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      z-index: 20;
+    }
+
+    .curve-path {
+      fill: none;
+      stroke: var(--teal);
+      stroke-width: 3;
+      transition: all 0.5s ease-in-out;
+    }
+
+    .res-path {
+      fill: none;
+      stroke: #ef4444;
+      stroke-width: 3;
+      transition: all 0.5s ease-in-out;
+    }
+
+    .axis {
+      stroke: var(--border2);
+      stroke-width: 1;
+      stroke-dasharray: 4;
+    }
+
+    .pt {
+      position: absolute;
+      width: 6px; height: 6px;
+      background: #3b82f6;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: all 0.5s ease-in-out;
+    }
+    
+    .pt-res {
+      background: #f97316;
+    }
+
+    .controls-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .btn-action {
+      background: var(--teal);
+      color: white;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-action:hover:not(:disabled) { background: #047857; transform: translateY(-2px); }
+    .btn-action:disabled { background: var(--border2); cursor: not-allowed; }
+
+    .desc-box {
+      margin-top: auto;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      background: #f1f5f9;
+      padding: 1rem;
+      border-radius: 8px;
+      border-left: 4px solid var(--teal);
+      min-height: 120px;
+    }
+
+    .math-formula {
+      font-family: 'Fira Code', monospace;
+      background: #e2e8f0;
+      padding: 0.5rem;
+      border-radius: 4px;
+      text-align: center;
+      font-size: 0.85rem;
+      margin-top: 1rem;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Métodos Ensemble</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 3 · Slide 02</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Gradient Boosting</h1>
+        <p class="slide-subtitle">
+          Em vez de mexer nos pesos das instâncias, o Gradient Boosting treina o novo classificador tentando prever diretamente os <strong>erros residuais</strong> (Real - Previsto) do classificador anterior.
+        </p>
+      </div>
+
+      <div class="layout-split">
+        <!-- Visual Panel -->
+        <div class="visual-panel">
+          
+          <!-- Plot 1: Ensemble Prediction -->
+          <div class="plot-area">
+            <div class="plot-title">Predição do Ensemble vs. Dados Reais</div>
+            <svg viewBox="0 0 500 200" style="width:100%; height:100%; position:absolute;">
+              <path class="curve-path" id="pred-curve" d="M0,150 L500,150" />
+            </svg>
+            <div id="data-pts"></div>
+          </div>
+
+          <!-- Plot 2: Residuals -->
+          <div class="plot-area">
+            <div class="plot-title">Resíduos (O que o próximo modelo vai tentar prever)</div>
+            <svg viewBox="0 0 500 200" style="width:100%; height:100%; position:absolute;">
+              <line x1="0" y1="100" x2="500" y2="100" class="axis" />
+              <path class="res-path" id="res-curve" d="M0,100 L500,100" />
+            </svg>
+            <div id="res-pts"></div>
+          </div>
+
+        </div>
+
+        <!-- Controls Panel -->
+        <div class="controls-panel">
+          
+          <div style="font-weight: 700; color: var(--teal); font-size: 1.2rem;" id="iter-label">Iteração 0 (Nenhum Modelo)</div>
+          
+          <button class="btn-action" id="btn-next" onclick="nextIter()">Treinar Modelo 1</button>
+
+          <div class="math-formula" id="formula">
+            Ensemble = 0
+          </div>
+
+          <div class="desc-box" id="desc">
+            Neste momento não temos nenhum modelo. Os resíduos são exatamente iguais aos dados reais (Y - 0 = Y).
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b3-s01.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <a class="btn-nav" href="b4-s01.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    let iter = 0;
+    const btn = document.getElementById('btn-next');
+    const desc = document.getElementById('desc');
+    const iterLabel = document.getElementById('iter-label');
+    const formula = document.getElementById('formula');
+    
+    const predCurve = document.getElementById('pred-curve');
+    const resCurve = document.getElementById('res-curve');
+    
+    const dataContainer = document.getElementById('data-pts');
+    const resContainer = document.getElementById('res-pts');
+
+    // Generate ground truth data (a parabola-like curve)
+    // Map X from 0 to 100
+    // Y = 100 - ( (X-50)^2 ) * 0.05 + noise
+    let data = [];
+    for(let i=10; i<=90; i+=5) {
+      let truth = 140 - (Math.pow(i-50, 2) * 0.04);
+      let noise = (Math.random() * 20) - 10;
+      data.push({ x: i, y: truth + noise });
+    }
+
+    // Render dots
+    data.forEach((d, idx) => {
+      // Top plot (Data)
+      let p = document.createElement('div');
+      p.className = 'pt';
+      p.style.left = d.x + '%';
+      p.style.top = (200 - d.y) + 'px'; // invert Y for DOM
+      dataContainer.appendChild(p);
+
+      // Bottom plot (Residuals)
+      let rp = document.createElement('div');
+      rp.className = 'pt pt-res';
+      rp.id = 'r' + idx;
+      rp.style.left = d.x + '%';
+      // initial residual = d.y (shifted to center at 100 for visual)
+      rp.style.top = (100 - (d.y - 100)) + 'px'; 
+      resContainer.appendChild(rp);
+    });
+
+    function nextIter() {
+      iter++;
+      iterLabel.textContent = "Iteração " + iter;
+
+      if(iter === 1) {
+        // Model 1: Flat line (mean)
+        // Mean is around 100
+        predCurve.setAttribute('d', 'M0,100 L500,100');
+        
+        // Update residuals: res = truth - 100
+        data.forEach((d, idx) => {
+          let res = d.y - 100;
+          document.getElementById('r'+idx).style.top = (100 - res) + 'px';
+        });
+        
+        // Residual prediction curve tries to fit the parabola
+        // M0,150 ... M500,150
+        resCurve.setAttribute('d', 'M0,160 Q250,20 500,160');
+
+        formula.innerHTML = "Ensemble = M₁";
+        desc.innerHTML = `<strong>Modelo 1 (M₁):</strong> Prevê apenas a média dos dados (uma linha reta contínua).<br><br>
+        No gráfico de baixo, calculamos os <strong>Resíduos</strong> (Y real - Média). O próximo passo é treinar uma árvore (M₂) focada apenas em prever esse formato do gráfico de baixo (um U invertido).`;
+
+        btn.textContent = "Treinar Modelo 2 (Resíduos)";
+      } 
+      else if (iter === 2) {
+        // Model 2 prediction is added to ensemble
+        // Ensemble becomes parabola
+        predCurve.setAttribute('d', 'M0,160 Q250,20 500,160');
+        
+        // Residuals approach 0 (scatter around line 100)
+        data.forEach((d, idx) => {
+          // New pred
+          let pred = 140 - (Math.pow(d.x-50, 2) * 0.04);
+          let res = d.y - pred; // just the noise
+          document.getElementById('r'+idx).style.top = (100 - res) + 'px';
+        });
+
+        // Res curve tries to fit the noise (wavy line near 0)
+        resCurve.setAttribute('d', 'M0,100 Q100,110 200,90 T400,105 T500,100');
+
+        formula.innerHTML = "Ensemble = M₁ + M₂";
+        desc.innerHTML = `<strong>Modelo 2 (M₂):</strong> Treinado sobre os resíduos, ele aprendeu o formato de parábola. Somando M₁ + M₂, nosso Ensemble agora ajusta os dados muito melhor.<br><br>
+        Os novos resíduos caíram drasticamente e agora representam apenas as pequenas variações e ruídos.`;
+
+        btn.textContent = "Treinar Modelo 3 (Ajuste Fino)";
+      }
+      else if (iter === 3) {
+        // Ensemble perfectly fits (overfits maybe)
+        let path = "M0,160 ";
+        data.forEach((d, idx) => {
+          // To make it look perfectly fitted, we draw through the points
+          if(idx===0) path = `M${d.x*5},${200-d.y} `;
+          else path += `L${d.x*5},${200-d.y} `;
+        });
+        predCurve.setAttribute('d', path);
+
+        // Residuals are exactly 0
+        data.forEach((d, idx) => {
+          document.getElementById('r'+idx).style.top = '100px';
+        });
+        resCurve.setAttribute('d', 'M0,100 L500,100');
+
+        formula.innerHTML = "Ensemble = M₁ + M₂ + M₃";
+        desc.innerHTML = `<strong>Modelo 3 (M₃):</strong> O modelo 3 previu o ruído final. O Ensemble (a soma dos 3 modelos) agora passa exatamente em cima de todos os pontos originais.<br><br>
+        <em>Nota: Ajustar os resíduos a zero absoluto na prática gera Overfitting, por isso usa-se Taxa de Aprendizado (Learning Rate) para dar "passos menores".</em>`;
+
+        btn.disabled = true;
+        btn.textContent = "Fim do Processo";
+      }
+    }
+  </script>
+</body>
+</html>
