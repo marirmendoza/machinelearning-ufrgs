@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 1.2 — Acurácia vs Interpretabilidade</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .layout-split {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 2rem;
+      margin-top: 1rem;
+    }
+
+    .visual-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .comparison-row {
+      display: flex;
+      gap: 2rem;
+      align-items: stretch;
+    }
+
+    .model-card {
+      flex: 1;
+      border: 2px solid var(--border2);
+      border-radius: 8px;
+      padding: 1.5rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      transition: all 0.3s;
+      position: relative;
+    }
+    
+    .model-card.black-box { background: #1e293b; color: white; border-color: #0f172a; }
+    .model-card.white-box { background: #f0fdf4; border-color: #22c55e; }
+
+    .m-title { font-weight: 800; font-size: 1.2rem; }
+    .m-type { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.8; }
+    
+    .acc-bar-bg { width: 100%; height: 20px; background: rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; position: relative; }
+    .acc-bar-fill { height: 100%; width: 0%; transition: width 1s ease-in-out; }
+    .bb-fill { background: #3b82f6; }
+    .wb-fill { background: #22c55e; }
+
+    .acc-text { font-family: 'Fira Code', monospace; font-size: 1.8rem; font-weight: 800; }
+
+    .explanation-zone {
+      margin-top: auto;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      border-top: 1px dashed rgba(0,0,0,0.2);
+      padding-top: 1rem;
+      width: 100%;
+    }
+    .black-box .explanation-zone { border-top-color: rgba(255,255,255,0.2); }
+
+    .controls-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .btn-action {
+      background: var(--teal);
+      color: white;
+      border: none;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-action:hover { background: #047857; transform: translateY(-2px); }
+
+    .desc-box {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .quote {
+      font-style: italic;
+      color: var(--teal);
+      border-left: 3px solid var(--teal);
+      padding-left: 1rem;
+      margin-top: 1rem;
+      font-weight: 600;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Interpretabilidade</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 1 · Slide 02</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">A Falsa Dicotomia: Acurácia vs. Interpretabilidade</h1>
+        <p class="slide-subtitle">
+          Muitos acreditam que para resolver problemas complexos, precisamos sacrificar a interpretabilidade e usar "Caixas-Pretas" (Deep Learning, Random Forests) para ter boa acurácia. A realidade, principalmente em dados tabulares, é diferente.
+        </p>
+      </div>
+
+      <div class="layout-split">
+        <!-- Visual Panel -->
+        <div class="visual-panel">
+          
+          <div style="font-weight: 700; color: var(--text-dim); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em; text-align: center;">
+            Competição FICO de Risco de Crédito (NeurIPS 2018)
+          </div>
+
+          <div class="comparison-row">
+            
+            <div class="model-card black-box">
+              <div class="m-type">Caixa Preta</div>
+              <div class="m-title">Deep Learning</div>
+              
+              <div class="acc-bar-bg">
+                <div class="acc-bar-fill bb-fill" id="bar-bb"></div>
+              </div>
+              <div class="acc-text" id="val-bb">0%</div>
+
+              <div class="explanation-zone" id="exp-bb">
+                "Por que o crédito do João foi negado?"<br>
+                <span style="font-family: monospace; color: #f87171;">> ERRO: Impossível traçar o caminho das sinapses.</span>
+              </div>
+            </div>
+
+            <div class="model-card white-box">
+              <div class="m-type">Transparente (White Box)</div>
+              <div class="m-title">Regressão Linear</div>
+              
+              <div class="acc-bar-bg">
+                <div class="acc-bar-fill wb-fill" id="bar-wb"></div>
+              </div>
+              <div class="acc-text" id="val-wb">0%</div>
+
+              <div class="explanation-zone" id="exp-wb" style="display:none;">
+                "Por que o crédito do João foi negado?"<br>
+                <span style="font-weight:600; color: #15803d;">> Porque ele possui 3 atrasos recentes no cartão (peso -4.5).</span>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Controls Panel -->
+        <div class="controls-panel">
+          
+          <button class="btn-action" onclick="runChallenge()" id="btn">
+            Treinar ambos no Dataset
+          </button>
+
+          <div class="desc-box">
+            A equipe da Duke University provou que, para o dataset de aprovação de crédito da FICO, um modelo de Regressão Clássica teve desempenho praticamente idêntico ao modelo complexo de Deep Learning.
+            <div class="quote" id="quote" style="display:none;">
+              "A escolha imposta entre acurácia e interpretabilidade de modelos em Aprendizado de Máquina é uma falsa dicotomia." <br>— Cynthia Rudin
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b1-s01.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <a class="btn-nav" href="b2-s01.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    function runChallenge() {
+      document.getElementById('btn').disabled = true;
+
+      document.getElementById('bar-bb').style.width = '73.8%';
+      document.getElementById('bar-wb').style.width = '73.4%';
+
+      // Animate numbers
+      let currBB = 0;
+      let currWB = 0;
+      let intBB = setInterval(() => {
+        currBB += 1;
+        if(currBB >= 73.8) { currBB = 73.8; clearInterval(intBB); }
+        document.getElementById('val-bb').textContent = currBB.toFixed(1) + '%';
+      }, 10);
+
+      let intWB = setInterval(() => {
+        currWB += 1;
+        if(currWB >= 73.4) { 
+          currWB = 73.4; 
+          clearInterval(intWB);
+          
+          document.getElementById('exp-wb').style.display = 'block';
+          document.getElementById('quote').style.display = 'block';
+        }
+        document.getElementById('val-wb').textContent = currWB.toFixed(1) + '%';
+      }, 10);
+    }
+  </script>
+</body>
+</html>
