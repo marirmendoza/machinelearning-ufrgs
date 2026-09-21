@@ -44,6 +44,19 @@
     }
     .boundary-layer.active { opacity: 1; }
 
+    .error-chart {
+      width: 100%;
+      height: 120px;
+      background: #f8fafc;
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+    .grid-lines { stroke: #e2e8f0; stroke-width: 1; }
+    .error-curve { fill: none; stroke: #ef4444; stroke-width: 3; transition: d 0.5s ease-in-out; }
+
     /* Data Points */
     .pt { position: absolute; width: 8px; height: 8px; border-radius: 50%; transform: translate(-50%, -50%); border: 1px solid rgba(0,0,0,0.5); z-index: 10; }
     .pt-blue { background: #3b82f6; }
@@ -149,8 +162,23 @@
 
             <!-- Data Points injected by JS -->
           </div>
-          <div style="font-size: 0.85rem; color: var(--text-dim);">
-            Os "degraus" rígidos da árvore solitária engolem os ruídos (pontos isolados).
+          
+          <div style="font-weight: 700; color: var(--text-muted); font-size: 0.85rem; align-self: flex-start; width: 100%; display: flex; justify-content: space-between;">
+            <span>Erro vs Número de Árvores</span>
+            <span id="err-val" style="color: #ef4444;">--</span>
+          </div>
+          <div class="error-chart">
+            <svg viewBox="0 0 500 120" style="width:100%; height:100%; position:absolute;">
+              <line x1="0" y1="20" x2="500" y2="20" class="grid-lines" />
+              <line x1="0" y1="60" x2="500" y2="60" class="grid-lines" />
+              <line x1="0" y1="100" x2="500" y2="100" class="grid-lines" />
+              <path class="error-curve" id="err-curve" d="" />
+              <circle cx="0" cy="0" r="5" fill="#ef4444" id="err-dot" style="opacity:0; transition:all 0.5s ease-in-out;" />
+            </svg>
+          </div>
+
+          <div style="font-size: 0.8rem; color: var(--text-dim); text-align: center;">
+            O número de árvores é um <strong>hiperparâmetro</strong>. Mais árvores reduzem a variância sem aumentar o viés (até estabilizar).
           </div>
         </div>
 
@@ -224,12 +252,35 @@
       document.getElementById('b-'+n).classList.add('active');
 
       const desc = document.getElementById('desc');
+      const errCurve = document.getElementById('err-curve');
+      const errDot = document.getElementById('err-dot');
+      const errVal = document.getElementById('err-val');
+
+      errDot.style.opacity = 1;
+
+      // Error function approximation: y = base + e^(-kx)
+      // 1 tree: high error. 50 trees: low error plateau.
+      // SVG Y: 20 (high error) to 100 (low error)
+      // SVG X: 0 to 500 (maps to 1 to 50 trees, so X = n * 10)
+
       if (n === 1) {
         desc.innerHTML = "<strong>1 Árvore:</strong> A fronteira é dura, perpendicular aos eixos, e tenta desesperadamente capturar os pontos alaranjados que invadiram a área azul (ruído). Alto Viés, Alta Variância.";
+        errCurve.setAttribute('d', 'M10,20');
+        errDot.setAttribute('cx', 10);
+        errDot.setAttribute('cy', 20);
+        errVal.textContent = "Erro: 38%";
       } else if (n === 5) {
         desc.innerHTML = "<strong>5 Árvores:</strong> Como cada árvore é treinada com uma subamostra diferente (bootstrap), elas cometem erros em lugares diferentes. A votação começa a suavizar os degraus agressivos.";
+        errCurve.setAttribute('d', 'M10,20 Q30,60 50,70');
+        errDot.setAttribute('cx', 50);
+        errDot.setAttribute('cy', 70);
+        errVal.textContent = "Erro: 22%";
       } else {
         desc.innerHTML = "<strong>50 Árvores:</strong> A Fronteira de Decisão agora é suave! A floresta aprendeu o formato global da distribuição dos dados e ignora ativamente os ruídos (pontos isolados). <strong>A Variância foi reduzida drasticamente.</strong>";
+        errCurve.setAttribute('d', 'M10,20 Q30,60 50,70 T150,90 T300,95 T500,98');
+        errDot.setAttribute('cx', 500);
+        errDot.setAttribute('cy', 98);
+        errVal.textContent = "Erro: 14% (Estabilizado)";
       }
     }
   </script>

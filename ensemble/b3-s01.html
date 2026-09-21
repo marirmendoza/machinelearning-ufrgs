@@ -127,6 +127,14 @@
             
             <!-- Boundary line -->
             <div id="boundary" class="boundary-line"></div>
+            
+            <svg id="final-boundary" viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute; top:0; left:0; width:100%; height:100%; opacity:0; transition:opacity 1s ease-in-out; pointer-events:none;">
+              <!-- Non-linear boundary shape separating the points perfectly -->
+              <!-- Plusses are top and right. Minuses are bottom and bottom-left -->
+              <polygon points="0,0 100,0 100,50 50,50 50,100 25,100 25,35 0,35" fill="rgba(59, 130, 246, 0.2)" stroke="var(--teal)" stroke-width="0.5" />
+              <polygon points="100,100 50,100 50,50 100,50" fill="rgba(249, 115, 22, 0.2)" stroke="var(--teal)" stroke-width="0.5" />
+              <polygon points="0,100 25,100 25,35 0,35" fill="rgba(249, 115, 22, 0.2)" stroke="var(--teal)" stroke-width="0.5" />
+            </svg>
 
             <!-- Data Points -->
             <div class="pt pt-plus" id="p1" style="left: 20%; top: 20%;">+</div>
@@ -262,7 +270,25 @@
         bgBlue.style.left = '25%'; bgBlue.style.top = '0'; bgBlue.style.width = '75%'; bgBlue.style.height = '100%';
 
         desc.innerHTML = `<strong>Classificador 3 (h₃):</strong> O modelo 3 foi obrigado a criar uma regra quase exclusiva para isolar o ponto (m5) que estava gigante, mesmo que isso prejudique outros pontos pequenos.<br><br>
-        Ao final, o <strong>Ensemble</strong> juntará essas 3 retas, formando uma fronteira complexa (votação ponderada) que separará os grupos perfeitamente.`;
+        Ao final, o algoritmo possui 3 "stumps" (regras simples), cada um com um <strong>peso (alpha)</strong> proporcional à sua precisão no treino.`;
+
+        btn.textContent = "Aplicar Modelo (Fronteira Final)";
+      }
+      else if (iter === 4) {
+        // Show final boundary
+        boundary.style.opacity = 0;
+        bgBlue.style.opacity = 0;
+        bgOrange.style.opacity = 0;
+        
+        document.getElementById('final-boundary').style.opacity = 1;
+
+        // reset sizes
+        pts.p1=30; pts.p2=30; pts.p3=30; pts.p4=30; pts.p5=30;
+        pts.m1=30; pts.m2=30; pts.m3=30; pts.m4=30; pts.m5=30;
+        setSizes();
+
+        desc.innerHTML = `<strong>Visão do Modelo (Inferência em Paralelo)</strong><br><br>
+        Durante o uso na vida real, um novo dado passa pelos 3 modelos <strong>simultaneamente</strong>. A previsão de cada modelo é multiplicada pelo seu peso (alpha) aprendido no treino. O resultado é uma Fronteira de Decisão <strong>Não-Linear</strong> altamente complexa que separa os grupos perfeitamente!`;
 
         btn.disabled = true;
         btn.textContent = "Fim do Processo";

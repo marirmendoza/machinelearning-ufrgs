@@ -172,6 +172,20 @@
           <div class="math-formula" id="formula">
             Ensemble = 0
           </div>
+          
+          <div style="background: white; border: 1px solid var(--border2); padding: 1rem; border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 0.9rem; margin-bottom: 0.5rem;">
+              <span style="color: var(--text-dim)">Erro de Treino (RMSE)</span>
+              <span id="rmse-val" style="color: #ef4444;">--</span>
+            </div>
+            <div style="width: 100%; height: 50px; position: relative;">
+              <svg viewBox="0 0 100 50" style="width:100%; height:100%;">
+                <line x1="0" y1="45" x2="100" y2="45" stroke="#e2e8f0" stroke-width="1" />
+                <path id="rmse-curve" fill="none" stroke="#ef4444" stroke-width="2" d="M0,5" />
+                <circle id="rmse-dot" cx="0" cy="5" r="3" fill="#ef4444" style="opacity:0; transition:all 0.3s;"/>
+              </svg>
+            </div>
+          </div>
 
           <div class="desc-box" id="desc">
             Neste momento não temos nenhum modelo. Os resíduos são exatamente iguais aos dados reais (Y - 0 = Y).
@@ -236,68 +250,119 @@
       iter++;
       iterLabel.textContent = "Iteração " + iter;
 
+      const rmseCurve = document.getElementById('rmse-curve');
+      const rmseDot = document.getElementById('rmse-dot');
+      const rmseVal = document.getElementById('rmse-val');
+      
+      rmseDot.style.opacity = 1;
+
       if(iter === 1) {
-        // Model 1: Flat line (mean)
-        // Mean is around 100
         predCurve.setAttribute('d', 'M0,100 L500,100');
         
-        // Update residuals: res = truth - 100
         data.forEach((d, idx) => {
           let res = d.y - 100;
           document.getElementById('r'+idx).style.top = (100 - res) + 'px';
         });
         
-        // Residual prediction curve tries to fit the parabola
-        // M0,150 ... M500,150
         resCurve.setAttribute('d', 'M0,160 Q250,20 500,160');
 
         formula.innerHTML = "Ensemble = M₁";
         desc.innerHTML = `<strong>Modelo 1 (M₁):</strong> Prevê apenas a média dos dados (uma linha reta contínua).<br><br>
-        No gráfico de baixo, calculamos os <strong>Resíduos</strong> (Y real - Média). O próximo passo é treinar uma árvore (M₂) focada apenas em prever esse formato do gráfico de baixo (um U invertido).`;
+        O <strong>Erro (RMSE)</strong> é altíssimo. Calculamos os <strong>Resíduos</strong> (Y real - Média). A árvore M₂ vai tentar prever esse erro.`;
 
-        btn.textContent = "Treinar Modelo 2 (Resíduos)";
+        rmseCurve.setAttribute('d', 'M20,5');
+        rmseDot.setAttribute('cx', 20); rmseDot.setAttribute('cy', 5);
+        rmseVal.textContent = "38.5";
+
+        btn.textContent = "Treinar M₂ (Ajustar Parábola)";
       } 
       else if (iter === 2) {
-        // Model 2 prediction is added to ensemble
-        // Ensemble becomes parabola
         predCurve.setAttribute('d', 'M0,160 Q250,20 500,160');
         
-        // Residuals approach 0 (scatter around line 100)
         data.forEach((d, idx) => {
-          // New pred
           let pred = 140 - (Math.pow(d.x-50, 2) * 0.04);
-          let res = d.y - pred; // just the noise
+          let res = d.y - pred; 
           document.getElementById('r'+idx).style.top = (100 - res) + 'px';
         });
 
-        // Res curve tries to fit the noise (wavy line near 0)
         resCurve.setAttribute('d', 'M0,100 Q100,110 200,90 T400,105 T500,100');
 
         formula.innerHTML = "Ensemble = M₁ + M₂";
-        desc.innerHTML = `<strong>Modelo 2 (M₂):</strong> Treinado sobre os resíduos, ele aprendeu o formato de parábola. Somando M₁ + M₂, nosso Ensemble agora ajusta os dados muito melhor.<br><br>
-        Os novos resíduos caíram drasticamente e agora representam apenas as pequenas variações e ruídos.`;
+        desc.innerHTML = `<strong>Modelo 2 (M₂):</strong> Aprendeu o formato principal (parábola). O Erro caiu drasticamente!<br><br>
+        Os novos resíduos agora são apenas pequenos ruídos não-lineares.`;
 
-        btn.textContent = "Treinar Modelo 3 (Ajuste Fino)";
+        rmseCurve.setAttribute('d', 'M20,5 L40,30');
+        rmseDot.setAttribute('cx', 40); rmseDot.setAttribute('cy', 30);
+        rmseVal.textContent = "12.0";
+
+        btn.textContent = "Treinar M₃ (Ajuste Fino)";
       }
       else if (iter === 3) {
-        // Ensemble perfectly fits (overfits maybe)
+        predCurve.setAttribute('d', 'M0,160 Q100,80 250,20 T500,160');
+        
+        data.forEach((d, idx) => {
+          let pred = 140 - (Math.pow(d.x-50, 2) * 0.04);
+          let res = (d.y - pred) * 0.6; // partially fitted noise
+          document.getElementById('r'+idx).style.top = (100 - res) + 'px';
+        });
+
+        resCurve.setAttribute('d', 'M0,100 Q150,105 250,95 T500,100');
+
+        formula.innerHTML = "Ensemble = M₁ + M₂ + M₃";
+        desc.innerHTML = `<strong>Modelo 3 (M₃):</strong> A curva começa a se distorcer para tentar encostar nos pontos fora da parábola. O Erro continua caindo.`;
+
+        rmseCurve.setAttribute('d', 'M20,5 L40,30 L60,38');
+        rmseDot.setAttribute('cx', 60); rmseDot.setAttribute('cy', 38);
+        rmseVal.textContent = "7.5";
+
+        btn.textContent = "Treinar M₄ (Mais Detalhes)";
+      }
+      else if (iter === 4) {
         let path = "M0,160 ";
         data.forEach((d, idx) => {
-          // To make it look perfectly fitted, we draw through the points
+          let pred = d.y - ((d.y - (140 - (Math.pow(d.x-50, 2) * 0.04))) * 0.2);
+          if(idx===0) path = `M${d.x*5},${200-pred} `;
+          else path += `L${d.x*5},${200-pred} `;
+        });
+        predCurve.setAttribute('d', path);
+
+        data.forEach((d, idx) => {
+          let pred = d.y - ((d.y - (140 - (Math.pow(d.x-50, 2) * 0.04))) * 0.2);
+          let res = d.y - pred;
+          document.getElementById('r'+idx).style.top = (100 - res) + 'px';
+        });
+
+        resCurve.setAttribute('d', 'M0,100 L500,100');
+
+        formula.innerHTML = "Ensemble = M₁ + M₂ + M₃ + M₄";
+        desc.innerHTML = `<strong>Modelo 4 (M₄):</strong> A curva do Ensemble ficou toda pontiaguda tentando abraçar os ruídos individuais. O resíduo está quase em zero.`;
+
+        rmseCurve.setAttribute('d', 'M20,5 L40,30 L60,38 L80,43');
+        rmseDot.setAttribute('cx', 80); rmseDot.setAttribute('cy', 43);
+        rmseVal.textContent = "2.1";
+
+        btn.textContent = "Treinar M₅ (Overfitting Total)";
+      }
+      else if (iter === 5) {
+        let path = "M0,160 ";
+        data.forEach((d, idx) => {
           if(idx===0) path = `M${d.x*5},${200-d.y} `;
           else path += `L${d.x*5},${200-d.y} `;
         });
         predCurve.setAttribute('d', path);
 
-        // Residuals are exactly 0
         data.forEach((d, idx) => {
           document.getElementById('r'+idx).style.top = '100px';
         });
         resCurve.setAttribute('d', 'M0,100 L500,100');
 
-        formula.innerHTML = "Ensemble = M₁ + M₂ + M₃";
-        desc.innerHTML = `<strong>Modelo 3 (M₃):</strong> O modelo 3 previu o ruído final. O Ensemble (a soma dos 3 modelos) agora passa exatamente em cima de todos os pontos originais.<br><br>
-        <em>Nota: Ajustar os resíduos a zero absoluto na prática gera Overfitting, por isso usa-se Taxa de Aprendizado (Learning Rate) para dar "passos menores".</em>`;
+        formula.innerHTML = "Ensemble = M₁ + M₂ + M₃ + M₄ + M₅";
+        desc.innerHTML = `<strong>Modelo 5 (M₅): Overfitting!</strong><br><br>
+        A curva passa perfeitamente sobre todos os pontos (Erro Treino = 0), mas perdeu o poder de generalização. Por isso adicionamos o parâmetro <em>Learning Rate (Taxa de Aprendizado)</em>, multiplicando cada M por um fator (ex: 0.1) para evitar que o erro zere rápido demais!`;
+
+        rmseCurve.setAttribute('d', 'M20,5 L40,30 L60,38 L80,43 L100,45');
+        rmseDot.setAttribute('cx', 100); rmseDot.setAttribute('cy', 45);
+        rmseVal.textContent = "0.0";
 
         btn.disabled = true;
         btn.textContent = "Fim do Processo";
