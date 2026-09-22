@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 2.1 — Bagging: Fronteira de Decisão</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .layout-split {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 2rem;
+      margin-top: 1rem;
+    }
+
+    .visual-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .plot-area {
+      width: 100%;
+      height: 350px;
+      background: #f8fafc;
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .boundary-layer {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      transition: opacity 0.5s ease-in-out;
+      opacity: 0;
+    }
+    .boundary-layer.active { opacity: 1; }
+
+    .error-chart {
+      width: 100%;
+      height: 120px;
+      background: #f8fafc;
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+    .grid-lines { stroke: #e2e8f0; stroke-width: 1; }
+    .error-curve { fill: none; stroke: #ef4444; stroke-width: 3; transition: d 0.5s ease-in-out; }
+
+    /* Data Points */
+    .pt { position: absolute; width: 8px; height: 8px; border-radius: 50%; transform: translate(-50%, -50%); border: 1px solid rgba(0,0,0,0.5); z-index: 10; }
+    .pt-blue { background: #3b82f6; }
+    .pt-orange { background: #f97316; }
+
+    .controls-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .control-label {
+      font-weight: 700;
+      color: var(--teal);
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+    }
+
+    .btn-tree {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 0.8rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: left;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .btn-tree:hover { background: #e2e8f0; }
+    .btn-tree.active {
+      background: var(--teal-lt);
+      border-color: var(--teal);
+      color: var(--teal);
+    }
+    
+    .desc-box {
+      margin-top: auto;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      background: #f1f5f9;
+      padding: 1rem;
+      border-radius: 8px;
+      border-left: 4px solid var(--teal);
+      min-height: 100px;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Métodos Ensemble</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 2 · Slide 01</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Bagging: Suavização da Fronteira</h1>
+        <p class="slide-subtitle">
+          Árvores de decisão sozinhas possuem <strong>alta variância</strong> e sofrem muito com ruído (overfitting). O <em>Bagging</em> reduz essa variância ao tomar a média de vários modelos treinados em subamostras.
+        </p>
+      </div>
+
+      <div class="layout-split">
+        <!-- Visual Panel -->
+        <div class="visual-panel">
+          
+          <div class="plot-area" id="plot">
+            
+            <!-- SVGs simulating the decision boundaries for different ensemble sizes -->
+            
+            <!-- 1 Tree (Highly Overfit) -->
+            <svg class="boundary-layer active" id="b-1" viewBox="0 0 400 350" preserveAspectRatio="none">
+              <path d="M0,0 L200,0 L200,80 L140,80 L140,120 L220,120 L220,200 L180,200 L180,240 L260,240 L260,350 L0,350 Z" fill="rgba(59, 130, 246, 0.2)" />
+              <path d="M400,0 L200,0 L200,80 L140,80 L140,120 L220,120 L220,200 L180,200 L180,240 L260,240 L260,350 L400,350 Z" fill="rgba(249, 115, 22, 0.2)" />
+              <path d="M200,0 L200,80 L140,80 L140,120 L220,120 L220,200 L180,200 L180,240 L260,240 L260,350" fill="none" stroke="#1e293b" stroke-width="2" />
+            </svg>
+
+            <!-- 5 Trees (A bit smoother but still jagged) -->
+            <svg class="boundary-layer" id="b-5" viewBox="0 0 400 350" preserveAspectRatio="none">
+              <path d="M0,0 L210,0 L210,50 L160,70 L180,110 L230,150 L200,190 L240,230 L230,350 L0,350 Z" fill="rgba(59, 130, 246, 0.2)" />
+              <path d="M400,0 L210,0 L210,50 L160,70 L180,110 L230,150 L200,190 L240,230 L230,350 L400,350 Z" fill="rgba(249, 115, 22, 0.2)" />
+              <path d="M210,0 L210,50 L160,70 L180,110 L230,150 L200,190 L240,230 L230,350" fill="none" stroke="#1e293b" stroke-width="2" />
+            </svg>
+
+            <!-- 50 Trees (Smooth curve) -->
+            <svg class="boundary-layer" id="b-50" viewBox="0 0 400 350" preserveAspectRatio="none">
+              <path d="M0,0 L230,0 C230,100 180,150 200,200 C220,250 240,300 240,350 L0,350 Z" fill="rgba(59, 130, 246, 0.2)" />
+              <path d="M400,0 L230,0 C230,100 180,150 200,200 C220,250 240,300 240,350 L400,350 Z" fill="rgba(249, 115, 22, 0.2)" />
+              <path d="M230,0 C230,100 180,150 200,200 C220,250 240,300 240,350" fill="none" stroke="#1e293b" stroke-width="3" />
+            </svg>
+
+            <!-- Data Points injected by JS -->
+          </div>
+          
+          <div style="font-weight: 700; color: var(--text-muted); font-size: 0.85rem; align-self: flex-start; width: 100%; display: flex; justify-content: space-between;">
+            <span>Erro vs Número de Árvores</span>
+            <span id="err-val" style="color: #ef4444;">--</span>
+          </div>
+          <div class="error-chart">
+            <svg viewBox="0 0 500 120" style="width:100%; height:100%; position:absolute;">
+              <line x1="0" y1="20" x2="500" y2="20" class="grid-lines" />
+              <line x1="0" y1="60" x2="500" y2="60" class="grid-lines" />
+              <line x1="0" y1="100" x2="500" y2="100" class="grid-lines" />
+              <path class="error-curve" id="err-curve" d="" />
+              <circle cx="0" cy="0" r="5" fill="#ef4444" id="err-dot" style="opacity:0; transition:all 0.5s ease-in-out;" />
+            </svg>
+          </div>
+
+          <div style="font-size: 0.8rem; color: var(--text-dim); text-align: center;">
+            O número de árvores é um <strong>hiperparâmetro</strong>. Mais árvores reduzem a variância sem aumentar o viés (até estabilizar).
+          </div>
+        </div>
+
+        <!-- Controls Panel -->
+        <div class="controls-panel">
+          <div class="control-label">Tamanho do Ensemble</div>
+          
+          <button class="btn-tree active" id="btn-1" onclick="setTrees(1)">
+            <span>1 Árvore de Decisão</span>
+            <span style="font-family: monospace;">Overfitting</span>
+          </button>
+          
+          <button class="btn-tree" id="btn-5" onclick="setTrees(5)">
+            <span>Ensemble (5 Árvores)</span>
+            <span style="font-family: monospace;">Melhorando</span>
+          </button>
+          
+          <button class="btn-tree" id="btn-50" onclick="setTrees(50)">
+            <span>Ensemble (50 Árvores)</span>
+            <span style="font-family: monospace;">Generalizado</span>
+          </button>
+
+          <div class="desc-box" id="desc">
+            <strong>1 Árvore:</strong> A fronteira é dura, perpendicular aos eixos, e tenta desesperadamente capturar os pontos alaranjados que invadiram a área azul (ruído).
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b1-s02.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b2-s02.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    // Generate synthetic clustered data points
+    const plot = document.getElementById('plot');
+    
+    // Cluster Blue (mostly left)
+    for(let i=0; i<40; i++) {
+      let x = 10 + Math.random() * 45;
+      let y = 10 + Math.random() * 80;
+      plot.innerHTML += `<div class="pt pt-blue" style="left: ${x}%; top: ${y}%;"></div>`;
+    }
+    // Noise Blue (on the right)
+    plot.innerHTML += `<div class="pt pt-blue" style="left: 60%; top: 40%;"></div>`;
+    plot.innerHTML += `<div class="pt pt-blue" style="left: 65%; top: 80%;"></div>`;
+
+    // Cluster Orange (mostly right)
+    for(let i=0; i<40; i++) {
+      let x = 55 + Math.random() * 40;
+      let y = 10 + Math.random() * 80;
+      plot.innerHTML += `<div class="pt pt-orange" style="left: ${x}%; top: ${y}%;"></div>`;
+    }
+    // Noise Orange (on the left)
+    plot.innerHTML += `<div class="pt pt-orange" style="left: 40%; top: 30%;"></div>`;
+    plot.innerHTML += `<div class="pt pt-orange" style="left: 45%; top: 60%;"></div>`;
+
+
+    function setTrees(n) {
+      document.querySelectorAll('.btn-tree').forEach(b => b.classList.remove('active'));
+      document.getElementById('btn-'+n).classList.add('active');
+
+      document.querySelectorAll('.boundary-layer').forEach(l => l.classList.remove('active'));
+      document.getElementById('b-'+n).classList.add('active');
+
+      const desc = document.getElementById('desc');
+      const errCurve = document.getElementById('err-curve');
+      const errDot = document.getElementById('err-dot');
+      const errVal = document.getElementById('err-val');
+
+      errDot.style.opacity = 1;
+
+      // Error function approximation: y = base + e^(-kx)
+      // 1 tree: high error. 50 trees: low error plateau.
+      // SVG Y: 20 (high error) to 100 (low error)
+      // SVG X: 0 to 500 (maps to 1 to 50 trees, so X = n * 10)
+
+      if (n === 1) {
+        desc.innerHTML = "<strong>1 Árvore:</strong> A fronteira é dura, perpendicular aos eixos, e tenta desesperadamente capturar os pontos alaranjados que invadiram a área azul (ruído). Alto Viés, Alta Variância.";
+        errCurve.setAttribute('d', 'M10,20');
+        errDot.setAttribute('cx', 10);
+        errDot.setAttribute('cy', 20);
+        errVal.textContent = "Erro: 38%";
+      } else if (n === 5) {
+        desc.innerHTML = "<strong>5 Árvores:</strong> Como cada árvore é treinada com uma subamostra diferente (bootstrap), elas cometem erros em lugares diferentes. A votação começa a suavizar os degraus agressivos.";
+        errCurve.setAttribute('d', 'M10,20 Q30,60 50,70');
+        errDot.setAttribute('cx', 50);
+        errDot.setAttribute('cy', 70);
+        errVal.textContent = "Erro: 22%";
+      } else {
+        desc.innerHTML = "<strong>50 Árvores:</strong> A Fronteira de Decisão agora é suave! A floresta aprendeu o formato global da distribuição dos dados e ignora ativamente os ruídos (pontos isolados). <strong>A Variância foi reduzida drasticamente.</strong>";
+        errCurve.setAttribute('d', 'M10,20 Q30,60 50,70 T150,90 T300,95 T500,98');
+        errDot.setAttribute('cx', 500);
+        errDot.setAttribute('cy', 98);
+        errVal.textContent = "Erro: 14% (Estabilizado)";
+      }
+    }
+  </script>
+</body>
+</html>

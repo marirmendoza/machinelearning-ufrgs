@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 4.2 — Métricas de Diversidade</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .layout-split {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 2rem;
+      margin-top: 1rem;
+    }
+
+    .visual-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .q-table {
+      border-collapse: collapse;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      font-size: 1rem;
+    }
+
+    .q-table th, .q-table td {
+      border: 1px solid var(--border);
+      padding: 1rem;
+    }
+
+    .q-table th { background: #f8fafc; color: var(--text-muted); font-weight: 600; }
+    
+    .input-cell { background: #fff; }
+    
+    .q-input {
+      width: 60px;
+      padding: 0.5rem;
+      font-size: 1.1rem;
+      text-align: center;
+      border: 1px solid var(--border2);
+      border-radius: 4px;
+      font-family: 'Fira Code', monospace;
+      font-weight: 700;
+      color: var(--teal);
+    }
+    .q-input:focus { outline: none; border-color: var(--teal); }
+
+    .formula-box {
+      font-family: 'Fira Code', monospace;
+      font-size: 1.2rem;
+      background: var(--teal-lt);
+      color: var(--teal);
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      border: 2px dashed var(--teal);
+      text-align: center;
+    }
+
+    .result-val {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-top: 0.5rem;
+    }
+
+    .controls-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .desc-box {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      text-align: center;
+      width: 100%;
+      margin-top: 1rem;
+    }
+
+    .status-bad { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+    .status-good { background: #dcfce3; color: #15803d; border: 1px solid #86efac; }
+    .status-neutral { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+
+    .btn-preset {
+      background: var(--bg);
+      border: 1px solid var(--border2);
+      padding: 0.5rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      width: 100%;
+      margin-bottom: 0.5rem;
+      transition: all 0.2s;
+    }
+    .btn-preset:hover { background: #e2e8f0; }
+
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Métodos Ensemble</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 4 · Slide 02</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Medindo a Diversidade (Q-Statistic)</h1>
+        <p class="slide-subtitle">
+          Para que o <em>Ensemble</em> funcione bem, os modelos devem cometer erros independentes. A estatística <strong>Q</strong> mede a correlação entre os erros de dois classificadores (i e j).
+        </p>
+      </div>
+
+      <div class="layout-split">
+        <!-- Visual Panel -->
+        <div class="visual-panel">
+          
+          <table class="q-table">
+            <tr>
+              <th style="background: white; border: none;"></th>
+              <th>Classificador j<br>CORRETO</th>
+              <th>Classificador j<br>INCORRETO</th>
+            </tr>
+            <tr>
+              <th>Classif. i<br>CORRETO</th>
+              <td class="input-cell">
+                <span style="color:var(--text-dim); font-size:0.8rem; display:block;">Ambos acertam (a)</span>
+                <input type="number" id="val-a" class="q-input" value="70" min="0" oninput="calcQ()">
+              </td>
+              <td class="input-cell">
+                <span style="color:var(--text-dim); font-size:0.8rem; display:block;">Apenas i acerta (b)</span>
+                <input type="number" id="val-b" class="q-input" value="10" min="0" oninput="calcQ()">
+              </td>
+            </tr>
+            <tr>
+              <th>Classif. i<br>INCORRETO</th>
+              <td class="input-cell">
+                <span style="color:var(--text-dim); font-size:0.8rem; display:block;">Apenas j acerta (c)</span>
+                <input type="number" id="val-c" class="q-input" value="10" min="0" oninput="calcQ()">
+              </td>
+              <td class="input-cell">
+                <span style="color:var(--text-dim); font-size:0.8rem; display:block;">Ambos erram (d)</span>
+                <input type="number" id="val-d" class="q-input" value="10" min="0" oninput="calcQ()">
+              </td>
+            </tr>
+          </table>
+
+          <div class="formula-box">
+            Q = (ad - bc) / (ad + bc)
+            <div class="result-val" id="q-result">0.00</div>
+          </div>
+          
+        </div>
+
+        <!-- Controls Panel -->
+        <div class="controls-panel">
+          
+          <div class="desc-box">
+            <strong>O que significa o valor Q?</strong><br><br>
+            • <strong>Q > 0:</strong> Os classificadores tendem a reconhecer os mesmos objetos corretamente (positivamente correlacionados).<br>
+            • <strong>Q < 0:</strong> Os classificadores cometem erros em instâncias diferentes (negativamente correlacionados - alta diversidade).<br>
+            • <strong>Q = 0:</strong> Classificadores estatisticamente independentes.
+          </div>
+
+          <div id="status-badge" class="status-badge">...</div>
+
+          <div style="margin-top: 1rem;">
+            <div style="font-size:0.8rem; font-weight:700; color:var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">Testar Cenários:</div>
+            <button class="btn-preset" onclick="setValues(80, 5, 5, 10)">Baixa Diversidade (Correlacionados)</button>
+            <button class="btn-preset" onclick="setValues(40, 30, 30, 0)">Alta Diversidade (Erros Opostos)</button>
+            <button class="btn-preset" onclick="setValues(50, 20, 20, 10)">Totalmente Independentes</button>
+          </div>
+
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b4-s01.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <a class="btn-nav" href="index.html">Início do Módulo 🏠</a>
+    </nav>
+  </div>
+
+  <script>
+    function setValues(a, b, c, d) {
+      document.getElementById('val-a').value = a;
+      document.getElementById('val-b').value = b;
+      document.getElementById('val-c').value = c;
+      document.getElementById('val-d').value = d;
+      calcQ();
+    }
+
+    function calcQ() {
+      const a = parseFloat(document.getElementById('val-a').value) || 0;
+      const b = parseFloat(document.getElementById('val-b').value) || 0;
+      const c = parseFloat(document.getElementById('val-c').value) || 0;
+      const d = parseFloat(document.getElementById('val-d').value) || 0;
+
+      const num = (a * d) - (b * c);
+      const den = (a * d) + (b * c);
+
+      let q = 0;
+      if (den !== 0) {
+        q = num / den;
+      }
+
+      document.getElementById('q-result').textContent = q.toFixed(2);
+
+      const badge = document.getElementById('status-badge');
+      if (q > 0.5) {
+        badge.className = 'status-badge status-bad';
+        badge.textContent = 'Modelos Correlacionados (Ruim)';
+      } else if (q < -0.2) {
+        badge.className = 'status-badge status-good';
+        badge.textContent = 'Alta Diversidade (Excelente!)';
+      } else if (q >= -0.2 && q <= 0.5) {
+        badge.className = 'status-badge status-neutral';
+        badge.textContent = 'Diversidade Razoável / Independentes';
+      }
+    }
+
+    // Init
+    calcQ();
+  </script>
+</body>
+</html>

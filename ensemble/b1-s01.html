@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 1.1 — Viés vs. Variância</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .layout-split {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 2rem;
+      margin-top: 1rem;
+    }
+
+    .visual-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .target-board {
+      width: 300px;
+      height: 300px;
+      position: relative;
+    }
+
+    .target-svg {
+      width: 100%;
+      height: 100%;
+    }
+    
+    .dart {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background-color: #ef4444;
+      border: 1px solid #7f1d1d;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .controls-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .slider-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .slider-group label {
+      font-weight: 600;
+      color: var(--teal);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .slider-group input[type="range"] {
+      width: 100%;
+      accent-color: var(--teal);
+    }
+
+    .btn-action {
+      background: var(--teal);
+      color: white;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+    }
+    .btn-action:hover { background: #047857; transform: translateY(-2px); }
+
+    .status-box {
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: 8px;
+      background: var(--bg);
+      border: 1px solid var(--border2);
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      min-height: 100px;
+    }
+    .status-title {
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Métodos Ensemble</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 1 · Slide 01</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Viés vs. Variância da Taxa de Erro</h1>
+        <p class="slide-subtitle">
+          O erro de um modelo supervisionado pode ser decomposto. O <strong>viés</strong> (bias) é a distância média das predições em relação ao valor real. A <strong>variância</strong> é o espalhamento das predições para diferentes amostras de treinamento.
+        </p>
+      </div>
+
+      <div class="layout-split">
+        <!-- Visual Panel -->
+        <div class="visual-panel">
+          <div class="target-board" id="board">
+            <svg viewBox="0 0 100 100" class="target-svg">
+              <circle cx="50" cy="50" r="45" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+              <circle cx="50" cy="50" r="35" fill="#cbd5e1" stroke="#94a3b8" stroke-width="1"/>
+              <circle cx="50" cy="50" r="25" fill="#94a3b8" stroke="#64748b" stroke-width="1"/>
+              <circle cx="50" cy="50" r="15" fill="#64748b" stroke="#475569" stroke-width="1"/>
+              <circle cx="50" cy="50" r="5" fill="#3b82f6" />
+            </svg>
+            <div id="darts-container"></div>
+          </div>
+          
+          <div style="text-align: center; color: var(--text-dim); font-size: 0.85rem;">
+            O centro (alvo azul) representa a <strong>hipótese verdadeira</strong>.<br>
+            Cada ponto vermelho é um modelo treinado com uma amostra diferente.
+          </div>
+        </div>
+
+        <!-- Controls Panel -->
+        <div class="controls-panel">
+          <div class="slider-group">
+            <label>
+              <span>Viés (Bias)</span>
+              <span id="bias-val">Baixo</span>
+            </label>
+            <input type="range" id="bias-slider" min="0" max="100" value="10">
+          </div>
+
+          <div class="slider-group">
+            <label>
+              <span>Variância</span>
+              <span id="var-val">Baixa</span>
+            </label>
+            <input type="range" id="var-slider" min="0" max="100" value="10">
+          </div>
+
+          <button class="btn-action" onclick="throwDarts()">Treinar Modelos (Atirar)</button>
+
+          <div class="status-box" id="status-box">
+            <div class="status-title">Diagnóstico</div>
+            <div id="status-text">...</div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="index.html">← Índice</a>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b1-s02.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    const biasSlider = document.getElementById('bias-slider');
+    const varSlider = document.getElementById('var-slider');
+    const dartsContainer = document.getElementById('darts-container');
+    const statusText = document.getElementById('status-text');
+    const biasVal = document.getElementById('bias-val');
+    const varVal = document.getElementById('var-val');
+
+    let darts = [];
+    const NUM_DARTS = 15;
+
+    // Initialize darts
+    for(let i=0; i<NUM_DARTS; i++) {
+      let d = document.createElement('div');
+      d.className = 'dart';
+      // start at center
+      d.style.left = '50%';
+      d.style.top = '50%';
+      dartsContainer.appendChild(d);
+      darts.push(d);
+    }
+
+    // Box-Muller transform for normal distribution
+    function randn_bm() {
+      let u = 0, v = 0;
+      while(u === 0) u = Math.random();
+      while(v === 0) v = Math.random();
+      return Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v );
+    }
+
+    function throwDarts() {
+      const bias = parseInt(biasSlider.value);
+      const variance = parseInt(varSlider.value);
+      
+      biasVal.textContent = bias < 50 ? 'Baixo' : 'Alto';
+      varVal.textContent = variance < 50 ? 'Baixa' : 'Alta';
+
+      // Determine center point based on bias
+      // Bias 0 = center (50, 50). Bias 100 = far edge (e.g. 80, 20)
+      const angle = Math.random() * Math.PI * 2;
+      const dist = (bias / 100) * 40; // max dist 40% from center
+      const centerX = 50 + Math.cos(angle) * dist;
+      const centerY = 50 + Math.sin(angle) * dist;
+
+      // Determine spread based on variance
+      const spread = (variance / 100) * 20 + 2; // max spread 22%
+
+      darts.forEach((d, i) => {
+        // Random normal offset
+        let offsetX = randn_bm() * spread;
+        let offsetY = randn_bm() * spread;
+        
+        let finalX = centerX + offsetX;
+        let finalY = centerY + offsetY;
+
+        // Keep within board bounds visually
+        finalX = Math.max(5, Math.min(95, finalX));
+        finalY = Math.max(5, Math.min(95, finalY));
+
+        // Add slight delay to each dart for cool animation
+        setTimeout(() => {
+          d.style.left = finalX + '%';
+          d.style.top = finalY + '%';
+        }, i * 50);
+      });
+
+      // Update text
+      if (bias < 50 && variance < 50) {
+        statusText.innerHTML = "<strong>Baixo Viés / Baixa Variância:</strong> O cenário ideal. O modelo acerta na média e é estável. Exemplos práticos geralmente exigem um compromisso entre os dois.";
+      } else if (bias >= 50 && variance < 50) {
+        statusText.innerHTML = "<strong>Alto Viés / Baixa Variância:</strong> Os modelos são consistentes, mas erram sistematicamente o alvo (<em>Underfitting</em>). Ex: Regressão linear simples em dados complexos.";
+      } else if (bias < 50 && variance >= 50) {
+        statusText.innerHTML = "<strong>Baixo Viés / Alta Variância:</strong> Na média o modelo acertaria o alvo, mas é altamente sensível aos dados de treino (<em>Overfitting</em>). Ex: Árvores de decisão não podadas, k-NN com k pequeno.";
+      } else {
+        statusText.innerHTML = "<strong>Alto Viés / Alta Variância:</strong> Pior cenário. O modelo não aprende o padrão geral e também é instável. Ocorre com modelos mal especificados com poucos dados.";
+      }
+    }
+
+    biasSlider.addEventListener('input', throwDarts);
+    varSlider.addEventListener('input', throwDarts);
+
+    // Initial throw
+    throwDarts();
+
+  </script>
+</body>
+</html>
