@@ -1,24 +1,34 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Aprendizado de Máquina · UFRGS</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg:        #f8f9fb;
-      --bg2:       #ffffff;
-      --border:    #c7d0e0;
-      --text:      #0f1724;
-      --text-muted:#3d4f6e;
-      --text-dim:  #6b7fa3;
-      --teal:      #0e7490;
-      --grad1:     linear-gradient(135deg, #0e7490 0%, #166534 100%);
-      --shadow:    0 2px 16px rgba(15,23,36,0.10);
-      --radius:    18px;
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
+
+    :root {
+      --bg: #f8f9fb;
+      --bg2: #ffffff;
+      --border: #c7d0e0;
+      --text: #0f1724;
+      --text-muted: #3d4f6e;
+      --text-dim: #6b7fa3;
+      --teal: #0e7490;
+      --grad1: linear-gradient(135deg, #0e7490 0%, #166534 100%);
+      --shadow: 0 2px 16px rgba(15, 23, 36, 0.10);
+      --radius: 18px;
+    }
+
     body {
       background: var(--bg);
       color: var(--text);
@@ -31,13 +41,18 @@
     }
 
     /* Hero */
-    .hero { text-align: center; margin-bottom: 4rem; max-width: 720px; }
+    .hero {
+      text-align: center;
+      margin-bottom: 4rem;
+      max-width: 720px;
+    }
+
     .badge {
       display: inline-block;
       padding: 0.4rem 1.2rem;
       border-radius: 999px;
-      background: rgba(14,116,144,0.08);
-      border: 1px solid rgba(14,116,144,0.25);
+      background: rgba(14, 116, 144, 0.08);
+      border: 1px solid rgba(14, 116, 144, 0.25);
       font-size: 0.9rem;
       font-weight: 700;
       letter-spacing: 0.12em;
@@ -45,6 +60,7 @@
       color: var(--teal);
       margin-bottom: 1.4rem;
     }
+
     h1 {
       font-size: 3.4rem;
       font-weight: 800;
@@ -56,6 +72,7 @@
       line-height: 1.1;
       margin-bottom: 1rem;
     }
+
     .hero-sub {
       color: var(--text-muted);
       font-size: 1.25rem;
@@ -63,8 +80,16 @@
       margin: 0 auto;
       line-height: 1.6;
     }
-    .hero-sub a { color: var(--teal); text-decoration: none; font-weight: 600; }
-    .hero-sub a:hover { text-decoration: underline; }
+
+    .hero-sub a {
+      color: var(--teal);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .hero-sub a:hover {
+      text-decoration: underline;
+    }
 
     .license-row {
       margin-top: 1.2rem;
@@ -73,7 +98,11 @@
       align-items: center;
       gap: 0.4rem;
     }
-    .license-row p { font-size: 0.9rem; color: var(--text-dim); }
+
+    .license-row p {
+      font-size: 0.9rem;
+      color: var(--text-dim);
+    }
 
     /* Grid */
     .grid {
@@ -99,9 +128,10 @@
       transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
       position: relative;
     }
+
     .card:hover {
       transform: translateY(-4px);
-      box-shadow: 0 8px 32px rgba(15,23,36,0.15);
+      box-shadow: 0 8px 32px rgba(15, 23, 36, 0.15);
       border-color: var(--card-accent);
     }
 
@@ -113,19 +143,26 @@
       text-transform: uppercase;
       font-weight: 600;
     }
-    .card-icon { font-size: 2.4rem; line-height: 1; }
+
+    .card-icon {
+      font-size: 2.4rem;
+      line-height: 1;
+    }
+
     .card-title {
       font-size: 1.5rem;
       font-weight: 800;
       letter-spacing: -0.01em;
       color: var(--card-accent);
     }
+
     .card-desc {
       font-size: 1.05rem;
       color: var(--text-muted);
       line-height: 1.55;
       flex: 1;
     }
+
     .card-link {
       font-size: 0.95rem;
       font-weight: 600;
@@ -134,25 +171,64 @@
     }
 
     /* Per-card accents */
-    .card-fundamentos      { --card-accent: #0e7490; }
-    .card-supervisionado   { --card-accent: #5b21b6; }
-    .card-knn              { --card-accent: #1d4ed8; }
-    .card-preprocessamento { --card-accent: #c2410c; }
-    .card-holdout          { --card-accent: #9d174d; }
-    .card-metricas         { --card-accent: #4338ca; }
+    .card-fundamentos {
+      --card-accent: #0e7490;
+    }
 
-    .card-arvores          { --card-accent: #0e7490; }
-    .card-redesneurais     { --card-accent: #db2777; }
-    .card-svm              { --card-accent: #0284c7; }
-    .card-avaliacao        { --card-accent: #6d28d9; }
-    .card-interpretabilidade { --card-accent: #d97706; }
+    .card-supervisionado {
+      --card-accent: #5b21b6;
+    }
+
+    .card-knn {
+      --card-accent: #1d4ed8;
+    }
+
+    .card-preprocessamento {
+      --card-accent: #c2410c;
+    }
+
+    .card-holdout {
+      --card-accent: #9d174d;
+    }
+
+    .card-metricas {
+      --card-accent: #4338ca;
+    }
+
+    .card-arvores {
+      --card-accent: #0e7490;
+    }
+
+    .card-redesneurais {
+      --card-accent: #db2777;
+    }
+
+    .card-svm {
+      --card-accent: #0284c7;
+    }
+
+    .card-avaliacao {
+      --card-accent: #6d28d9;
+    }
+
+    .card-interpretabilidade {
+      --card-accent: #d97706;
+    }
+
+    .card-ensemble {
+      --card-accent: #059669;
+    }
 
     /* Coming soon */
     .card.coming-soon {
       opacity: 0.55;
       pointer-events: none;
     }
-    .card.coming-soon .card-link { color: var(--text-dim); }
+
+    .card.coming-soon .card-link {
+      color: var(--text-dim);
+    }
+
     .card.coming-soon::after {
       content: 'em breve';
       position: absolute;
@@ -177,26 +253,36 @@
       line-height: 1.75;
       max-width: 760px;
     }
+
     footer a {
       color: var(--text-dim);
       text-decoration: underline;
     }
-    footer a:hover { color: var(--teal); }
+
+    footer a:hover {
+      color: var(--teal);
+    }
   </style>
 </head>
+
 <body>
 
   <div class="hero">
     <div class="badge">UFRGS · Materiais de Aprendizado de Máquina</div>
     <h1>Aprendizado de Máquina</h1>
     <p class="hero-sub">
-      Slides interativos para a disciplina de Aprendizado de Máquina, do Instituto de Informática da Universidade Federal do Rio Grande do Sul (UFRGS).<br/>
-      Pela <a href="http://www.inf.ufrgs.br/~mrmendoza">Profa. Mariana Recamonde-Mendoza</a>.
+      Slides interativos para a disciplina de Aprendizado de Máquina, do Instituto de Informática da Universidade
+      Federal do Rio Grande do Sul (UFRGS).<br />
+      Pela <a href="http://www.inf.ufrgs.br/~mrmendoza">Profa. Mariana Recamonde-Mendoza</a> e <strong><a
+          href="https://www.linkedin.com/in/luciano-luz-beylouni-farias-501810196/" target="_blank"
+          rel="noopener">Luciano Beylouni (Mestrando PPGC)</a></strong>.
     </p>
     <div class="license-row">
       <p>CC BY-NC-SA 4.0 &nbsp;·&nbsp; Copie, adapte, dê o crédito, mantenha aberto, não lucre</p>
-      <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.pt-br" target="_blank" rel="noopener" title="CC BY-NC-SA 4.0">
-        <img src="https://licensebuttons.net/l/by-nc-sa/4.0/88x31.png" alt="Licença Creative Commons BY-NC-SA 4.0" style="height: 28px; border-radius: 4px;" />
+      <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.pt-br" target="_blank" rel="noopener"
+        title="CC BY-NC-SA 4.0">
+        <img src="https://licensebuttons.net/l/by-nc-sa/4.0/88x31.png" alt="Licença Creative Commons BY-NC-SA 4.0"
+          style="height: 28px; border-radius: 4px;" />
       </a>
     </div>
   </div>
@@ -206,7 +292,8 @@
     <a class="card card-fundamentos" href="fundamentos/index.html">
       <div class="card-icon">🌱</div>
       <div class="card-title">Fundamentos de AM</div>
-      <div class="card-desc">O que é aprendizado de máquina, paradigmas, tarefas preditivas vs. descritivas e pipeline geral.</div>
+      <div class="card-desc">O que é aprendizado de máquina, paradigmas, tarefas preditivas vs. descritivas e pipeline
+        geral.</div>
       <span class="card-link">Abrir slides →</span>
     </a>
 
@@ -220,56 +307,64 @@
     <a class="card card-knn" href="knn/index.html">
       <div class="card-icon">📍</div>
       <div class="card-title">KNN — K vizinhos mais próximos</div>
-      <div class="card-desc">Classificação baseada em instâncias, escolha de k, métricas de distância, normalização, dimensionalidade e aplicação prática.</div>
+      <div class="card-desc">Classificação baseada em instâncias, escolha de k, métricas de distância, normalização,
+        dimensionalidade e aplicação prática.</div>
       <span class="card-link">Abrir slides →</span>
     </a>
 
     <a class="card card-preprocessamento" href="preprocessamento/index.html">
       <div class="card-icon">🧹</div>
       <div class="card-title">Pré-processamento de Dados</div>
-      <div class="card-desc">Normalização (min-max, z-score) e codificação de atributos categóricos (ordinal, one-hot, top-K).</div>
+      <div class="card-desc">Normalização (min-max, z-score) e codificação de atributos categóricos (ordinal, one-hot,
+        top-K).</div>
       <span class="card-link">Abrir slides →</span>
     </a>
 
     <a class="card card-holdout" href="holdout/index.html">
       <div class="card-icon">🎯</div>
       <div class="card-title">Avaliação de Modelos: Holdout</div>
-      <div class="card-desc">Erro de treino vs. teste, overfitting/underfitting, método holdout, variabilidade do split e train/val/test.</div>
+      <div class="card-desc">Erro de treino vs. teste, overfitting/underfitting, método holdout, variabilidade do split
+        e train/val/test.</div>
       <span class="card-link">Abrir slides →</span>
     </a>
 
     <a class="card card-metricas" href="metricas/index.html">
       <div class="card-icon">📏</div>
       <div class="card-title">Métricas de Avaliação</div>
-      <div class="card-desc">Matriz de confusão, acurácia, sensibilidade, precisão e F1 para classificação. MAE e MSE para regressão.</div>
+      <div class="card-desc">Matriz de confusão, acurácia, sensibilidade, precisão e F1 para classificação. MAE e MSE
+        para regressão.</div>
       <span class="card-link">Abrir slides →</span>
     </a>
 
     <a class="card card-arvores" href="arvores/index.html">
       <div class="card-icon">🌳</div>
       <div class="card-title">Árvores de Decisão & Poda</div>
-      <div class="card-desc">Particionamento recursivo, regras IF-THEN, métricas de pureza (Gini e Entropia), overfitting, alta variância e pré/pós-poda.</div>
+      <div class="card-desc">Particionamento recursivo, regras IF-THEN, métricas de pureza (Gini e Entropia),
+        overfitting, alta variância e pré/pós-poda.</div>
       <span class="card-link">Abrir slides →</span>
     </a>
 
     <a class="card card-regressao" href="regressaolinear/index.html">
       <div class="card-icon">📈</div>
       <div class="card-title">Regressão Linear & Gradiente Descendente</div>
-      <div class="card-desc">Hipótese linear, resíduos, funções de perda (MSE vs. MAE vs. Huber), robusez a outliers, superfícies de custo 3D, taxa de aprendizagem α, variantes (SGD) e normalização.</div>
+      <div class="card-desc">Hipótese linear, resíduos, funções de perda (MSE vs. MAE vs. Huber), robusez a outliers,
+        superfícies de custo 3D, taxa de aprendizagem α, variantes (SGD) e normalização.</div>
       <span class="card-link">Abrir slides →</span>
     </a>
 
     <a class="card card-redesneurais" href="redesneurais/index.html">
       <div class="card-icon">🧠</div>
       <div class="card-title">Redes Neurais</div>
-      <div class="card-desc">O neurônio computacional, funções de ativação, arquitetura de rede, gradiente descendente e backpropagation.</div>
+      <div class="card-desc">O neurônio computacional, funções de ativação, arquitetura de rede, gradiente descendente e
+        backpropagation.</div>
       <span class="card-link">Abrir slides →</span>
     </a>
 
     <a class="card card-svm" href="svm/index.html">
       <div class="card-icon">🛡️</div>
       <div class="card-title">Support Vector Machines (SVM)</div>
-      <div class="card-desc">Máxima margem, support vectors, relação entre geometria e otimização, soft margin (C), kernel trick (RBF, γ), tuning C x γ e comparação com KNN e Árvores.</div>
+      <div class="card-desc">Máxima margem, support vectors, relação entre geometria e otimização, soft margin (C),
+        kernel trick (RBF, γ), tuning C x γ e comparação com KNN e Árvores.</div>
       <span class="card-link">Abrir slides →</span>
     </a>
 
@@ -284,16 +379,26 @@
       <div class="card-icon">🔦</div>
       <div class="card-title">Interpretabilidade</div>
       <div class="card-desc">Abrindo caixas-pretas: Permutação, Partial Dependence Plots e valores SHAP.</div>
-      <span class="card-link">Abrir slides →</span>
-    </a>
+
+      <a class="card card-ensemble" href="ensemble/index.html">
+        <div class="card-icon">🌲</div>
+        <div class="card-title">Métodos Ensemble</div>
+        <div class="card-desc">Bagging, Random Forests, AdaBoost, Gradient Boosting e Stacking.</div>
+        <span class="card-link">Abrir slides →</span>
+      </a>
 
   </div>
 
   <footer>
-    <strong>UFRGS · Instituto de Informática · Aprendizado de Máquina</strong><br/>
-    Este material foi concebido, estruturado e orientado pela <strong>Profa. Mariana Recamonde-Mendoza</strong> com base nos seus slides e nas referências bibliográficas da disciplina, codificado com o auxílio de inteligência artificial generativa (Claude e Gemini), e revisado pela professora.<br/>
-    Inspirado no formato dos <a href="https://andertavares.github.io/deeplearning-ufrgs/" target="_blank" rel="noopener">slides interativos do prof. Anderson Tavares</a>.
+    <strong>UFRGS · Instituto de Informática · Aprendizado de Máquina</strong><br />
+    Este material foi concebido, estruturado e orientado pela <strong>Profa. Mariana Recamonde-Mendoza</strong>, e
+    desenvolvido por <strong><a href="https://www.linkedin.com/in/luciano-luz-beylouni-farias-501810196/"
+        target="_blank" rel="noopener">Luciano Beylouni (Mestrando PPGC)</a></strong> com o auxílio de inteligência
+    artificial generativa (Claude e Gemini).<br />
+    Inspirado no formato dos <a href="https://andertavares.github.io/deeplearning-ufrgs/" target="_blank"
+      rel="noopener">slides interativos do prof. Anderson Tavares</a>.
   </footer>
 
 </body>
+
 </html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 2.2 — Random Forests: Seleção de Atributos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .split-container {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      gap: 2rem;
+      align-items: flex-start;
+      margin-top: 1rem;
+    }
+
+    .data-table {
+      flex: 1;
+      border-collapse: collapse;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+    .data-table th, .data-table td {
+      border: 1px solid var(--border2);
+      padding: 0.5rem;
+    }
+    .data-table th {
+      background: var(--bg);
+      color: var(--text-muted);
+      transition: all 0.3s;
+    }
+    .data-table td { transition: all 0.3s; }
+    
+    .col-active th { background: var(--teal-lt) !important; color: var(--teal); border-color: var(--teal); }
+    .col-active td { background: rgba(5, 150, 105, 0.05); border-color: rgba(5, 150, 105, 0.2); }
+    
+    .col-chosen th { background: var(--teal) !important; color: white !important; }
+    .col-chosen td { background: rgba(5, 150, 105, 0.15); border-color: var(--teal); font-weight: 700; }
+
+    .action-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      background: #f8fafc;
+      padding: 1.5rem;
+      border-radius: 8px;
+      border: 1px solid var(--border2);
+    }
+
+    .node-visual {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .node-circle {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 3px solid var(--border);
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: var(--text-muted);
+      transition: all 0.3s;
+    }
+
+    .btn-action {
+      background: var(--teal);
+      color: white;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-action:hover { background: #047857; transform: translateY(-2px); }
+
+    .log-box {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      min-height: 80px;
+      background: white;
+      padding: 1rem;
+      border-radius: 4px;
+      border: 1px dashed var(--border);
+    }
+
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Métodos Ensemble</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 2 · Slide 02</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Florestas Aleatórias: Seleção de Atributos</h1>
+        <p class="slide-subtitle">
+          Para garantir que as árvores não sejam idênticas (mesmo usando Bagging), o algoritmo sorteia um subconjunto de <strong>m atributos</strong> (ex: m=2) a cada divisão de nó, ignorando o resto.
+        </p>
+      </div>
+
+      <div class="split-container">
+        
+        <!-- Dataset -->
+        <div style="flex: 1;">
+          <table class="data-table" id="dataset">
+            <thead>
+              <tr>
+                <th id="h-0">X₁ (Idade)</th>
+                <th id="h-1">X₂ (Renda)</th>
+                <th id="h-2">X₃ (Dívida)</th>
+                <th id="h-3">X₄ (Casado)</th>
+                <th id="h-4">X₅ (Score)</th>
+                <th style="background:#cbd5e1;">Y</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td class="c-0">34</td><td class="c-1">5k</td><td class="c-2">1k</td><td class="c-3">Sim</td><td class="c-4">600</td><td>+</td></tr>
+              <tr><td class="c-0">22</td><td class="c-1">2k</td><td class="c-2">5k</td><td class="c-3">Não</td><td class="c-4">300</td><td>-</td></tr>
+              <tr><td class="c-0">45</td><td class="c-1">8k</td><td class="c-2">0</td><td class="c-3">Sim</td><td class="c-4">850</td><td>+</td></tr>
+              <tr><td class="c-0">29</td><td class="c-1">4k</td><td class="c-2">2k</td><td class="c-3">Não</td><td class="c-4">500</td><td>+</td></tr>
+              <tr><td class="c-0">38</td><td class="c-1">3k</td><td class="c-2">8k</td><td class="c-3">Sim</td><td class="c-4">400</td><td>-</td></tr>
+            </tbody>
+          </table>
+          <div style="font-size:0.8rem; color: var(--text-dim); margin-top: 0.5rem; text-align: center;">
+            Total de atributos (d) = 5.<br>Vamos usar m = 2.
+          </div>
+        </div>
+
+        <!-- Action Panel -->
+        <div class="action-panel">
+          
+          <div class="node-visual">
+            <div class="node-circle" id="node">?</div>
+          </div>
+
+          <button class="btn-action" onclick="runSplit()">Realizar um Split (Nó)</button>
+
+          <div class="log-box" id="log">
+            Aguardando...
+          </div>
+        </div>
+
+      </div>
+
+      <div class="insight-box mt-4">
+        <span class="i-icon">💡</span>
+        <div class="i-text">
+          Se o algoritmo pudesse olhar para todos os atributos sempre, e o atributo <strong>X₃</strong> fosse dominante, quase todas as árvores do *ensemble* usariam o X₃ no topo e ficariam muito correlacionadas. A seleção aleatória força a <strong>diversidade</strong>, criando um "Comitê de Especialistas Diferentes".
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b2-s01.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b2-s03.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    const features = ['X₁ (Idade)', 'X₂ (Renda)', 'X₃ (Dívida)', 'X₄ (Casado)', 'X₅ (Score)'];
+    
+    function resetTable() {
+      for(let i=0; i<5; i++) {
+        document.getElementById('h-'+i).parentElement.classList.remove('col-active', 'col-chosen');
+        document.querySelectorAll('.c-'+i).forEach(td => td.classList.remove('col-active', 'col-chosen'));
+        document.getElementById('h-'+i).style.background = '';
+        document.getElementById('h-'+i).style.color = '';
+      }
+      document.getElementById('node').style.borderColor = 'var(--border)';
+      document.getElementById('node').textContent = '?';
+    }
+
+    function runSplit() {
+      resetTable();
+      const log = document.getElementById('log');
+      
+      // Select 2 random features
+      let f1 = Math.floor(Math.random() * 5);
+      let f2 = Math.floor(Math.random() * 5);
+      while(f1 === f2) {
+        f2 = Math.floor(Math.random() * 5);
+      }
+
+      log.innerHTML = `Sorteando m=2 atributos...<br>> Selecionados: ${features[f1]} e ${features[f2]}.<br>> Os outros 3 atributos são "cegos" para este nó.<br>`;
+
+      // Highlight active cols
+      document.getElementById('h-'+f1).classList.add('col-active');
+      document.querySelectorAll('.c-'+f1).forEach(td => td.classList.add('col-active'));
+      document.getElementById('h-'+f2).classList.add('col-active');
+      document.querySelectorAll('.c-'+f2).forEach(td => td.classList.add('col-active'));
+
+      // Simulate calculating impurity
+      setTimeout(() => {
+        let best = Math.random() > 0.5 ? f1 : f2;
+        let other = best === f1 ? f2 : f1;
+
+        log.innerHTML += `> Calculando ganho de informação...<br>> O atributo ${features[best]} reduziu mais a impureza.<br>> Dividindo o nó por ${features[best].split(' ')[0]}!`;
+        
+        // Remove highlight from 'other'
+        document.getElementById('h-'+other).classList.remove('col-active');
+        document.querySelectorAll('.c-'+other).forEach(td => td.classList.remove('col-active'));
+
+        // Super highlight 'best'
+        document.getElementById('h-'+best).classList.remove('col-active');
+        document.getElementById('h-'+best).classList.add('col-chosen');
+        document.querySelectorAll('.c-'+best).forEach(td => {
+          td.classList.remove('col-active');
+          td.classList.add('col-chosen');
+        });
+
+        // Update node visual
+        const node = document.getElementById('node');
+        node.textContent = features[best].split(' ')[0];
+        node.style.borderColor = 'var(--teal)';
+
+      }, 1000);
+    }
+  </script>
+</body>
+</html>

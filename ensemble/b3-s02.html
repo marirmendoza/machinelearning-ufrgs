@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 3.2 — Gradient Boosting</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .layout-split {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 2rem;
+      margin-top: 1rem;
+    }
+
+    .visual-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .plot-area {
+      width: 100%;
+      height: 200px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    
+    .plot-title {
+      position: absolute;
+      top: 10px; left: 15px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      z-index: 20;
+    }
+
+    .curve-path {
+      fill: none;
+      stroke: var(--teal);
+      stroke-width: 3;
+      transition: all 0.5s ease-in-out;
+    }
+
+    .res-path {
+      fill: none;
+      stroke: #ef4444;
+      stroke-width: 3;
+      transition: all 0.5s ease-in-out;
+    }
+
+    .axis {
+      stroke: var(--border2);
+      stroke-width: 1;
+      stroke-dasharray: 4;
+    }
+
+    .pt {
+      position: absolute;
+      width: 6px; height: 6px;
+      background: #3b82f6;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: all 0.5s ease-in-out;
+    }
+    
+    .pt-res {
+      background: #f97316;
+    }
+
+    .controls-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .btn-action {
+      background: var(--teal);
+      color: white;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-action:hover:not(:disabled) { background: #047857; transform: translateY(-2px); }
+    .btn-action:disabled { background: var(--border2); cursor: not-allowed; }
+
+    .desc-box {
+      margin-top: auto;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      background: #f1f5f9;
+      padding: 1rem;
+      border-radius: 8px;
+      border-left: 4px solid var(--teal);
+      min-height: 120px;
+    }
+
+    .math-formula {
+      font-family: 'Fira Code', monospace;
+      background: #e2e8f0;
+      padding: 0.5rem;
+      border-radius: 4px;
+      text-align: center;
+      font-size: 0.85rem;
+      margin-top: 1rem;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Métodos Ensemble</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 3 · Slide 02</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Gradient Boosting</h1>
+        <p class="slide-subtitle">
+          Em vez de mexer nos pesos das instâncias, o Gradient Boosting treina o novo classificador tentando prever diretamente os <strong>erros residuais</strong> (Real - Previsto) do classificador anterior.
+        </p>
+      </div>
+
+      <div class="layout-split">
+        <!-- Visual Panel -->
+        <div class="visual-panel">
+          
+          <!-- Plot 1: Ensemble Prediction -->
+          <div class="plot-area">
+            <div class="plot-title">Predição do Ensemble vs. Dados Reais</div>
+            <svg viewBox="0 0 500 200" style="width:100%; height:100%; position:absolute;">
+              <path class="curve-path" id="pred-curve" d="M0,150 L500,150" />
+            </svg>
+            <div id="data-pts"></div>
+          </div>
+
+          <!-- Plot 2: Residuals -->
+          <div class="plot-area">
+            <div class="plot-title">Resíduos (O que o próximo modelo vai tentar prever)</div>
+            <svg viewBox="0 0 500 200" style="width:100%; height:100%; position:absolute;">
+              <line x1="0" y1="100" x2="500" y2="100" class="axis" />
+              <path class="res-path" id="res-curve" d="M0,100 L500,100" />
+            </svg>
+            <div id="res-pts"></div>
+          </div>
+
+        </div>
+
+        <!-- Controls Panel -->
+        <div class="controls-panel">
+          
+          <div style="font-weight: 700; color: var(--teal); font-size: 1.2rem;" id="iter-label">Iteração 0 (Nenhum Modelo)</div>
+          
+          <button class="btn-action" id="btn-next" onclick="nextIter()">Treinar Modelo 1</button>
+
+          <div class="math-formula" id="formula">
+            Ensemble = 0
+          </div>
+          
+          <div style="background: white; border: 1px solid var(--border2); padding: 1rem; border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 0.9rem; margin-bottom: 0.5rem;">
+              <span style="color: var(--text-dim)">Erro de Treino (RMSE)</span>
+              <span id="rmse-val" style="color: #ef4444;">--</span>
+            </div>
+            <div style="width: 100%; height: 50px; position: relative;">
+              <svg viewBox="0 0 100 50" style="width:100%; height:100%;">
+                <line x1="0" y1="45" x2="100" y2="45" stroke="#e2e8f0" stroke-width="1" />
+                <path id="rmse-curve" fill="none" stroke="#ef4444" stroke-width="2" d="M0,5" />
+                <circle id="rmse-dot" cx="0" cy="5" r="3" fill="#ef4444" style="opacity:0; transition:all 0.3s;"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="desc-box" id="desc">
+            Neste momento não temos nenhum modelo. Os resíduos são exatamente iguais aos dados reais (Y - 0 = Y).
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b3-s01.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <a class="btn-nav" href="b4-s01.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    let iter = 0;
+    const btn = document.getElementById('btn-next');
+    const desc = document.getElementById('desc');
+    const iterLabel = document.getElementById('iter-label');
+    const formula = document.getElementById('formula');
+    
+    const predCurve = document.getElementById('pred-curve');
+    const resCurve = document.getElementById('res-curve');
+    
+    const dataContainer = document.getElementById('data-pts');
+    const resContainer = document.getElementById('res-pts');
+
+    // Generate ground truth data (a parabola-like curve)
+    // Map X from 0 to 100
+    // Y = 100 - ( (X-50)^2 ) * 0.05 + noise
+    let data = [];
+    for(let i=10; i<=90; i+=5) {
+      let truth = 140 - (Math.pow(i-50, 2) * 0.04);
+      let noise = (Math.random() * 20) - 10;
+      data.push({ x: i, y: truth + noise });
+    }
+
+    // Render dots
+    data.forEach((d, idx) => {
+      // Top plot (Data)
+      let p = document.createElement('div');
+      p.className = 'pt';
+      p.style.left = d.x + '%';
+      p.style.top = (200 - d.y) + 'px'; // invert Y for DOM
+      dataContainer.appendChild(p);
+
+      // Bottom plot (Residuals)
+      let rp = document.createElement('div');
+      rp.className = 'pt pt-res';
+      rp.id = 'r' + idx;
+      rp.style.left = d.x + '%';
+      // initial residual = d.y (shifted to center at 100 for visual)
+      rp.style.top = (100 - (d.y - 100)) + 'px'; 
+      resContainer.appendChild(rp);
+    });
+
+    function nextIter() {
+      iter++;
+      iterLabel.textContent = "Iteração " + iter;
+
+      const rmseCurve = document.getElementById('rmse-curve');
+      const rmseDot = document.getElementById('rmse-dot');
+      const rmseVal = document.getElementById('rmse-val');
+      
+      rmseDot.style.opacity = 1;
+
+      if(iter === 1) {
+        predCurve.setAttribute('d', 'M0,100 L500,100');
+        
+        data.forEach((d, idx) => {
+          let res = d.y - 100;
+          document.getElementById('r'+idx).style.top = (100 - res) + 'px';
+        });
+        
+        resCurve.setAttribute('d', 'M0,160 Q250,20 500,160');
+
+        formula.innerHTML = "Ensemble = M₁";
+        desc.innerHTML = `<strong>Modelo 1 (M₁):</strong> Prevê apenas a média dos dados (uma linha reta contínua).<br><br>
+        O <strong>Erro (RMSE)</strong> é altíssimo. Calculamos os <strong>Resíduos</strong> (Y real - Média). A árvore M₂ vai tentar prever esse erro.`;
+
+        rmseCurve.setAttribute('d', 'M20,5');
+        rmseDot.setAttribute('cx', 20); rmseDot.setAttribute('cy', 5);
+        rmseVal.textContent = "38.5";
+
+        btn.textContent = "Treinar M₂ (Ajustar Parábola)";
+      } 
+      else if (iter === 2) {
+        predCurve.setAttribute('d', 'M0,160 Q250,20 500,160');
+        
+        data.forEach((d, idx) => {
+          let pred = 140 - (Math.pow(d.x-50, 2) * 0.04);
+          let res = d.y - pred; 
+          document.getElementById('r'+idx).style.top = (100 - res) + 'px';
+        });
+
+        resCurve.setAttribute('d', 'M0,100 Q100,110 200,90 T400,105 T500,100');
+
+        formula.innerHTML = "Ensemble = M₁ + M₂";
+        desc.innerHTML = `<strong>Modelo 2 (M₂):</strong> Aprendeu o formato principal (parábola). O Erro caiu drasticamente!<br><br>
+        Os novos resíduos agora são apenas pequenos ruídos não-lineares.`;
+
+        rmseCurve.setAttribute('d', 'M20,5 L40,30');
+        rmseDot.setAttribute('cx', 40); rmseDot.setAttribute('cy', 30);
+        rmseVal.textContent = "12.0";
+
+        btn.textContent = "Treinar M₃ (Ajuste Fino)";
+      }
+      else if (iter === 3) {
+        predCurve.setAttribute('d', 'M0,160 Q100,80 250,20 T500,160');
+        
+        data.forEach((d, idx) => {
+          let pred = 140 - (Math.pow(d.x-50, 2) * 0.04);
+          let res = (d.y - pred) * 0.6; // partially fitted noise
+          document.getElementById('r'+idx).style.top = (100 - res) + 'px';
+        });
+
+        resCurve.setAttribute('d', 'M0,100 Q150,105 250,95 T500,100');
+
+        formula.innerHTML = "Ensemble = M₁ + M₂ + M₃";
+        desc.innerHTML = `<strong>Modelo 3 (M₃):</strong> A curva começa a se distorcer para tentar encostar nos pontos fora da parábola. O Erro continua caindo.`;
+
+        rmseCurve.setAttribute('d', 'M20,5 L40,30 L60,38');
+        rmseDot.setAttribute('cx', 60); rmseDot.setAttribute('cy', 38);
+        rmseVal.textContent = "7.5";
+
+        btn.textContent = "Treinar M₄ (Mais Detalhes)";
+      }
+      else if (iter === 4) {
+        let path = "M0,160 ";
+        data.forEach((d, idx) => {
+          let pred = d.y - ((d.y - (140 - (Math.pow(d.x-50, 2) * 0.04))) * 0.2);
+          if(idx===0) path = `M${d.x*5},${200-pred} `;
+          else path += `L${d.x*5},${200-pred} `;
+        });
+        predCurve.setAttribute('d', path);
+
+        data.forEach((d, idx) => {
+          let pred = d.y - ((d.y - (140 - (Math.pow(d.x-50, 2) * 0.04))) * 0.2);
+          let res = d.y - pred;
+          document.getElementById('r'+idx).style.top = (100 - res) + 'px';
+        });
+
+        resCurve.setAttribute('d', 'M0,100 L500,100');
+
+        formula.innerHTML = "Ensemble = M₁ + M₂ + M₃ + M₄";
+        desc.innerHTML = `<strong>Modelo 4 (M₄):</strong> A curva do Ensemble ficou toda pontiaguda tentando abraçar os ruídos individuais. O resíduo está quase em zero.`;
+
+        rmseCurve.setAttribute('d', 'M20,5 L40,30 L60,38 L80,43');
+        rmseDot.setAttribute('cx', 80); rmseDot.setAttribute('cy', 43);
+        rmseVal.textContent = "2.1";
+
+        btn.textContent = "Treinar M₅ (Overfitting Total)";
+      }
+      else if (iter === 5) {
+        let path = "M0,160 ";
+        data.forEach((d, idx) => {
+          if(idx===0) path = `M${d.x*5},${200-d.y} `;
+          else path += `L${d.x*5},${200-d.y} `;
+        });
+        predCurve.setAttribute('d', path);
+
+        data.forEach((d, idx) => {
+          document.getElementById('r'+idx).style.top = '100px';
+        });
+        resCurve.setAttribute('d', 'M0,100 L500,100');
+
+        formula.innerHTML = "Ensemble = M₁ + M₂ + M₃ + M₄ + M₅";
+        desc.innerHTML = `<strong>Modelo 5 (M₅): Overfitting!</strong><br><br>
+        A curva passa perfeitamente sobre todos os pontos (Erro Treino = 0), mas perdeu o poder de generalização. Por isso adicionamos o parâmetro <em>Learning Rate (Taxa de Aprendizado)</em>, multiplicando cada M por um fator (ex: 0.1) para evitar que o erro zere rápido demais!`;
+
+        rmseCurve.setAttribute('d', 'M20,5 L40,30 L60,38 L80,43 L100,45');
+        rmseDot.setAttribute('cx', 100); rmseDot.setAttribute('cy', 45);
+        rmseVal.textContent = "0.0";
+
+        btn.disabled = true;
+        btn.textContent = "Fim do Processo";
+      }
+    }
+  </script>
+</body>
+</html>

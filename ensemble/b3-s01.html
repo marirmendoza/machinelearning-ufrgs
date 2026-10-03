@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 3.1 — AdaBoost: Atualização de Pesos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .layout-split {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 2rem;
+      margin-top: 1rem;
+    }
+
+    .visual-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .plot-area {
+      width: 100%;
+      height: 350px;
+      background: #f8fafc;
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .boundary-line {
+      position: absolute;
+      background: var(--teal);
+      transition: all 0.5s ease-in-out;
+      opacity: 0;
+    }
+    
+    .bg-blue { position: absolute; background: rgba(59, 130, 246, 0.15); transition: all 0.5s ease-in-out; opacity: 0; }
+    .bg-orange { position: absolute; background: rgba(249, 115, 22, 0.15); transition: all 0.5s ease-in-out; opacity: 0; }
+
+    /* Data Points */
+    .pt {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-family: 'Fira Code', monospace;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 10;
+    }
+    .pt-plus { color: #1d4ed8; background: #bfdbfe; border: 2px solid #3b82f6; }
+    .pt-minus { color: #c2410c; background: #ffedd5; border: 2px solid #f97316; }
+
+    .controls-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .btn-action {
+      background: var(--teal);
+      color: white;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-action:hover:not(:disabled) { background: #047857; transform: translateY(-2px); }
+    .btn-action:disabled { background: var(--border2); cursor: not-allowed; }
+
+    .desc-box {
+      margin-top: auto;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      background: #f1f5f9;
+      padding: 1rem;
+      border-radius: 8px;
+      border-left: 4px solid var(--teal);
+      min-height: 120px;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Métodos Ensemble</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 3 · Slide 01</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">AdaBoost: Ajuste de Pesos</h1>
+        <p class="slide-subtitle">
+          No <em>Boosting</em>, classificadores "fracos" (que erram muito) são treinados <strong>sequencialmente</strong>. Os exemplos que o modelo 1 errou ganham maior <strong>peso</strong> (ficam maiores), forçando o modelo 2 a focar neles.
+        </p>
+      </div>
+
+      <div class="layout-split">
+        <!-- Visual Panel -->
+        <div class="visual-panel">
+          
+          <div class="plot-area" id="plot">
+            <!-- Background Regions -->
+            <div id="bg-blue" class="bg-blue"></div>
+            <div id="bg-orange" class="bg-orange"></div>
+            
+            <!-- Boundary line -->
+            <div id="boundary" class="boundary-line"></div>
+            
+            <svg id="final-boundary" viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute; top:0; left:0; width:100%; height:100%; opacity:0; transition:opacity 1s ease-in-out; pointer-events:none;">
+              <!-- Non-linear boundary shape separating the points perfectly -->
+              <!-- Plusses are top and right. Minuses are bottom and bottom-left -->
+              <polygon points="0,0 100,0 100,50 50,50 50,100 25,100 25,35 0,35" fill="rgba(59, 130, 246, 0.2)" stroke="var(--teal)" stroke-width="0.5" />
+              <polygon points="100,100 50,100 50,50 100,50" fill="rgba(249, 115, 22, 0.2)" stroke="var(--teal)" stroke-width="0.5" />
+              <polygon points="0,100 25,100 25,35 0,35" fill="rgba(249, 115, 22, 0.2)" stroke="var(--teal)" stroke-width="0.5" />
+            </svg>
+
+            <!-- Data Points -->
+            <div class="pt pt-plus" id="p1" style="left: 20%; top: 20%;">+</div>
+            <div class="pt pt-plus" id="p2" style="left: 30%; top: 40%;">+</div>
+            <div class="pt pt-plus" id="p3" style="left: 40%; top: 25%;">+</div>
+            <div class="pt pt-plus" id="p4" style="left: 80%; top: 20%;">+</div>
+            <div class="pt pt-plus" id="p5" style="left: 60%; top: 15%;">+</div>
+            
+            <div class="pt pt-minus" id="m1" style="left: 25%; top: 80%;">-</div>
+            <div class="pt pt-minus" id="m2" style="left: 45%; top: 75%;">-</div>
+            <div class="pt pt-minus" id="m3" style="left: 70%; top: 85%;">-</div>
+            <div class="pt pt-minus" id="m4" style="left: 85%; top: 60%;">-</div>
+            <div class="pt pt-minus" id="m5" style="left: 15%; top: 45%;">-</div>
+          </div>
+          
+          <div style="font-size: 0.85rem; color: var(--text-dim); text-align: center;">
+            Pontos classificados incorretamente têm seu peso incrementado (ficam maiores) para a próxima iteração.
+          </div>
+        </div>
+
+        <!-- Controls Panel -->
+        <div class="controls-panel">
+          
+          <div style="font-weight: 700; color: var(--teal); font-size: 1.2rem;" id="iter-label">Iteração 0</div>
+          
+          <button class="btn-action" id="btn-next" onclick="nextIter()">Treinar Classificador 1</button>
+
+          <div class="desc-box" id="desc">
+            No início, todos os pontos têm exatamente o mesmo peso (tamanho igual). O algoritmo vai procurar a reta simples (stump) que separa os dados da melhor forma possível, errando inevitavelmente alguns.
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b2-s02.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b3-s02.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    let iter = 0;
+    const btn = document.getElementById('btn-next');
+    const desc = document.getElementById('desc');
+    const iterLabel = document.getElementById('iter-label');
+    
+    const boundary = document.getElementById('boundary');
+    const bgBlue = document.getElementById('bg-blue');
+    const bgOrange = document.getElementById('bg-orange');
+
+    // Default sizes
+    const pts = {
+      p1: 30, p2: 30, p3: 30, p4: 30, p5: 30,
+      m1: 30, m2: 30, m3: 30, m4: 30, m5: 30
+    };
+
+    function setSizes() {
+      Object.keys(pts).forEach(id => {
+        let el = document.getElementById(id);
+        el.style.width = pts[id] + 'px';
+        el.style.height = pts[id] + 'px';
+        el.style.fontSize = (pts[id]/2) + 'px';
+      });
+    }
+
+    setSizes();
+
+    function nextIter() {
+      iter++;
+      iterLabel.textContent = "Iteração " + iter;
+
+      if(iter === 1) {
+        // Vertical split at X = 50%
+        boundary.style.opacity = 1;
+        boundary.style.left = '50%';
+        boundary.style.top = '0';
+        boundary.style.width = '4px';
+        boundary.style.height = '100%';
+
+        bgBlue.style.opacity = 1;
+        bgBlue.style.left = '0'; bgBlue.style.top = '0'; bgBlue.style.width = '50%'; bgBlue.style.height = '100%';
+        
+        bgOrange.style.opacity = 1;
+        bgOrange.style.left = '50%'; bgOrange.style.top = '0'; bgOrange.style.width = '50%'; bgOrange.style.height = '100%';
+
+        desc.innerHTML = `<strong>Classificador 1 (h₁):</strong> O modelo separou os dados verticalmente.<br><br>
+        <strong>Erro:</strong> Os pontos (+) na direita (p4, p5) e os (-) na esquerda (m1, m2, m5) foram classificados incorretamente.<br>
+        Eles terão seus <strong>pesos aumentados</strong>!`;
+
+        // Increase weights of misclassified, decrease correct
+        pts.p4 = 55; pts.p5 = 55;
+        pts.m1 = 55; pts.m2 = 55; pts.m5 = 55;
+        
+        pts.p1 = 20; pts.p2 = 20; pts.p3 = 20;
+        pts.m3 = 20; pts.m4 = 20;
+        
+        setTimeout(setSizes, 1500);
+        btn.textContent = "Treinar Classificador 2";
+      } 
+      else if (iter === 2) {
+        // Horizontal split at Y = 50%
+        boundary.style.left = '0';
+        boundary.style.top = '50%';
+        boundary.style.width = '100%';
+        boundary.style.height = '4px';
+
+        bgBlue.style.left = '0'; bgBlue.style.top = '0'; bgBlue.style.width = '100%'; bgBlue.style.height = '50%';
+        bgOrange.style.left = '0'; bgOrange.style.top = '50%'; bgOrange.style.width = '100%'; bgOrange.style.height = '50%';
+
+        desc.innerHTML = `<strong>Classificador 2 (h₂):</strong> Ignorou os pontos pequenos e focou em acertar os pontos gigantes!<br><br>
+        A reta horizontal agora acerta os gigantes (p4, p5) e (m1, m2).<br>
+        Mas errou o (m5) novamente e errou o (p2). Seus pesos vão estourar!`;
+
+        pts.p4 = 15; pts.p5 = 15; pts.m1 = 15; pts.m2 = 15; // now correct
+        pts.m5 = 80; // wrong again! huge
+        pts.p2 = 60; // was 20, now wrong
+        
+        setTimeout(setSizes, 1500);
+        btn.textContent = "Treinar Classificador 3";
+      }
+      else if (iter === 3) {
+        // Vertical split at X = 20%
+        boundary.style.left = '25%';
+        boundary.style.top = '0';
+        boundary.style.width = '4px';
+        boundary.style.height = '100%';
+
+        bgOrange.style.left = '0'; bgOrange.style.top = '0'; bgOrange.style.width = '25%'; bgOrange.style.height = '100%';
+        bgBlue.style.left = '25%'; bgBlue.style.top = '0'; bgBlue.style.width = '75%'; bgBlue.style.height = '100%';
+
+        desc.innerHTML = `<strong>Classificador 3 (h₃):</strong> O modelo 3 foi obrigado a criar uma regra quase exclusiva para isolar o ponto (m5) que estava gigante, mesmo que isso prejudique outros pontos pequenos.<br><br>
+        Ao final, o algoritmo possui 3 "stumps" (regras simples), cada um com um <strong>peso (alpha)</strong> proporcional à sua precisão no treino.`;
+
+        btn.textContent = "Aplicar Modelo (Fronteira Final)";
+      }
+      else if (iter === 4) {
+        // Show final boundary
+        boundary.style.opacity = 0;
+        bgBlue.style.opacity = 0;
+        bgOrange.style.opacity = 0;
+        
+        document.getElementById('final-boundary').style.opacity = 1;
+
+        // reset sizes
+        pts.p1=30; pts.p2=30; pts.p3=30; pts.p4=30; pts.p5=30;
+        pts.m1=30; pts.m2=30; pts.m3=30; pts.m4=30; pts.m5=30;
+        setSizes();
+
+        desc.innerHTML = `<strong>Visão do Modelo (Inferência em Paralelo)</strong><br><br>
+        Durante o uso na vida real, um novo dado passa pelos 3 modelos <strong>simultaneamente</strong>. A previsão de cada modelo é multiplicada pelo seu peso (alpha) aprendido no treino. O resultado é uma Fronteira de Decisão <strong>Não-Linear</strong> altamente complexa que separa os grupos perfeitamente!`;
+
+        btn.disabled = true;
+        btn.textContent = "Fim do Processo";
+      }
+    }
+  </script>
+</body>
+</html>
