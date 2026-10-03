@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 3.2 — SHAP Global (Summary Plot)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .layout-split {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 2rem;
+      margin-top: 1rem;
+    }
+
+    .visual-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    /* Summary Plot */
+    .summary-plot {
+      width: 100%;
+      height: 320px;
+      background: #f8fafc;
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      position: relative;
+      padding: 20px 0 20px 100px; /* Space for Y axis labels */
+    }
+
+    .axis-y {
+      position: absolute;
+      left: 10px;
+      width: 80px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    .axis-x-line {
+      position: absolute;
+      top: 10px; bottom: 30px;
+      left: 55%; /* SHAP value 0 */
+      width: 2px;
+      background: #94a3b8;
+      border-left: 2px dashed #94a3b8;
+    }
+    
+    .axis-x-labels {
+      position: absolute;
+      bottom: 5px;
+      left: 100px; right: 20px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+
+    .feature-row {
+      height: 25%;
+      width: 100%;
+      position: relative;
+    }
+
+    /* Dots */
+    .dot {
+      position: absolute;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      top: 50%;
+      transform: translateY(-50%);
+      opacity: 0.8;
+      animation: scatter 1s ease-out forwards;
+    }
+
+    @keyframes scatter {
+      0% { left: 55%; opacity: 0; }
+    }
+
+    /* Colors */
+    .val-high { background: #ef4444; } /* Red = High feature value */
+    .val-low { background: #3b82f6; } /* Blue = Low feature value */
+
+    /* Legend */
+    .color-legend {
+      position: absolute;
+      top: 10px; right: 10px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+    }
+    .gradient-bar {
+      width: 60px; height: 8px;
+      background: linear-gradient(to right, #3b82f6, #ef4444);
+      border-radius: 4px;
+    }
+
+    .controls-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .desc-box {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .highlight-box {
+      display: block;
+      background: #fef3c7;
+      border-left: 4px solid #f59e0b;
+      padding: 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: #92400e;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Interpretabilidade</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza & Luciano Beylouni</span>
+      <span class="slide-counter">Bloco 3 · Slide 02</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">SHAP Global (Summary Plot)</h1>
+        <p class="slide-subtitle">
+          Se calcularmos os valores SHAP locais para <strong>todos</strong> os dias no dataset de Bike Sharing e plotarmos juntos, obtemos uma visão Global! Conseguimos ver a direção e a força de cada variável no modelo inteiro.
+        </p>
+      </div>
+
+      <div class="layout-split">
+        <!-- Visual Panel -->
+        <div class="visual-panel">
+          <div style="font-weight: 700; color: var(--text-muted); font-size: 0.9rem;">SHAP Summary Plot: Aluguel de Bicicletas</div>
+          
+          <div class="summary-plot">
+            <div class="color-legend">
+              Baixo <div class="gradient-bar"></div> Alto (Valor do Atributo)
+            </div>
+
+            <div class="axis-y">
+              <span>Temperatura</span>
+              <span>Umidade</span>
+              <span>Chuva</span>
+              <span>Vento</span>
+            </div>
+
+            <div class="axis-x-line"></div>
+
+            <!-- Temperature Row (High temp = pushes right/red dots right, blue dots left) -->
+            <div class="feature-row" id="row-temp"></div>
+            
+            <!-- Humidity Row (High humidity = pushes left/red dots left, blue dots right) -->
+            <div class="feature-row" id="row-hum"></div>
+            
+            <!-- Rain Row (High rain/Yes = pushes hard left/red dots left) -->
+            <div class="feature-row" id="row-rain"></div>
+            
+            <!-- Wind Row (High wind = pushes slightly left) -->
+            <div class="feature-row" id="row-wind"></div>
+
+            <div class="axis-x-labels">
+              <span>Impacto Negativo<br>(- Aluguéis)</span>
+              <span style="padding-left:30px;">0</span>
+              <span>Impacto Positivo<br>(+ Aluguéis)</span>
+            </div>
+          </div>
+          
+        </div>
+
+        <!-- Controls Panel -->
+        <div class="controls-panel">
+          
+          <div class="desc-box">
+            <strong>Como ler este gráfico?</strong><br><br>
+            • <strong>Eixo X:</strong> É o impacto na previsão (Valor SHAP). Pontos à direita aumentam o aluguel, à esquerda diminuem.<br>
+            • <strong>Cores:</strong> Vermelho significa que a variável original era alta (ex: estava muito quente). Azul significa que era baixa (ex: frio).
+          </div>
+
+          <div class="highlight-box">
+            <strong>Descobertas (Molnar):</strong><br>
+            1. <strong>Temperatura:</strong> Bolinhas vermelhas (alta temp) estão à direita. O calor aumenta aluguéis.<br>
+            2. <strong>Umidade:</strong> Bolinhas vermelhas (alta umidade) estão à esquerda. Tempo abafado/úmido espanta ciclistas.<br>
+            3. <strong>Chuva:</strong> Tem o maior impacto negativo isolado (bolinhas vermelhas empurradas fortemente para a extrema esquerda).
+          </div>
+
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b3-s01.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <a class="btn-nav" href="index.html">Início do Módulo 🏠</a>
+    </nav>
+  </div>
+
+  <script>
+    // Generate random beeswarm dots
+    function createDots(containerId, behavior) {
+      const container = document.getElementById(containerId);
+      const numDots = 80;
+
+      for (let i = 0; i < numDots; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot';
+        
+        // Randomize feature value (low to high) -> color
+        const isHigh = Math.random() > 0.5;
+        dot.classList.add(isHigh ? 'val-high' : 'val-low');
+
+        // Determine SHAP value based on behavior
+        let shapBase = 55; // center
+        if (behavior === 'temp') {
+          // High temp -> positive SHAP (right), Low temp -> negative SHAP (left)
+          shapBase = isHigh ? (65 + Math.random()*25) : (45 - Math.random()*25);
+        } else if (behavior === 'hum') {
+          // High humidity -> negative SHAP
+          shapBase = isHigh ? (45 - Math.random()*15) : (60 + Math.random()*10);
+        } else if (behavior === 'rain') {
+          // Yes rain (high) -> very negative. No rain (low) -> slightly positive
+          shapBase = isHigh ? (20 + Math.random()*15) : (58 + Math.random()*10);
+        } else if (behavior === 'wind') {
+          // High wind -> slightly negative
+          shapBase = isHigh ? (45 - Math.random()*10) : (56 + Math.random()*8);
+        }
+
+        // Add some random vertical jitter so they look like a swarm
+        const jitter = (Math.random() - 0.5) * 30; // -15px to 15px
+        
+        // Apply final positions
+        // We use animation, so we set the final destination via inline style but handled by CSS animation... wait, CSS animation only animates 'left'. 
+        // We'll set 'left' directly and bypass animation if needed, or set a custom property.
+        dot.style.left = shapBase + '%';
+        dot.style.transform = `translate(-50%, calc(-50% + ${jitter}px))`;
+        
+        // Stagger animation
+        dot.style.animationDelay = (Math.random() * 0.5) + 's';
+
+        container.appendChild(dot);
+      }
+    }
+
+    createDots('row-temp', 'temp');
+    createDots('row-hum', 'hum');
+    createDots('row-rain', 'rain');
+    createDots('row-wind', 'wind');
+
+  </script>
+</body>
+</html>

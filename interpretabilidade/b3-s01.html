@@ -132,7 +132,7 @@
 
     .desc-box {
       margin-top: auto;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       color: var(--text-muted);
       background: #f1f5f9;
       padding: 1rem;
@@ -147,7 +147,7 @@
   <div class="slide-container">
     <header class="slide-header">
       <span class="course-tag">Interpretabilidade</span>
-      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza & Luciano Beylouni</span>
       <span class="slide-counter">Bloco 3 · Slide 01</span>
     </header>
 
@@ -164,23 +164,23 @@
         <div class="visual-panel">
           
           <div style="font-weight: 700; color: var(--text-dim); text-transform: uppercase; font-size: 0.9rem; letter-spacing: 0.05em; text-align: center;">
-            Paciente #140: Risco de Câncer
+            Previsão do Dia #140: Aluguéis de Bicicletas
           </div>
 
           <div class="shap-track">
             
-            <div class="base-line"></div>
-            <div class="base-label">Valor Base (Média Global)<br>30%</div>
+            <div class="base-line" style="left: 45%;"></div>
+            <div class="base-label" style="left: 45%;">Valor Base<br>4500</div>
 
             <!-- Force Blocks -->
-            <div class="force-arrow force-red" id="f1" style="left: 30%; width: 25%;">Idade: 60</div>
-            <div class="force-arrow force-red" id="f2" style="left: 55%; width: 30%;">Fuma: Sim</div>
+            <div class="force-arrow force-red" id="f1" style="left: 45%; width: 15%;">Temp: 22°C</div>
+            <div class="force-arrow force-red" id="f2" style="left: 60%; width: 10%;">Estação: Verão</div>
             
             <!-- Blue force pushes back left -->
-            <div class="force-arrow force-blue" id="f3" style="left: 70%; width: 15%;">Esporte: Sim</div>
+            <div class="force-arrow force-blue" id="f3" style="left: 55%; width: 15%;">Chuva: Sim</div>
 
-            <div class="pred-line" id="p-line"></div>
-            <div class="pred-label" id="p-label">30%</div>
+            <div class="pred-line" id="p-line" style="left: 45%;"></div>
+            <div class="pred-label" id="p-label" style="left: 45%;">4500</div>
           </div>
           
         </div>
@@ -191,22 +191,23 @@
           <div style="font-weight: 700; color: var(--teal); font-size: 0.85rem; text-transform: uppercase;">Adicionar Coalizões:</div>
           
           <button class="btn-action" id="btn1" onclick="step1()">
-            <span>1. Adicionar Idade = 60</span>
-            <span style="font-family:monospace;">+ 25%</span>
+            <span>1. Temp = 22°C</span>
+            <span style="font-family:monospace;">+ 1500</span>
           </button>
           
           <button class="btn-action" id="btn2" onclick="step2()" disabled>
-            <span>2. Adicionar Fuma = Sim</span>
-            <span style="font-family:monospace;">+ 30%</span>
+            <span>2. Estação = Verão</span>
+            <span style="font-family:monospace;">+ 1000</span>
           </button>
           
           <button class="btn-action" id="btn3" onclick="step3()" disabled>
-            <span>3. Adicionar Esporte = Sim</span>
-            <span style="font-family:monospace;">- 15%</span>
+            <span>3. Chuva = Sim</span>
+            <span style="font-family:monospace;">- 1500</span>
           </button>
 
           <div class="desc-box" id="desc">
-            Todo modelo começa em um <strong>Valor Base</strong> (a média matemática de todas as previsões do dataset). O papel da explicabilidade local (SHAP) é entender por que este paciente específico se distanciou dessa média.
+            <strong>Exemplo: Bike Sharing (Molnar)</strong><br>
+            Todo modelo começa em um <strong>Valor Base</strong> (a média de aluguéis diários do dataset). O papel do SHAP é entender por que a previsão <em>deste dia específico</em> se distanciou da média.
           </div>
         </div>
       </div>
@@ -216,8 +217,9 @@
       <a class="btn-nav" href="b2-s02.html">← Anterior</a>
       <div class="nav-dots">
         <span class="dot active"></span>
+        <span class="dot"></span>
       </div>
-      <a class="btn-nav" href="index.html">Início do Módulo 🏠</a>
+      <a class="btn-nav" href="b3-s02.html">Próximo →</a>
     </nav>
   </div>
 
@@ -225,46 +227,46 @@
     function step1() {
       document.getElementById('f1').style.opacity = 1;
       
-      document.getElementById('p-line').style.left = '55%';
-      document.getElementById('p-label').style.left = '55%';
-      document.getElementById('p-label').textContent = '55%';
+      document.getElementById('p-line').style.left = '60%';
+      document.getElementById('p-label').style.left = '60%';
+      document.getElementById('p-label').textContent = '6000';
 
       document.getElementById('btn1').classList.add('active-red');
       document.getElementById('btn1').disabled = true;
       document.getElementById('btn2').disabled = false;
 
-      document.getElementById('desc').innerHTML = "O atributo <strong>Idade = 60</strong> atuou como uma força positiva. Sozinho, ele empurrou o risco do paciente de 30% para 55%.";
+      document.getElementById('desc').innerHTML = "A <strong>Temperatura (22°C)</strong> atuou como uma força positiva muito forte. Agradável para pedalar, ela empurrou a previsão em +1500 aluguéis acima da média.";
     }
 
     function step2() {
       document.getElementById('f2').style.opacity = 1;
       
-      document.getElementById('p-line').style.left = '85%';
-      document.getElementById('p-label').style.left = '85%';
-      document.getElementById('p-label').textContent = '85%';
+      document.getElementById('p-line').style.left = '70%';
+      document.getElementById('p-label').style.left = '70%';
+      document.getElementById('p-label').textContent = '7000';
 
       document.getElementById('btn2').classList.add('active-red');
       document.getElementById('btn2').disabled = true;
       document.getElementById('btn3').disabled = false;
 
-      document.getElementById('desc').innerHTML = "A segunda coalizão: <strong>Fumante = Sim</strong>. Isso agregou mais uma força massiva ao risco (empurrando-o para 85%).";
+      document.getElementById('desc').innerHTML = "A <strong>Estação (Verão)</strong> agregou mais uma força positiva (+1000 aluguéis), empurrando a previsão para 7000.";
     }
 
     function step3() {
       document.getElementById('f3').style.opacity = 1;
       
-      // prediction moves back left by 15% (from 85 to 70)
-      document.getElementById('p-line').style.left = '70%';
-      document.getElementById('p-label').style.left = '70%';
-      document.getElementById('p-label').textContent = '70%';
+      // prediction moves back left to 55%
+      document.getElementById('p-line').style.left = '55%';
+      document.getElementById('p-label').style.left = '55%';
+      document.getElementById('p-label').textContent = '5500';
 
       document.getElementById('btn3').classList.add('active-blue');
       document.getElementById('btn3').disabled = true;
 
       document.getElementById('desc').innerHTML = `
-        A última variável: <strong>Pratica Esportes = Sim</strong>.<br><br>
-        Esta variável atua como uma força negativa (empurrando a previsão para baixo). Ela reduziu o risco final do paciente para 70%.<br><br>
-        <strong>Conclusão:</strong> O SHAP provou que a previsão final de 70% não foi aleatória. Ela é o equilíbrio matemático exato destas 3 forças contra o valor base (30 + 25 + 30 - 15 = 70).
+        A última variável: <strong>Chuva = Sim</strong>.<br><br>
+        Esta variável atua como uma força negativa massiva. Ninguém gosta de pedalar na chuva, então ela reduz a previsão final em -1500.<br><br>
+        <strong>Conclusão:</strong> O SHAP provou que a previsão final de 5500 não foi mágica. Ela é o equilíbrio matemático exato destas 3 forças contra o valor base diário (4500 + 1500 + 1000 - 1500 = 5500).
       `;
     }
   </script>

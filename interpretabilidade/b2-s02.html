@@ -123,25 +123,25 @@
       <div class="title-block">
         <h1 class="slide-title">Partial Dependence Plots (PDP)</h1>
         <p class="slide-subtitle">
-          Qual o efeito marginal isolado de uma variável (ex: Idade) no resultado de uma Caixa-Preta? Para descobrir, nós <strong>forçamos</strong> todas as instâncias do dataset a terem a mesma idade, pedimos pro modelo prever e calculamos a média.
+          Qual o efeito marginal isolado de uma variável (ex: Temperatura) no resultado de uma Caixa-Preta? Para descobrir, nós <strong>forçamos</strong> todas as instâncias do dataset a terem a mesma temperatura, pedimos pro modelo prever (ex: aluguel de bicicletas) e calculamos a média.
         </p>
       </div>
 
       <div class="layout-split">
         <!-- Visual Panel -->
         <div class="visual-panel">
-          <div style="font-weight: 700; color: var(--text-muted); font-size: 0.9rem;">Probabilidade Média de Câncer vs. Idade</div>
+          <div style="font-weight: 700; color: var(--text-muted); font-size: 0.9rem;">Previsão Média de Aluguéis vs. Temperatura (°C)</div>
           <div class="pdp-chart" id="chart-area">
             
-            <svg viewBox="0 0 500 300" style="width:100%; height:100%; position:absolute;">
+            <svg viewBox="0 0 500 300" preserveAspectRatio="none" style="width:100%; height:100%; position:absolute;">
               <!-- Grid -->
               <line x1="0" y1="50" x2="500" y2="50" class="grid-lines" />
               <line x1="0" y1="150" x2="500" y2="150" class="grid-lines" />
               <line x1="0" y1="250" x2="500" y2="250" class="grid-lines" />
               
-              <!-- Curve: Age 20 to 80 
-                   Low risk until 45, then steep climb, then plateaus -->
-              <path class="pdp-curve" d="M0,280 L100,280 L150,270 L200,275 L220,200 L250,100 L300,50 L400,60 L500,60" />
+              <!-- Curve: Temperature 0 to 40 
+                   Low rentals at 0, peaks around 22-25, then drops at 40 -->
+              <path class="pdp-curve" d="M0,280 L125,180 L250,50 L312,40 L375,80 L500,200" />
             </svg>
 
             <!-- Cursor -->
@@ -151,8 +151,8 @@
           </div>
           
           <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-dim); font-family:monospace;">
-            <span>Idade: 20</span>
-            <span>Idade: 80</span>
+            <span>0°C</span>
+            <span>40°C</span>
           </div>
 
         </div>
@@ -162,22 +162,22 @@
           
           <div class="slider-container">
             <div class="slider-label">
-              <span>Forçar Idade para:</span>
-              <span id="slider-val">50 anos</span>
+              <span>Forçar Temperatura para:</span>
+              <span id="slider-val">20°C</span>
             </div>
-            <input type="range" min="20" max="80" value="50" class="slider" id="age-slider" oninput="updatePlot()">
+            <input type="range" min="0" max="40" value="20" class="slider" id="temp-slider" oninput="updatePlot()">
           </div>
 
           <div class="result-box">
-            Prob. Média (Caixa Preta)
-            <div class="result-val" id="prob-val">20.5%</div>
-            <div style="font-size: 0.75rem; color:var(--text-dim);">Marginal Effect</div>
+            Aluguéis Previstos (Média)
+            <div class="result-val" id="rent-val">4500</div>
+            <div style="font-size: 0.75rem; color:var(--text-dim);">Efeito Marginal</div>
           </div>
 
           <div class="desc-box">
-            <strong>Interpretação:</strong><br>
-            A curva mostra claramente que o risco se mantém baixo e estável até cerca de 40 anos, cresce drasticamente na faixa dos 50 anos, e então atinge um platô aos 65 anos.<br><br>
-            Mesmo sendo uma Rede Neural (Caixa Preta), o PDP revelou sua lógica interna para a variável "Idade"!
+            <strong>Interpretação (Exemplo Bike Sharing do livro do Molnar):</strong><br>
+            A curva mostra claramente que o número de aluguéis sobe de forma quase linear à medida que esquenta, atinge um pico ao redor de 25°C, e então começa a cair rapidamente porque fica quente demais para pedalar.<br><br>
+            Mesmo sendo uma Rede Neural (Caixa Preta), o PDP revelou sua lógica interna para a variável "Temperatura"!
           </div>
         </div>
       </div>
@@ -194,46 +194,42 @@
   </div>
 
   <script>
-    // Define the curve points (x: 20 to 80, y: probability 0 to 40%)
+    // Define the curve points (x: 0 to 40°C, y: rentals 0 to 6000)
     // SVG viewBox is 500x300
-    // X maps: 20 -> 0, 80 -> 500
-    // Y maps: 0% -> 300, 40% -> 0
+    // X maps: 0 -> 0, 40 -> 500
+    // Y maps: 0 -> 300, 6000 -> 0 (inverted)
     
-    // Manual mapping for interpolation based on the path
-    // Path: M0,280 L100,280 L150,270 L200,275 L220,200 L250,100 L300,50 L400,60 L500,60
+    // Path: M0,280 L125,180 L250,50 L312,40 L375,80 L500,200
     
     const points = [
-      {x: 20, py: 280},
-      {x: 32, py: 280},
-      {x: 38, py: 270},
-      {x: 44, py: 275},
-      {x: 46.4, py: 200},
-      {x: 50, py: 100},
-      {x: 56, py: 50},
-      {x: 68, py: 60},
-      {x: 80, py: 60}
+      {x: 0, py: 280},
+      {x: 10, py: 180},
+      {x: 20, py: 50},
+      {x: 25, py: 40},
+      {x: 30, py: 80},
+      {x: 40, py: 200}
     ];
 
-    function getInterpolatedY(age) {
+    function getInterpolatedY(temp) {
       for(let i=0; i<points.length-1; i++) {
         let p1 = points[i];
         let p2 = points[i+1];
-        if (age >= p1.x && age <= p2.x) {
+        if (temp >= p1.x && temp <= p2.x) {
           // linear interpolate
-          let t = (age - p1.x) / (p2.x - p1.x);
+          let t = (temp - p1.x) / (p2.x - p1.x);
           return p1.py + t * (p2.py - p1.py);
         }
       }
-      return 60; // default plateau
+      return 200; 
     }
 
     function updatePlot() {
-      const age = parseFloat(document.getElementById('age-slider').value);
-      document.getElementById('slider-val').textContent = age + " anos";
+      const temp = parseFloat(document.getElementById('temp-slider').value);
+      document.getElementById('slider-val').textContent = temp + " °C";
 
       // calc svg coords
-      const pctX = ((age - 20) / 60) * 100;
-      const py = getInterpolatedY(age);
+      const pctX = (temp / 40) * 100;
+      const py = getInterpolatedY(temp);
 
       // position cursor
       const line = document.getElementById('c-line');
@@ -241,13 +237,13 @@
       
       line.style.left = pctX + '%';
       dot.style.left = pctX + '%';
-      dot.style.top = py + 'px';
+      dot.style.top = (py / 300 * 100) + '%';
 
-      // Prob is 300 = 0%, 0 = 40% (inverted)
-      // py = 300 - (prob * 300 / 40) => prob = (300 - py) * 40 / 300
-      let prob = ((300 - py) * 40 / 300).toFixed(1);
+      // Rentals: py=300 -> 0, py=0 -> 6000
+      // rent = (300 - py) * (6000 / 300)
+      let rent = Math.round((300 - py) * 20);
       
-      document.getElementById('prob-val').textContent = prob + "%";
+      document.getElementById('rent-val').textContent = rent;
     }
 
     // Init
