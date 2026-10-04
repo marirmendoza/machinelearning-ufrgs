@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 1.1 — Husky ou Lobo?</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .layout-split {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 2rem;
+      margin-top: 1rem;
+    }
+
+    .visual-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    /* CSS Image representation */
+    .image-frame {
+      width: 320px;
+      height: 320px;
+      border: 4px solid var(--border);
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      background: #f1f5f9;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .snow-bg {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-end;
+      padding: 1rem;
+      font-size: 2rem;
+      transition: all 0.5s ease;
+    }
+
+    .animal {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 8rem;
+      filter: drop-shadow(0 4px 4px rgba(0,0,0,0.2));
+      transition: all 0.5s ease;
+      z-index: 10;
+    }
+
+    /* Heatmap states */
+    .explained .snow-bg {
+      background: linear-gradient(135deg, #fef08a 0%, #ef4444 100%);
+      opacity: 0.8;
+    }
+    .explained .animal {
+      opacity: 0.1;
+      filter: grayscale(100%);
+    }
+
+    .pred-box {
+      font-family: 'Fira Code', monospace;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1d4ed8;
+      background: #dbeafe;
+      padding: 0.8rem 2rem;
+      border-radius: 8px;
+      border: 2px dashed #3b82f6;
+    }
+
+    .controls-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .btn-action {
+      background: var(--teal);
+      color: white;
+      border: none;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-action:hover { background: #047857; transform: translateY(-2px); }
+
+    .desc-box {
+      margin-top: auto;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      background: #f1f5f9;
+      padding: 1.2rem;
+      border-radius: 8px;
+      border-left: 4px solid var(--teal);
+      line-height: 1.5;
+      min-height: 150px;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Interpretabilidade</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 1 · Slide 01</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Por que Interpretabilidade? Husky ou Lobo?</h1>
+        <p class="slide-subtitle">
+          Um modelo de rede neural profunda foi treinado para diferenciar Huskys de Lobos. Ele alcançou <strong>> 90% de acurácia</strong> nos testes. Parecia perfeito, até ser implantado na vida real.
+        </p>
+      </div>
+
+      <div class="layout-split">
+        <!-- Visual Panel -->
+        <div class="visual-panel">
+          
+          <div class="image-frame" id="frame">
+            <div class="snow-bg" id="snow">❄️❄️</div>
+            <div class="animal" id="animal">🐺</div>
+          </div>
+
+          <div class="pred-box">
+            Predição: LOBO (95%)
+          </div>
+          
+        </div>
+
+        <!-- Controls Panel -->
+        <div class="controls-panel">
+          
+          <button class="btn-action" onclick="explainModel()" id="btn-explain">
+            Exigir Explicação (Heatmap)
+          </button>
+
+          <div class="desc-box" id="desc">
+            O modelo é uma <strong>Caixa Preta</strong>. Ele diz que esta imagem contém um Lobo com 95% de certeza. Pela acurácia do modelo em laboratório, você confiaria cegamente?<br><br>
+            Clique no botão acima para descobrir quais pixels o modelo <em>realmente</em> usou para tomar essa decisão.
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="index.html">← Índice</a>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b1-s02.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    function explainModel() {
+      document.getElementById('frame').classList.add('explained');
+      document.getElementById('btn-explain').style.display = 'none';
+
+      document.getElementById('desc').innerHTML = `
+        <strong>Surpresa! Ele era um "Classificador de Neve"!</strong><br><br>
+        Ao usar técnicas de explicabilidade visual (como mapas de calor), os pesquisadores descobriram que a rede neural ignorava completamente o rosto do animal.<br><br>
+        Como a maioria das fotos de lobos no dataset de treino tinha <strong>neve no fundo</strong>, o modelo aprendeu um atalho: "Se tem neve, é Lobo. Se tem grama, é Husky". Sem interpretabilidade, esse modelo falho teria sido colocado em produção!
+      `;
+    }
+  </script>
+</body>
+</html>
