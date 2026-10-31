@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 3.2 — Exemplo Numérico: Restaurantes</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet" />
+  <!-- KaTeX para renderização matemática perfeita -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .math-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+    .math-table th, .math-table td {
+      padding: 0.5rem 0.6rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .math-table th {
+      background: var(--bg3);
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+    }
+    .math-table tr.selected {
+      background: #f0f9ff;
+    }
+    .cell-c1 { color: #0284c7; font-weight: 700; font-family: 'Fira Code', monospace; }
+    .cell-c2 { color: #ea580c; font-weight: 700; font-family: 'Fira Code', monospace; }
+    .badge-win {
+      background: #dcfce7;
+      color: #166534;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    .graph-panel {
+      width: 100%;
+      height: 250px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      position: relative;
+    }
+
+    .formula-display {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 0.85rem 1rem;
+      border-radius: var(--radius-sm);
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+    .formula-display .hl { color: #38bdf8; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Agrupamento & K-Means</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 3 · Slide 02</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Cálculo Numérico Manual: O Caso dos Restaurantes</h1>
+        <p class="slide-subtitle">
+          Exemplo real de aula: 6 clientes avaliaram o <strong>Tempo de Preparo</strong> e a <strong>Qualidade</strong> da refeição (normalizados entre 0 e 1). Desejamos encontrar 2 clusters ($k=2$) com distância euclidiana.
+        </p>
+      </div>
+
+      <div class="content-split">
+        <!-- Esquerda: Tabela de Dados e Distâncias -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>1. Tabela de Instâncias e Distâncias Euclidianas</span>
+            <span class="badge-tag">Iteração #1</span>
+          </div>
+
+          <div style="font-size:0.84rem; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
+            <span>Centróides Iniciais: <strong class="cell-c1">$c_1 = (0.00, 0.29)$</strong> &nbsp;|&nbsp; <strong class="cell-c2">$c_2 = (1.00, 0.71)$</strong></span>
+          </div>
+
+          <table class="math-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Tempo ($x_1$)</th>
+                <th>Qualidade ($x_2$)</th>
+                <th>Dist. $c_1$</th>
+                <th>Dist. $c_2$</th>
+                <th>Atribuição</th>
+              </tr>
+            </thead>
+            <tbody id="table-body">
+              <tr id="row-0" onclick="inspectRow(0)" style="cursor:pointer;">
+                <td class="mono font-bold">atend1</td>
+                <td>0.00</td>
+                <td>0.57</td>
+                <td class="cell-c1">0.28</td>
+                <td>1.01</td>
+                <td><span class="badge-win">Cluster $c_1$</span></td>
+              </tr>
+              <tr id="row-1" onclick="inspectRow(1)" style="cursor:pointer;">
+                <td class="mono font-bold">atend2</td>
+                <td>0.50</td>
+                <td>0.43</td>
+                <td class="cell-c1">0.52</td>
+                <td>0.57</td>
+                <td><span class="badge-win">Cluster $c_1$</span></td>
+              </tr>
+              <tr id="row-2" onclick="inspectRow(2)" style="cursor:pointer;">
+                <td class="mono font-bold">atend3</td>
+                <td>1.00</td>
+                <td>0.00</td>
+                <td>1.04</td>
+                <td class="cell-c2">0.71</td>
+                <td><span class="badge-win" style="background:#ffedd5; color:#c2410c;">Cluster $c_2$</span></td>
+              </tr>
+              <tr id="row-3" onclick="inspectRow(3)" style="cursor:pointer;">
+                <td class="mono font-bold">atend4</td>
+                <td>0.50</td>
+                <td>0.86</td>
+                <td>0.76</td>
+                <td class="cell-c2">0.52</td>
+                <td><span class="badge-win" style="background:#ffedd5; color:#c2410c;">Cluster $c_2$</span></td>
+              </tr>
+              <tr id="row-4" onclick="inspectRow(4)" style="cursor:pointer;">
+                <td class="mono font-bold">atend5</td>
+                <td>1.00</td>
+                <td>1.00</td>
+                <td>1.23</td>
+                <td class="cell-c2">0.29</td>
+                <td><span class="badge-win" style="background:#ffedd5; color:#c2410c;">Cluster $c_2$</span></td>
+              </tr>
+              <tr id="row-5" onclick="inspectRow(5)" style="cursor:pointer;">
+                <td class="mono font-bold">atend6</td>
+                <td>1.00</td>
+                <td>0.57</td>
+                <td>1.04</td>
+                <td class="cell-c2">0.14</td>
+                <td><span class="badge-win" style="background:#ffedd5; color:#c2410c;">Cluster $c_2$</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="formula-display" id="formula-detail">
+            <!-- Detalhe matemático da linha selecionada -->
+          </div>
+
+          <div style="font-size:0.78rem; color:var(--text-dim); text-align:center;">
+            💡 Clique em qualquer linha da tabela para ver a fórmula detalhada da distância euclidiana calculada com KaTeX.
+          </div>
+        </div>
+
+        <!-- Direita: Gráfico Cartesiano & Atualização das Médias -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>2. Visualização Gráfica & Atualização das Médias</span>
+            <div style="display:flex; gap:0.4rem;">
+              <button class="btn btn-secondary" id="btn-update-centroids" onclick="toggleCentroidUpdate()" style="font-size:0.8rem; padding:0.35rem 0.8rem;">
+                🔄 Atualizar Centróides (Passo B)
+              </button>
+            </div>
+          </div>
+
+          <div class="graph-panel">
+            <canvas id="calc-canvas" width="500" height="250"></canvas>
+          </div>
+
+          <div class="highlight-box teal" id="mean-calc-box" style="font-size:0.86rem; line-height:1.6;">
+            <strong>Atualização dos Centróides (Média por Atributo):</strong><br />
+            • <strong class="cell-c1">Novo $c_1^*$</strong> $\{atend1, atend2\}$:<br />
+            &nbsp;&nbsp;$\text{Tempo} = \frac{0.00 + 0.50}{2} = \mathbf{0.25}$ &nbsp;|&nbsp; $\text{Qualidade} = \frac{0.57 + 0.43}{2} = \mathbf{0.50}$<br />
+            • <strong class="cell-c2">Novo $c_2^*$</strong> $\{atend3, atend4, atend5, atend6\}$:<br />
+            &nbsp;&nbsp;$\text{Tempo} = \frac{1.00 + 0.50 + 1.00 + 1.00}{4} = \mathbf{0.88}$ &nbsp;|&nbsp; $\text{Qualidade} = \frac{0.00 + 0.86 + 1.00 + 0.57}{4} = \mathbf{0.61}$
+          </div>
+
+          <div class="insight-box" style="margin-top:auto;">
+            <div class="i-icon">💡</div>
+            <div class="i-text">
+              <strong>Interpretação Semântica dos Clusters:</strong><br />
+              • <strong>Cluster 1 ($c_1$):</strong> Restaurantes de preparo rápido (Tempo $\approx 0.25$) com nota mediana ($0.50$).<br />
+              • <strong>Cluster 2 ($c_2$):</strong> Restaurantes com preparo mais demorado (Tempo $\approx 0.88$) e nota mais alta ($0.61$).
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b3-s01.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b4-s01.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    function triggerMath() {
+      if (typeof renderMathInElement === 'function') {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '\\[', right: '\\]', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false}
+          ],
+          throwOnError: false
+        });
+      }
+    }
+
+    const restaurantData = [
+      { id: 'atend1', t: 0.00, q: 0.57, d1: 0.28, d2: 1.01, c: 1 },
+      { id: 'atend2', t: 0.50, q: 0.43, d1: 0.52, d2: 0.57, c: 1 },
+      { id: 'atend3', t: 1.00, q: 0.00, d1: 1.04, d2: 0.71, c: 2 },
+      { id: 'atend4', t: 0.50, q: 0.86, d1: 0.76, d2: 0.52, c: 2 },
+      { id: 'atend5', t: 1.00, q: 1.00, d1: 1.23, d2: 0.29, c: 2 },
+      { id: 'atend6', t: 1.00, q: 0.57, d1: 1.04, d2: 0.14, c: 2 }
+    ];
+
+    let centroidsInitial = [
+      { t: 0.00, q: 0.29, label: 'c₁', color: '#0284c7' },
+      { t: 1.00, q: 0.71, label: 'c₂', color: '#ea580c' }
+    ];
+
+    let centroidsUpdated = [
+      { t: 0.25, q: 0.50, label: 'c₁*', color: '#0284c7' },
+      { t: 0.88, q: 0.61, label: 'c₂*', color: '#ea580c' }
+    ];
+
+    let isUpdated = false;
+
+    const canvas = document.getElementById('calc-canvas');
+    const ctx = canvas.getContext('2d');
+
+    function toCanvasX(val) { return 50 + val * (canvas.width - 90); }
+    function toCanvasY(val) { return (canvas.height - 40) - val * (canvas.height - 70); }
+
+    function renderCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Eixos
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(40, 20); ctx.lineTo(40, canvas.height - 30);
+      ctx.lineTo(canvas.width - 20, canvas.height - 30);
+      ctx.stroke();
+
+      // Labels dos eixos
+      ctx.fillStyle = '#64748b';
+      ctx.font = 'bold 11px Inter';
+      ctx.textAlign = 'right';
+      ctx.fillText('Qualidade (norm.)', 125, 18);
+      ctx.textAlign = 'right';
+      ctx.fillText('Tempo (norm.) →', canvas.width - 20, canvas.height - 10);
+
+      // Linhas de conexão
+      const activeCentroids = isUpdated ? centroidsUpdated : centroidsInitial;
+      restaurantData.forEach(p => {
+        const c = activeCentroids[p.c - 1];
+        ctx.strokeStyle = c.color + '40';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(toCanvasX(p.t), toCanvasY(p.q));
+        ctx.lineTo(toCanvasX(c.t), toCanvasY(c.q));
+        ctx.stroke();
+      });
+
+      // Pontos dos restaurantes
+      restaurantData.forEach(p => {
+        const px = toCanvasX(p.t);
+        const py = toCanvasY(p.q);
+        const color = p.c === 1 ? '#0284c7' : '#ea580c';
+
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(px, py, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = '#0f172a';
+        ctx.font = '10px Fira Code';
+        ctx.textAlign = 'center';
+        ctx.fillText(p.id, px, py - 9);
+      });
+
+      // Centróides
+      activeCentroids.forEach(c => {
+        const cx = toCanvasX(c.t);
+        const cy = toCanvasY(c.q);
+
+        ctx.fillStyle = c.color;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 11, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 11px Fira Code';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(c.label, cx, cy);
+      });
+    }
+
+    function inspectRow(idx) {
+      document.querySelectorAll('#table-body tr').forEach(r => r.classList.remove('selected'));
+      document.getElementById('row-' + idx).classList.add('selected');
+
+      const p = restaurantData[idx];
+      const detail = document.getElementById('formula-detail');
+
+      detail.innerHTML = `
+        <span class="hl">Cálculo detalhado para ${p.id}:</span><br />
+        $d(${p.id}, c_1) = \\sqrt{(${p.t.toFixed(2)} - 0.00)^2 + (${p.q.toFixed(2)} - 0.29)^2} = \\mathbf{${p.d1.toFixed(2)}}$<br />
+        $d(${p.id}, c_2) = \\sqrt{(${p.t.toFixed(2)} - 1.00)^2 + (${p.q.toFixed(2)} - 0.71)^2} = \\mathbf{${p.d2.toFixed(2)}}$<br />
+        <span style="color:#94a3b8;">Menor distância: ${p.c === 1 ? p.d1.toFixed(2) + ' ($c_1$)' : p.d2.toFixed(2) + ' ($c_2$)'} ➔ Atribuído a <strong>Cluster $c_${p.c}$</strong>!</span>
+      `;
+      triggerMath();
+    }
+
+    function toggleCentroidUpdate() {
+      isUpdated = !isUpdated;
+      const btn = document.getElementById('btn-update-centroids');
+      if (isUpdated) {
+        btn.classList.add('active');
+        btn.innerText = "↩️ Voltar Centróides Iniciais";
+      } else {
+        btn.classList.remove('active');
+        btn.innerText = "🔄 Atualizar Centróides (Passo B)";
+      }
+      renderCanvas();
+    }
+
+    // Inicialização
+    inspectRow(0);
+    renderCanvas();
+    window.addEventListener('load', triggerMath);
+  </script>
+</body>
+</html>

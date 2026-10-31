@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 4.3 — Viés do K-Means & Alternativas</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .dataset-pills {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .d-pill {
+      background: var(--bg3);
+      border: 1.5px solid var(--border);
+      border-radius: 999px;
+      padding: 0.35rem 0.8rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .d-pill:hover, .d-pill.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .canvas-container {
+      width: 100%;
+      height: 280px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      position: relative;
+    }
+
+    .algo-toggle {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      margin-top: 0.4rem;
+    }
+    .compare-table th, .compare-table td {
+      padding: 0.5rem 0.6rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .compare-table th {
+      background: var(--bg3);
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 0.74rem;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Agrupamento & K-Means</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 4 · Slide 03</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Viés Indutivo & Quando o K-Means Falha</h1>
+        <p class="slide-subtitle">
+          O K-means assume que os grupos são <strong>esféricos (convexos)</strong>, de <strong>densidade homogênea</strong> e <strong>tamanhos semelhantes</strong>. Em geometrias complexas, ele falha — abrindo espaço para algoritmos como o <strong>DBSCAN</strong>.
+        </p>
+      </div>
+
+      <div class="content-split">
+        <!-- Esquerda: Simulador de Geometrias Desafiadoras -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>1. Laboratório de Formatos Arbitrários</span>
+            <div class="algo-toggle">
+              <button class="btn active" id="btn-algo-kmeans" onclick="setAlgo('kmeans')" style="font-size:0.78rem; padding:0.25rem 0.65rem;">
+                K-Means (k=2)
+              </button>
+              <button class="btn btn-secondary" id="btn-algo-dbscan" onclick="setAlgo('dbscan')" style="font-size:0.78rem; padding:0.25rem 0.65rem;">
+                DBSCAN (Densidade)
+              </button>
+            </div>
+          </div>
+
+          <div class="dataset-pills">
+            <span style="font-size:0.78rem; font-weight:700; color:var(--text-muted); align-self:center;">Dataset:</span>
+            <button class="d-pill active" id="dp-rings" onclick="selectDataset('rings')">⭕ Anéis Concêntricos</button>
+            <button class="d-pill" id="dp-moons" onclick="selectDataset('moons')">🌙 Duas Luas</button>
+            <button class="d-pill" id="dp-blobs" onclick="selectDataset('blobs')">☁️ Blobs Esféricos</button>
+          </div>
+
+          <div class="canvas-container">
+            <canvas id="bias-canvas" width="500" height="280"></canvas>
+          </div>
+
+          <div id="verdict-box" class="highlight-box rose" style="font-size:0.86rem;">
+            <!-- Texto dinâmico de veredito -->
+          </div>
+        </div>
+
+        <!-- Direita: Quadro Comparativo de Limitações -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>2. K-Means vs. DBSCAN vs. Hierárquico</span>
+            <span class="badge-tag">Síntese de Modelos</span>
+          </div>
+
+          <table class="compare-table">
+            <thead>
+              <tr>
+                <th>Critério</th>
+                <th>K-Means</th>
+                <th>DBSCAN</th>
+                <th>Hierárquico</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Formato dos Grupos</strong></td>
+                <td>Apenas esféricos / convexos</td>
+                <td><span style="color:var(--emerald); font-weight:700;">Formatos arbitrários</span></td>
+                <td>Flexível (via linkage)</td>
+              </tr>
+              <tr>
+                <td><strong>Exige definir k?</strong></td>
+                <td>Sim ($k$ obrigatório)</td>
+                <td><span style="color:var(--emerald); font-weight:700;">Não</span> (usa $\epsilon$, MinPts)</td>
+                <td>Não (corta na altura)</td>
+              </tr>
+              <tr>
+                <td><strong>Robusto a Outliers?</strong></td>
+                <td>Sensível (arrasta média)</td>
+                <td><span style="color:var(--emerald); font-weight:700;">Sim</span> (isola como ruído)</td>
+                <td>Moderado</td>
+              </tr>
+              <tr>
+                <td><strong>Complexidade Computacional</strong></td>
+                <td><span style="color:var(--emerald); font-weight:700;">Rápido: $O(N \cdot k \cdot I)$</span></td>
+                <td>$O(N \log N)$ a $O(N^2)$</td>
+                <td>Lento: $O(N^2)$ a $O(N^3)$</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="highlight-box cyan" style="font-size:0.85rem; margin-top:0.4rem;">
+            <strong>Quando usar K-Means?</strong><br />
+            Para grandes volumes de dados onde a velocidade é prioridade e as instâncias tendem a formar clusters compactos e unimodais (ex.: segmentação preliminar de clientes, quantização de cores em imagens).
+          </div>
+
+          <div class="insight-box" style="margin-top:auto;">
+            <div class="i-icon">💡</div>
+            <div class="i-text">
+              <strong>Parabéns!</strong> Você concluiu toda a jornada de Aprendizado Não-Supervisionado: do entendimento de feedback nulo e tarefas descritivas até a matemática e limites práticos do K-Means!
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b4-s02.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <a class="btn-nav" href="index.html">Concluir Trilha ✓</a>
+    </nav>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('bias-canvas');
+    const ctx = canvas.getContext('2d');
+
+    let currentDataset = 'rings';
+    let currentAlgo = 'kmeans';
+
+    const colors = ['#0284c7', '#ea580c', '#10b981', '#7c3aed'];
+
+    // Geradores de Datasets
+    let currentPoints = [];
+
+    function generateRings() {
+      const pts = [];
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+
+      // Círculo interno (Cluster 1)
+      for (let i = 0; i < 45; i++) {
+        const th = Math.random() * 2 * Math.PI;
+        const r = 25 + Math.random() * 22;
+        pts.push({ x: cx + r * Math.cos(th), y: cy + r * Math.sin(th), trueGroup: 0 });
+      }
+
+      // Círculo externo (Cluster 2)
+      for (let i = 0; i < 75; i++) {
+        const th = Math.random() * 2 * Math.PI;
+        const r = 85 + Math.random() * 25;
+        pts.push({ x: cx + r * Math.cos(th), y: cy + r * Math.sin(th), trueGroup: 1 });
+      }
+      return pts;
+    }
+
+    function generateMoons() {
+      const pts = [];
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+
+      // Lua Superior
+      for (let i = 0; i < 55; i++) {
+        const th = (i / 55) * Math.PI;
+        const r = 65 + (Math.random() - 0.5) * 16;
+        pts.push({ x: cx - 45 + r * Math.cos(th), y: cy - 25 - r * Math.sin(th), trueGroup: 0 });
+      }
+
+      // Lua Inferior
+      for (let i = 0; i < 55; i++) {
+        const th = (i / 55) * Math.PI;
+        const r = 65 + (Math.random() - 0.5) * 16;
+        pts.push({ x: cx + 45 - r * Math.cos(th), y: cy + 25 + r * Math.sin(th), trueGroup: 1 });
+      }
+      return pts;
+    }
+
+    function generateBlobs() {
+      const pts = [];
+      const c1 = { x: 150, y: 140 };
+      const c2 = { x: 350, y: 140 };
+
+      for (let i = 0; i < 50; i++) {
+        const r = Math.sqrt(-2 * Math.log(Math.random() || 0.01)) * 28;
+        const th = Math.random() * 2 * Math.PI;
+        pts.push({ x: c1.x + r * Math.cos(th), y: c1.y + r * Math.sin(th), trueGroup: 0 });
+      }
+
+      for (let i = 0; i < 50; i++) {
+        const r = Math.sqrt(-2 * Math.log(Math.random() || 0.01)) * 28;
+        const th = Math.random() * 2 * Math.PI;
+        pts.push({ x: c2.x + r * Math.cos(th), y: c2.y + r * Math.sin(th), trueGroup: 1 });
+      }
+      return pts;
+    }
+
+    function selectDataset(ds) {
+      currentDataset = ds;
+      document.querySelectorAll('.d-pill').forEach(p => p.classList.remove('active'));
+      document.getElementById('dp-' + ds).classList.add('active');
+
+      if (ds === 'rings') currentPoints = generateRings();
+      else if (ds === 'moons') currentPoints = generateMoons();
+      else currentPoints = generateBlobs();
+
+      updateSimulation();
+    }
+
+    function setAlgo(algo) {
+      currentAlgo = algo;
+      document.getElementById('btn-algo-kmeans').classList.toggle('active', algo === 'kmeans');
+      document.getElementById('btn-algo-kmeans').classList.toggle('btn-secondary', algo !== 'kmeans');
+      document.getElementById('btn-algo-dbscan').classList.toggle('active', algo === 'dbscan');
+      document.getElementById('btn-algo-dbscan').classList.toggle('btn-secondary', algo !== 'dbscan');
+
+      updateSimulation();
+    }
+
+    function updateSimulation() {
+      const verdict = document.getElementById('verdict-box');
+
+      if (currentAlgo === 'kmeans') {
+        if (currentDataset === 'rings') {
+          // K-means corta os anéis ao meio verticalmente
+          currentPoints.forEach(p => {
+            p.cluster = p.x < canvas.width / 2 ? 0 : 1;
+          });
+          verdict.className = 'highlight-box rose';
+          verdict.innerHTML = '❌ <strong>Falha do K-Means:</strong> O algoritmo cortou os círculos como uma pizza! Ele não compreende a topologia aninhada (não-convexa) e fundiu partes do anel externo com o miolo interno.';
+        } else if (currentDataset === 'moons') {
+          // K-means corta as luas no meio
+          currentPoints.forEach(p => {
+            p.cluster = p.x < canvas.width / 2 ? 0 : 1;
+          });
+          verdict.className = 'highlight-box rose';
+          verdict.innerHTML = '❌ <strong>Falha do K-Means:</strong> O algoritmo fatiou as duas luas ao meio porque tentou traçar uma linha reta divisória de Voronoi entre dois centros pontuais.';
+        } else {
+          // Blobs esféricos (K-means tem sucesso)
+          currentPoints.forEach(p => {
+            p.cluster = p.trueGroup;
+          });
+          verdict.className = 'highlight-box emerald';
+          verdict.innerHTML = '✅ <strong>Sucesso do K-Means!</strong> Quando os clusters são convexos e esféricos, o K-means atinge a partição ótima com altíssima velocidade e simplicidade.';
+        }
+      } else {
+        // DBSCAN
+        currentPoints.forEach(p => {
+          p.cluster = p.trueGroup;
+        });
+        verdict.className = 'highlight-box emerald';
+        verdict.innerHTML = '🌟 <strong>Sucesso do DBSCAN (Densidade):</strong> Por conectar pontos adjacentes em regiões densas contínuas, o DBSCAN descobre a forma exata dos anéis e luas com perfeição!';
+      }
+
+      render();
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      currentPoints.forEach(p => {
+        ctx.fillStyle = colors[p.cluster];
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      });
+
+      // Se for K-means, desenhar os centróides aproximados
+      if (currentAlgo === 'kmeans') {
+        const c1pts = currentPoints.filter(p => p.cluster === 0);
+        const c2pts = currentPoints.filter(p => p.cluster === 1);
+
+        if (c1pts.length && c2pts.length) {
+          const c1x = c1pts.reduce((acc, p) => acc + p.x, 0) / c1pts.length;
+          const c1y = c1pts.reduce((acc, p) => acc + p.y, 0) / c1pts.length;
+          const c2x = c2pts.reduce((acc, p) => acc + p.x, 0) / c2pts.length;
+          const c2y = c2pts.reduce((acc, p) => acc + p.y, 0) / c2pts.length;
+
+          drawCentroid(c1x, c1y, colors[0], 'c₁');
+          drawCentroid(c2x, c2y, colors[1], 'c₂');
+        }
+      }
+    }
+
+    function drawCentroid(cx, cy, color, label) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 10px Fira Code';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(label, cx, cy);
+    }
+
+    function triggerMath() {
+      if (typeof renderMathInElement === 'function') {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '\\[', right: '\\]', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false}
+          ],
+          throwOnError: false
+        });
+      }
+    }
+
+    // Inicialização
+    selectDataset('rings');
+    window.addEventListener('load', triggerMath);
+  </script>
+</body>
+</html>
