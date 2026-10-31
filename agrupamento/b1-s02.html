@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 1.2 — Agrupamento vs. Associação</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .split-tasks {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem;
+    }
+    .task-card {
+      background: var(--bg2);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      transition: all 0.2s;
+    }
+    .task-card:hover {
+      border-color: var(--primary);
+    }
+    .task-header {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+    }
+    .task-icon {
+      font-size: 2rem;
+      background: var(--primary-lt);
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+    }
+    .task-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .task-sub {
+      font-size: 0.8rem;
+      color: var(--primary);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Market Basket UI */
+    .basket-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.6rem;
+    }
+    .basket-item {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 0.8rem;
+      font-size: 0.85rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .basket-item:hover {
+      background: var(--primary-lt);
+      border-color: var(--primary);
+    }
+    .basket-item.checked {
+      background: #dcfce7;
+      border-color: #22c55e;
+      font-weight: 600;
+    }
+
+    .rule-box {
+      background: #0f172a;
+      color: #38bdf8;
+      border-radius: var(--radius-sm);
+      padding: 0.9rem 1.1rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.88rem;
+      line-height: 1.6;
+    }
+    .rule-box .kw { color: #f43f5e; font-weight: 700; }
+    .rule-box .val { color: #4ade80; }
+    .rule-box .num { color: #fbbf24; }
+
+    /* Cluster mini demo */
+    .cluster-demo-box {
+      height: 170px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      position: relative;
+      overflow: hidden;
+    }
+    .c-point {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: all 0.4s ease;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Agrupamento & K-Means</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 1 · Slide 02</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Agrupamento vs. Associação: Instâncias ou Atributos?</h1>
+        <p class="slide-subtitle">
+          Na ausência de um atributo alvo, o que queremos investigar? Buscamos relações entre as <strong>instâncias (linhas)</strong> ou associações entre os <strong>atributos (colunas)</strong>?
+        </p>
+      </div>
+
+      <div class="split-tasks">
+        <!-- Tarefa 1: Agrupamento (Clustering) -->
+        <div class="task-card">
+          <div class="task-header">
+            <div class="task-icon">🫧</div>
+            <div>
+              <div class="task-sub">Relações entre Instâncias</div>
+              <div class="task-title">Análise de Agrupamentos (Clustering)</div>
+            </div>
+          </div>
+
+          <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5;">
+            <strong>Pergunta central:</strong> <em>"Existem subgrupos naturais nestes dados em função de similaridades entre seus atributos?"</em>
+          </p>
+
+          <div class="cluster-demo-box" id="cluster-preview">
+            <!-- Renderizado via JS -->
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:0.8rem; font-weight:700; color:var(--text-dim);">DEMONSTRAÇÃO DE SUBGRUPOS</span>
+            <button class="btn btn-secondary" onclick="regenerateClusters()" style="font-size:0.78rem; padding:0.3rem 0.8rem;">
+              🔄 Re-simular Instâncias
+            </button>
+          </div>
+
+          <div class="highlight-box cyan" style="font-size: 0.88rem;">
+            <strong>Foco nas Linhas (Exemplos):</strong> Queremos que instâncias similares fiquem no mesmo grupo, e instâncias dissimilares fiquem em grupos distintos.<br />
+            <strong>Exemplos:</strong> K-means, DBSCAN, Agrupamento Hierárquico.
+          </div>
+        </div>
+
+        <!-- Tarefa 2: Regras de Associação -->
+        <div class="task-card">
+          <div class="task-header">
+            <div class="task-icon" style="background: #fef3c7; color: #b45309;">🛒</div>
+            <div>
+              <div class="task-sub" style="color: #b45309;">Relações entre Atributos</div>
+              <div class="task-title">Mineração de Padrões Frequentes</div>
+            </div>
+          </div>
+
+          <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5;">
+            <strong>Pergunta central:</strong> <em>"A presença do atributo A implica na presença do atributo C no formato <strong>Se A Então C</strong>?"</em>
+          </p>
+
+          <div style="font-size:0.82rem; font-weight:700; color:var(--text-muted); margin-bottom:-0.3rem;">
+            SELECIONE OS ITENS NO CARRINHO (MARKET BASKET):
+          </div>
+
+          <div class="basket-grid">
+            <div class="basket-item checked" id="item-diapers" onclick="toggleItem('diapers')">
+              <span>👶 Fraldas (Diapers)</span>
+              <span id="check-diapers">✓</span>
+            </div>
+            <div class="basket-item checked" id="item-beer" onclick="toggleItem('beer')">
+              <span>🍺 Cerveja (Beer)</span>
+              <span id="check-beer">✓</span>
+            </div>
+            <div class="basket-item" id="item-bread" onclick="toggleItem('bread')">
+              <span>🍞 Pão (Bread)</span>
+              <span id="check-bread"></span>
+            </div>
+            <div class="basket-item" id="item-milk" onclick="toggleItem('milk')">
+              <span>🥛 Leite (Milk)</span>
+              <span id="check-milk"></span>
+            </div>
+          </div>
+
+          <div class="rule-box" id="rule-display">
+            <span class="kw">REGRA MINERADA:</span><br />
+            <span class="kw">SE</span> { <span class="val">Fraldas</span> } 
+            <span class="kw">ENTÃO</span> { <span class="val">Cerveja</span> }<br />
+            <span style="color:#94a3b8; font-size:0.8rem;">
+              Suporte = <span class="num">35%</span> &nbsp;|&nbsp; Confiança = <span class="num">82%</span> &nbsp;|&nbsp; Lift = <span class="num">2.4</span>
+            </span>
+          </div>
+
+          <div class="highlight-box amber" style="font-size: 0.88rem;">
+            <strong>Foco nas Colunas (Itens/Atributos):</strong> Identifica coocorrências frequentes em transações.<br />
+            <strong>Exemplos:</strong> Algoritmo Apriori, FP-Growth, Recomendação de Cesta de Compras.
+          </div>
+        </div>
+      </div>
+
+      <div class="insight-box" style="margin-top: 0.4rem;">
+        <div class="i-icon">💡</div>
+        <div class="i-text">
+          <strong>Resumo da Dicotomia Não-Supervisionada:</strong><br />
+          Se você precisa segmentar clientes em <em>Personas</em> baseadas no comportamento geral $\rightarrow$ <strong>Agrupamento (Clustering)</strong>.<br />
+          Se você precisa saber quais produtos são comprados juntos no carrinho $\rightarrow$ <strong>Regras de Associação</strong>.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b1-s01.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b2-s01.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    // Visualização de Agrupamento
+    function regenerateClusters() {
+      const box = document.getElementById('cluster-preview');
+      box.innerHTML = '';
+      
+      const clusters = [
+        { cx: 30, cy: 35, color: '#0284c7', count: 18 },
+        { cx: 70, cy: 30, color: '#7c3aed', count: 16 },
+        { cx: 50, cy: 75, color: '#0d9488', count: 20 }
+      ];
+
+      clusters.forEach(c => {
+        for (let i = 0; i < c.count; i++) {
+          const pt = document.createElement('div');
+          pt.className = 'c-point';
+          // Distribuição Gaussiana simples
+          const r = Math.sqrt(-2 * Math.log(Math.random() || 0.01)) * 6.5;
+          const theta = Math.random() * 2 * Math.PI;
+          const x = c.cx + r * Math.cos(theta);
+          const y = c.cy + r * Math.sin(theta);
+
+          pt.style.left = Math.max(5, Math.min(95, x)) + '%';
+          pt.style.top = Math.max(5, Math.min(95, y)) + '%';
+          pt.style.background = c.color;
+          pt.style.boxShadow = `0 0 6px ${c.color}66`;
+          box.appendChild(pt);
+        }
+      });
+    }
+
+    // Regras de Associação
+    const activeItems = {
+      diapers: true,
+      beer: true,
+      bread: false,
+      milk: false
+    };
+
+    function toggleItem(key) {
+      activeItems[key] = !activeItems[key];
+      const el = document.getElementById('item-' + key);
+      const chk = document.getElementById('check-' + key);
+
+      if (activeItems[key]) {
+        el.classList.add('checked');
+        chk.innerText = '✓';
+      } else {
+        el.classList.remove('checked');
+        chk.innerText = '';
+      }
+
+      updateRules();
+    }
+
+    function updateRules() {
+      const display = document.getElementById('rule-display');
+      const hasDiapers = activeItems.diapers;
+      const hasBeer = activeItems.beer;
+      const hasBread = activeItems.bread;
+      const hasMilk = activeItems.milk;
+
+      if (hasDiapers && hasBeer && !hasBread && !hasMilk) {
+        display.innerHTML = `
+          <span class="kw">REGRA CLÁSSICA ENCONTRADA:</span><br />
+          <span class="kw">SE</span> { <span class="val">Fraldas</span> } 
+          <span class="kw">ENTÃO</span> { <span class="val">Cerveja</span> }<br />
+          <span style="color:#94a3b8; font-size:0.8rem;">
+            Suporte = <span class="num">35%</span> &nbsp;|&nbsp; Confiança = <span class="num">82%</span> &nbsp;|&nbsp; Lift = <span class="num">2.4</span> (Forte correlação!)
+          </span>
+        `;
+      } else if (hasBread && hasMilk) {
+        display.innerHTML = `
+          <span class="kw">PADRÃO FREQUENTE DE CAFÉ DA MANHÃ:</span><br />
+          <span class="kw">SE</span> { <span class="val">Pão</span> } 
+          <span class="kw">ENTÃO</span> { <span class="val">Leite</span> }<br />
+          <span style="color:#94a3b8; font-size:0.8rem;">
+            Suporte = <span class="num">48%</span> &nbsp;|&nbsp; Confiança = <span class="num">76%</span> &nbsp;|&nbsp; Lift = <span class="num">1.8</span>
+          </span>
+        `;
+      } else if (hasDiapers && hasBread) {
+        display.innerHTML = `
+          <span class="kw">ITEMSET FRACO / INDEPENDENTE:</span><br />
+          <span class="kw">SE</span> { <span class="val">Fraldas</span> } 
+          <span class="kw">ENTÃO</span> { <span class="val">Pão</span> }<br />
+          <span style="color:#94a3b8; font-size:0.8rem;">
+            Suporte = <span class="num">8%</span> &nbsp;|&nbsp; Confiança = <span class="num">22%</span> &nbsp;|&nbsp; Lift = <span class="num">0.9</span> (Independência estatística)
+          </span>
+        `;
+      } else {
+        const selected = Object.keys(activeItems).filter(k => activeItems[k]);
+        display.innerHTML = `
+          <span class="kw">CONJUNTO DE ITENS SELECIONADO:</span> { <span class="val">${selected.join(', ') || 'Nenhum'}</span> }<br />
+          <span style="color:#94a3b8; font-size:0.8rem;">
+            Adicione mais itens como Fraldas + Cerveja ou Pão + Leite para minerar regras com alto suporte e confiança!
+          </span>
+        `;
+      }
+    }
+
+    function triggerMath() {
+      if (typeof renderMathInElement === 'function') {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '\\[', right: '\\]', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false}
+          ],
+          throwOnError: false
+        });
+      }
+    }
+
+    // Inicialização
+    regenerateClusters();
+    updateRules();
+    window.addEventListener('load', triggerMath);
+  </script>
+</body>
+</html>

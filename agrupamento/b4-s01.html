@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 4.1 — O Método do Cotovelo (Elbow Method)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .k-selector {
+      display: flex;
+      gap: 0.4rem;
+      align-items: center;
+    }
+    .k-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      background: var(--bg3);
+      font-weight: 700;
+      font-size: 0.9rem;
+      font-family: 'Fira Code', monospace;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .k-btn:hover { border-color: var(--primary); }
+    .k-btn.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+    }
+    .k-btn.elbow {
+      border: 2px dashed #10b981;
+    }
+
+    .elbow-chart-box {
+      width: 100%;
+      height: 250px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      position: relative;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Agrupamento & K-Means</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 4 · Slide 01</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Quantos Grupos Existem? O Método do Cotovelo</h1>
+        <p class="slide-subtitle">
+          O K-means visa minimizar a dissimilaridade intracluster (SSE / WCSS). Como $SSE \to 0$ quando $k \to N$, usamos a <strong>curva do cotovelo</strong> para encontrar o balanço ideal entre simplicidade e erro.
+        </p>
+      </div>
+
+      <div class="content-split">
+        <!-- Esquerda: Agrupamento Visual com o K Selecionado -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>1. Visualização dos Clusters no Espaço Amostral</span>
+            <div class="k-selector">
+              <span style="font-size:0.8rem; font-weight:700; color:var(--text-muted); margin-right:0.2rem;">Escolha k:</span>
+              <button class="k-btn" id="kb-1" onclick="selectK(1)">1</button>
+              <button class="k-btn" id="kb-2" onclick="selectK(2)">2</button>
+              <button class="k-btn active elbow" id="kb-3" onclick="selectK(3)">3</button>
+              <button class="k-btn" id="kb-4" onclick="selectK(4)">4</button>
+              <button class="k-btn" id="kb-5" onclick="selectK(5)">5</button>
+              <button class="k-btn" id="kb-6" onclick="selectK(6)">6</button>
+            </div>
+          </div>
+
+          <div class="vis-container" style="height:250px; min-height:unset;">
+            <canvas id="scatter-canvas" width="500" height="250"></canvas>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span id="k-info" class="mono" style="font-size:0.85rem; font-weight:700; color:var(--primary);">
+              Agrupamento para k = 3
+            </span>
+            <span id="current-sse" class="mono" style="font-size:0.85rem; font-weight:700; color:var(--emerald);">
+              SSE = 18.4
+            </span>
+          </div>
+
+          <div class="highlight-box cyan" style="font-size:0.86rem;">
+            <strong>A Armadilha do SSE Mínimo:</strong> Se aumentarmos $k$ até o número total de instâncias ($k=N$), cada ponto será seu próprio centróide e o SSE será exatamente $0$. Mas isso não resume nada! Buscamos o maior ganho de informação com o menor número de grupos.
+          </div>
+        </div>
+
+        <!-- Direita: A Curva do Cotovelo -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>2. Curva SSE vs. Número de Clusters (k)</span>
+            <span class="badge-tag">Elbow Method</span>
+          </div>
+
+          <div class="elbow-chart-box">
+            <canvas id="elbow-canvas" width="500" height="250"></canvas>
+          </div>
+
+          <div class="formula-card" style="font-size:0.82rem;">
+            <strong>Função Objetivo (Within-Cluster Sum of Squares):</strong>
+            <div style="color:var(--primary); font-size:0.95rem; margin-top:0.2rem;">
+              $$SSE = \sum_{j=1}^k \sum_{x \in C_j} ||x - \mu_j||^2$$
+            </div>
+            <span style="font-size:0.75rem; color:var(--text-dim); margin-top:0.2rem;">
+              Mede a variância intracluster agregada: a soma das distâncias ao quadrado de cada ponto ao seu respectivo centróide.
+            </span>
+          </div>
+
+          <div class="highlight-box emerald" style="font-size:0.86rem;">
+            <strong>O "Cotovelo" em k=3:</strong> Note a queda abrupta de $k=1 \to k=2 \to k=3$. A partir de $k=3$, adicionar mais grupos reduz o SSE em taxas decrescentes mínimas. Esse "joelho" ou "cotovelo" indica a quantidade natural de subpopulações!
+          </div>
+
+          <div class="insight-box" style="margin-top:auto;">
+            <div class="i-icon">💡</div>
+            <div class="i-text">
+              <strong>Em Casos Reais:</strong> Quando a curva do cotovelo é ambígua ou suave, complementa-se a análise com o <strong>Coeficiente de Silhueta (Silhouette Score)</strong> ou índices de Davies-Bouldin.
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b3-s02.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b4-s02.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    const clusterColors = ['#0284c7', '#ea580c', '#10b981', '#7c3aed', '#ec4899', '#f59e0b'];
+    const sseValues = [142.5, 68.2, 18.4, 13.8, 10.5, 8.2]; // Valores de SSE pré-computados para 3 clusters naturais
+
+    let currentK = 3;
+
+    // Gerar 3 nuvens naturais de dados sintéticos
+    const syntheticPoints = [];
+    const trueCenters = [
+      { x: 120, y: 80, count: 25 },
+      { x: 380, y: 70, count: 25 },
+      { x: 250, y: 190, count: 30 }
+    ];
+
+    trueCenters.forEach((c, cIdx) => {
+      for (let i = 0; i < c.count; i++) {
+        const r = Math.sqrt(-2 * Math.log(Math.random() || 0.01)) * 26;
+        const th = Math.random() * 2 * Math.PI;
+        syntheticPoints.push({
+          x: c.x + r * Math.cos(th),
+          y: c.y + r * Math.sin(th),
+          trueC: cIdx
+        });
+      }
+    });
+
+    const scatterCanvas = document.getElementById('scatter-canvas');
+    const sCtx = scatterCanvas.getContext('2d');
+
+    const elbowCanvas = document.getElementById('elbow-canvas');
+    const eCtx = elbowCanvas.getContext('2d');
+
+    function selectK(k) {
+      currentK = k;
+      document.querySelectorAll('.k-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('kb-' + k).classList.add('active');
+
+      document.getElementById('k-info').innerText = `Agrupamento para k = ${k}`;
+      document.getElementById('current-sse').innerText = `SSE = ${sseValues[k - 1].toFixed(1)}`;
+
+      renderScatter();
+      renderElbowChart();
+    }
+
+    function renderScatter() {
+      sCtx.clearRect(0, 0, scatterCanvas.width, scatterCanvas.height);
+
+      // K-means simplificado determinístico para visualização consistente do K
+      let centroids = [];
+      if (currentK === 1) {
+        centroids = [{ x: 250, y: 125, color: clusterColors[0] }];
+      } else if (currentK === 2) {
+        centroids = [
+          { x: 130, y: 90, color: clusterColors[0] },
+          { x: 340, y: 150, color: clusterColors[1] }
+        ];
+      } else if (currentK === 3) {
+        centroids = [
+          { x: 120, y: 80, color: clusterColors[0] },
+          { x: 380, y: 70, color: clusterColors[1] },
+          { x: 250, y: 190, color: clusterColors[2] }
+        ];
+      } else {
+        // k >= 4: divide um dos clusters
+        centroids = [
+          { x: 120, y: 80, color: clusterColors[0] },
+          { x: 380, y: 70, color: clusterColors[1] },
+          { x: 220, y: 180, color: clusterColors[2] },
+          { x: 280, y: 200, color: clusterColors[3] }
+        ];
+        if (currentK >= 5) centroids.push({ x: 350, y: 90, color: clusterColors[4] });
+        if (currentK >= 6) centroids.push({ x: 100, y: 100, color: clusterColors[5] });
+      }
+
+      // Atribuir e desenhar pontos
+      syntheticPoints.forEach(p => {
+        let bestDist = Infinity;
+        let bestIdx = 0;
+        centroids.forEach((c, idx) => {
+          const d = Math.hypot(p.x - c.x, p.y - c.y);
+          if (d < bestDist) { bestDist = d; bestIdx = idx; }
+        });
+
+        sCtx.fillStyle = centroids[bestIdx].color;
+        sCtx.beginPath();
+        sCtx.arc(p.x, p.y, 4.5, 0, Math.PI * 2);
+        sCtx.fill();
+        sCtx.strokeStyle = '#ffffff';
+        sCtx.lineWidth = 1;
+        sCtx.stroke();
+      });
+
+      // Desenhar Centróides
+      centroids.forEach((c, idx) => {
+        sCtx.fillStyle = c.color;
+        sCtx.beginPath();
+        sCtx.arc(c.x, c.y, 10, 0, Math.PI * 2);
+        sCtx.fill();
+        sCtx.strokeStyle = '#ffffff';
+        sCtx.lineWidth = 2.5;
+        sCtx.stroke();
+
+        sCtx.fillStyle = '#ffffff';
+        sCtx.font = 'bold 10px Fira Code';
+        sCtx.textAlign = 'center';
+        sCtx.textBaseline = 'middle';
+        sCtx.fillText(`c${idx+1}`, c.x, c.y);
+      });
+    }
+
+    function renderElbowChart() {
+      eCtx.clearRect(0, 0, elbowCanvas.width, elbowCanvas.height);
+
+      const padX = 55;
+      const padY = 35;
+      const w = elbowCanvas.width - padX - 30;
+      const h = elbowCanvas.height - padY - 35;
+
+      // Eixos
+      eCtx.strokeStyle = '#cbd5e1';
+      eCtx.lineWidth = 1.5;
+      eCtx.beginPath();
+      eCtx.moveTo(padX, 20);
+      eCtx.lineTo(padX, elbowCanvas.height - padY);
+      eCtx.lineTo(elbowCanvas.width - 20, elbowCanvas.height - padY);
+      eCtx.stroke();
+
+      // Labels dos eixos
+      eCtx.fillStyle = '#64748b';
+      eCtx.font = 'bold 11px Inter';
+      eCtx.textAlign = 'right';
+      eCtx.fillText('SSE (WCSS) ↑', padX + 20, 16);
+      eCtx.textAlign = 'right';
+      eCtx.fillText('k (Clusters) →', elbowCanvas.width - 20, elbowCanvas.height - 10);
+
+      // Coordenadas dos pontos na curva
+      const maxSSE = 150;
+      const coords = sseValues.map((val, idx) => {
+        const x = padX + (idx / 5) * w;
+        const y = (elbowCanvas.height - padY) - (val / maxSSE) * h;
+        return { x, y, k: idx + 1, val };
+      });
+
+      // Área sombreada sob a curva
+      eCtx.fillStyle = 'rgba(2, 132, 199, 0.08)';
+      eCtx.beginPath();
+      eCtx.moveTo(coords[0].x, elbowCanvas.height - padY);
+      coords.forEach(pt => eCtx.lineTo(pt.x, pt.y));
+      eCtx.lineTo(coords[coords.length - 1].x, elbowCanvas.height - padY);
+      eCtx.closePath();
+      eCtx.fill();
+
+      // Linha da curva
+      eCtx.strokeStyle = '#0284c7';
+      eCtx.lineWidth = 3;
+      eCtx.beginPath();
+      coords.forEach((pt, i) => {
+        if (i === 0) eCtx.moveTo(pt.x, pt.y);
+        else eCtx.lineTo(pt.x, pt.y);
+      });
+      eCtx.stroke();
+
+      // Anotação do "Cotovelo" em k=3
+      const elbowPt = coords[2];
+      eCtx.strokeStyle = '#10b981';
+      eCtx.lineWidth = 1.5;
+      eCtx.setLineDash([3, 3]);
+      eCtx.beginPath();
+      eCtx.arc(elbowPt.x, elbowPt.y, 16, 0, Math.PI * 2);
+      eCtx.stroke();
+      eCtx.setLineDash([]);
+
+      eCtx.fillStyle = '#10b981';
+      eCtx.font = 'bold 11px Inter';
+      eCtx.textAlign = 'center';
+      eCtx.fillText('Cotovelo Ideal (k=3)', elbowPt.x + 40, elbowPt.y - 14);
+
+      // Desenhar pontos
+      coords.forEach(pt => {
+        const isCurrent = pt.k === currentK;
+        eCtx.fillStyle = isCurrent ? '#ea580c' : '#0284c7';
+        eCtx.beginPath();
+        eCtx.arc(pt.x, pt.y, isCurrent ? 7 : 4.5, 0, Math.PI * 2);
+        eCtx.fill();
+        eCtx.strokeStyle = '#ffffff';
+        eCtx.lineWidth = 2;
+        eCtx.stroke();
+
+        // Label k no eixo X
+        eCtx.fillStyle = isCurrent ? '#ea580c' : '#64748b';
+        eCtx.font = isCurrent ? 'bold 12px Fira Code' : '11px Fira Code';
+        eCtx.textAlign = 'center';
+        eCtx.fillText(`k=${pt.k}`, pt.x, elbowCanvas.height - padY + 18);
+      });
+    }
+
+    function triggerMath() {
+      if (typeof renderMathInElement === 'function') {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '\\[', right: '\\]', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false}
+          ],
+          throwOnError: false
+        });
+      }
+    }
+
+    // Inicialização
+    selectK(3);
+    window.addEventListener('load', triggerMath);
+  </script>
+</body>
+</html>

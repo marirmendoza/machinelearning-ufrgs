@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 4.2 — Inicialização & Múltiplos Restarts</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .strategy-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.6rem;
+    }
+
+    .strat-card {
+      background: var(--bg3);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.8rem 0.6rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .strat-card:hover {
+      border-color: var(--primary);
+    }
+
+    .strat-card.active {
+      border-color: var(--primary);
+      background: var(--primary-lt);
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.2);
+    }
+
+    .strat-title {
+      font-weight: 700;
+      font-size: 0.86rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .strat-tag {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 0.1rem 0.45rem;
+      border-radius: 999px;
+      display: inline-block;
+    }
+
+    .canvas-box {
+      width: 100%;
+      height: 270px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      position: relative;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Agrupamento & K-Means</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 4 · Slide 02</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Sensibilidade à Inicialização & Múltiplos Restarts</h1>
+        <p class="slide-subtitle">
+          O K-means é sensível às posições iniciais dos centróides e pode ficar preso em <strong>mínimos
+            locais</strong>. A solução padrão é executar <strong>múltiplas reinicializações (restarts)</strong> ou usar
+          o algoritmo <strong>K-means++</strong>.
+        </p>
+      </div>
+
+      <div class="content-split">
+        <!-- Esquerda: Simulador de Estratégias de Inicialização -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>1. Laboratório de Inicialização (k = 3)</span>
+            <span class="badge-tag">Mínimos Locais vs. Global</span>
+          </div>
+
+          <div class="strategy-cards">
+            <div class="strat-card active" id="strat-bad" onclick="selectStrategy('bad')">
+              <div class="strat-title">⚠️ Inicialização Ruim</div>
+              <span class="strat-tag" style="background:#fee2e2; color:#b91c1c;">Mínimo Local</span>
+            </div>
+
+            <div class="strat-card" id="strat-restarts" onclick="selectStrategy('restarts')">
+              <div class="strat-title">🔁 20 Restarts</div>
+              <span class="strat-tag" style="background:#e0f2fe; color:#0284c7;">Melhor de N</span>
+            </div>
+
+            <div class="strat-card" id="strat-plus" onclick="selectStrategy('plus')">
+              <div class="strat-title">✨ K-Means++</div>
+              <span class="strat-tag" style="background:#dcfce7; color:#166534;">Espalhamento $D(x)^2$</span>
+            </div>
+          </div>
+
+          <div class="canvas-box">
+            <canvas id="init-canvas" width="500" height="270"></canvas>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <button class="btn active" id="btn-run-sim" onclick="runCurrentStrategy()">
+              ▶️ Executar Convergência
+            </button>
+            <div class="mono" style="font-size:0.85rem;">
+              SSE Final: <strong id="lbl-sse" style="color:var(--rose);">112.4 (Subótimo)</strong>
+            </div>
+          </div>
+
+          <div id="strat-desc" class="highlight-box rose" style="font-size:0.86rem;">
+            <!-- Preenchido via JS -->
+          </div>
+        </div>
+
+        <!-- Direita: O Algoritmo de Múltiplos Restarts -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>2. Boas Práticas: Múltiplas Execuções (Restart)</span>
+            <span class="badge-tag">Pseudo-código da Aula</span>
+          </div>
+
+          <pre class="code-block"><span class="com"># Estratégia de Múltiplos Restarts</span>
+<span class="kw">melhor_SSE</span> = <span class="num">Infinity</span>
+<span class="kw">melhor_agrupamento</span> = <span class="num">None</span>
+
+<span class="kw">para</span> i = <span class="num">1</span> <span class="kw">até</span> <span class="num">100</span>:
+    <span class="com"># 1. Inicializa centróides aleatórios</span>
+    centróides = <span class="fn">inicializar_aleatorio</span>(dados, k)
+    
+    <span class="com"># 2. Executa k-means até a convergência</span>
+    clusters = <span class="fn">executar_kmeans</span>(dados, centróides)
+    
+    <span class="com"># 3. Calcula dissimilaridade intracluster (SSE)</span>
+    sse_atual = <span class="fn">calcular_SSE</span>(dados, clusters)
+    
+    <span class="kw">se</span> sse_atual &lt; melhor_SSE:
+        melhor_SSE = sse_atual
+        melhor_agrupamento = clusters
+
+<span class="kw">retorne</span> melhor_agrupamento</pre>
+
+          <div class="highlight-box teal" style="font-size:0.86rem;">
+            <strong>Como funciona o K-Means++?</strong><br />
+            1. O 1º centróide é escolhido uniformemente ao acaso.<br />
+            2. Cada centróide seguinte é sorteado com probabilidade proporcional a $D(x)^2$ (o quadrado da distância ao
+            centróide mais próximo já existente).<br />
+            Isso <em>força</em> os centróides a nascerem bem afastados uns dos outros, reduzindo drasticamente as
+            chances de mínimos locais!
+          </div>
+
+          <div class="insight-box" style="margin-top:auto;">
+            <div class="i-icon">💡</div>
+            <div class="i-text">
+              <strong>Padrão nas Bibliotecas (Scikit-Learn):</strong> Por padrão, a função <code>KMeans()</code> do
+              scikit-learn já utiliza <code>init='k-means++'</code> e roda <code>n_init=10</code> restarts
+              automaticamente!
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b4-s01.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b4-s03.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('init-canvas');
+    const ctx = canvas.getContext('2d');
+    const colors = ['#0284c7', '#ea580c', '#10b981'];
+
+    let currentStrat = 'bad';
+
+    // 3 clusters naturais
+    const clustersData = [
+      { cx: 120, cy: 110, count: 25 },
+      { cx: 380, cy: 90, count: 25 },
+      { cx: 250, cy: 210, count: 30 }
+    ];
+
+    const dataPoints = [];
+    clustersData.forEach(c => {
+      for (let i = 0; i < c.count; i++) {
+        const r = Math.sqrt(-2 * Math.log(Math.random() || 0.01)) * 26;
+        const th = Math.random() * 2 * Math.PI;
+        dataPoints.push({
+          x: c.cx + r * Math.cos(th),
+          y: c.cy + r * Math.sin(th),
+          cluster: 0
+        });
+      }
+    });
+
+    let simCentroids = [];
+
+    function selectStrategy(strat) {
+      currentStrat = strat;
+      document.querySelectorAll('.strat-card').forEach(c => c.classList.remove('active'));
+      document.getElementById('strat-' + strat).classList.add('active');
+
+      const desc = document.getElementById('strat-desc');
+      const sseLbl = document.getElementById('lbl-sse');
+
+      if (strat === 'bad') {
+        // Inicialização ruim: 2 centróides no mesmo cluster à esquerda
+        simCentroids = [
+          { x: 100, y: 100, color: colors[0] },
+          { x: 130, y: 120, color: colors[1] },
+          { x: 370, y: 90, color: colors[2] }
+        ];
+        desc.className = "highlight-box rose";
+        desc.innerHTML = "<strong>Inicialização Ruim:</strong> Dois centróides iniciaram juntos no mesmo grupo superior-esquerdo. O grupo inferior e o direito serão fundidos incorretamente em um só centróide, gerando um erro altíssimo (mínimo local).";
+        sseLbl.innerText = "112.4 (Subótimo)";
+        sseLbl.style.color = "var(--rose)";
+      } else if (strat === 'restarts') {
+        simCentroids = [
+          { x: 120, y: 110, color: colors[0] },
+          { x: 380, y: 90, color: colors[1] },
+          { x: 250, y: 210, color: colors[2] }
+        ];
+        desc.className = "highlight-box cyan";
+        desc.innerHTML = "<strong>Múltiplos Restarts:</strong> Dentre 20 inicializações aleatórias independentes, selecionamos a iteração que atingiu o menor SSE intracluster, escapando de mínimos locais ruins.";
+        sseLbl.innerText = "28.1 (Ótimo Global)";
+        sseLbl.style.color = "var(--emerald)";
+      } else {
+        // K-Means++
+        simCentroids = [
+          { x: 115, y: 105, color: colors[0] },
+          { x: 385, y: 95, color: colors[1] },
+          { x: 245, y: 205, color: colors[2] }
+        ];
+        desc.className = "highlight-box emerald";
+        desc.innerHTML = "<strong>K-Means++:</strong> Os centróides são semeados de forma dispersa com peso proporcional a $D(x)^2$. Cada grupo natural recebe um centróide logo na largada, garantindo convergência perfeita e rápida!";
+        sseLbl.innerText = "27.8 (Ótimo Global)";
+        sseLbl.style.color = "var(--emerald)";
+      }
+
+      runCurrentStrategy();
+      triggerMath();
+    }
+
+    function triggerMath() {
+      if (typeof renderMathInElement === 'function') {
+        renderMathInElement(document.body, {
+          delimiters: [
+            { left: '$$', right: '$$', display: true },
+            { left: '\\[', right: '\\]', display: true },
+            { left: '$', right: '$', display: false },
+            { left: '\\(', right: '\\)', display: false }
+          ],
+          throwOnError: false
+        });
+      }
+    }
+
+    function runCurrentStrategy() {
+      // 1 passo de atribuição e atualização
+      dataPoints.forEach(p => {
+        let bestDist = Infinity;
+        let bestIdx = 0;
+        simCentroids.forEach((c, idx) => {
+          const d = Math.hypot(p.x - c.x, p.y - c.y);
+          if (d < bestDist) { bestDist = d; bestIdx = idx; }
+        });
+        p.cluster = bestIdx;
+      });
+
+      render();
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Pontos
+      dataPoints.forEach(p => {
+        ctx.fillStyle = simCentroids[p.cluster].color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      });
+
+      // Centróides
+      simCentroids.forEach((c, idx) => {
+        ctx.fillStyle = c.color;
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, 11, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 11px Fira Code';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`c${idx + 1}`, c.x, c.y);
+      });
+    }
+
+    // Inicialização
+    selectStrategy('bad');
+    window.addEventListener('load', triggerMath);
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 2.1 — Análise de Agrupamentos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .taxonomy-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.8rem;
+    }
+    .tax-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.85rem 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tax-card:hover {
+      border-color: var(--primary);
+    }
+    .tax-card.active {
+      background: var(--primary-lt);
+      border-color: var(--primary);
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.2);
+    }
+    .tax-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 0.2rem; }
+    .tax-desc { font-size: 0.82rem; color: var(--text-muted); line-height: 1.4; }
+
+    /* Canvas de Coesão e Separação */
+    .vis-box {
+      width: 100%;
+      height: 230px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      position: relative;
+    }
+
+    /* Personas */
+    .persona-pills {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .persona-pill {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.35rem 0.8rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .persona-pill:hover, .persona-pill.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Agrupamento & K-Means</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 2 · Slide 01</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Análise de Agrupamentos: Coesão, Separação & Taxonomia</h1>
+        <p class="slide-subtitle">
+          O clustering busca compreender a estrutura latente dos dados. O objetivo formal é <strong>maximizar a similaridade intragrupo (coesão)</strong> e <strong>minimizar a similaridade intergrupos (separação)</strong>.
+        </p>
+      </div>
+
+      <div class="content-split">
+        <!-- Esquerda: Objetivo Geométrico (Coesão x Separação) -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>1. O Dilema: Coesão vs. Separação</span>
+            <span class="badge-tag">Geometria dos Clusters</span>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <label style="font-size:0.85rem; font-weight:600; color:var(--text-muted);">
+              Ajustar Separação Intergrupos ($D_{inter}$):
+            </label>
+            <input type="range" id="sep-slider" min="30" max="110" value="70" oninput="updateCohesionCanvas()" style="width:140px; cursor:pointer;" />
+          </div>
+
+          <canvas id="cohesion-canvas" class="vis-box" width="500" height="230"></canvas>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.6rem;">
+            <div class="formula-card" style="font-size:0.82rem; text-align:center;">
+              <span style="color:var(--text-dim);">Coesão Intragrupo (WCSS)</span>
+              <strong id="metric-intra" style="color:var(--emerald); font-size:1rem;">ALTA (Desejado)</strong>
+              <span style="font-size:0.75rem; color:var(--text-dim);">Pontos compactos no centróide</span>
+            </div>
+            <div class="formula-card" style="font-size:0.82rem; text-align:center;">
+              <span style="color:var(--text-dim);">Separação Intergrupos</span>
+              <strong id="metric-inter" style="color:var(--primary); font-size:1rem;">BOM ISOLAMENTO</strong>
+              <span style="font-size:0.75rem; color:var(--text-dim);">Distância entre centros</span>
+            </div>
+          </div>
+
+          <div class="highlight-box cyan" style="font-size: 0.88rem;">
+            <strong>Critério de Qualidade:</strong> Um bom agrupamento produz grupos densos e isolados. Se os clusters se tocam ou se misturam, a dissimilaridade intergrupos é baixa e a fronteira se torna ambígua.
+          </div>
+        </div>
+
+        <!-- Direita: Taxonomia & Personas Reais -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>2. Taxonomia & Aplicação Prática</span>
+            <span class="badge-tag">Classificação de Algoritmos</span>
+          </div>
+
+          <div class="taxonomy-grid">
+            <div class="tax-card active" id="tax-hard" onclick="selectTax('hard')">
+              <div class="tax-title">🧱 Hard Clustering</div>
+              <div class="tax-desc">Pertencimento estrito: cada ponto pertence a <strong>exatamente um</strong> cluster ($0$ ou $1$). Ex: K-Means.</div>
+            </div>
+
+            <div class="tax-card" id="tax-soft" onclick="selectTax('soft')">
+              <div class="tax-title">🌫️ Soft / Fuzzy</div>
+              <div class="tax-desc">Pertencimento contínuo: cada ponto tem um grau probabilístico em cada cluster. Ex: GMM, Fuzzy C-Means.</div>
+            </div>
+
+            <div class="tax-card" id="tax-part" onclick="selectTax('part')">
+              <div class="tax-title">✂️ Particional</div>
+              <div class="tax-desc">Divisão plana direta do espaço em $k$ partições disjuntas. Realocação iterativa.</div>
+            </div>
+
+            <div class="tax-card" id="tax-hier" onclick="selectTax('hier')">
+              <div class="tax-title">🌳 Hierárquico</div>
+              <div class="tax-desc">Árvore de aninhamento (dendrograma). Aglomerativo (bottom-up) ou divisivo (top-down).</div>
+            </div>
+          </div>
+
+          <div id="tax-detail" class="highlight-box cyan" style="font-size:0.86rem; min-height:75px; margin-top:0.6rem;">
+            <!-- Preenchido dinamicamente ao clicar nos cards de taxonomia acima -->
+          </div>
+
+          <div class="panel-title" style="margin-top:0.4rem;">
+            <span>3. Descoberta de Personas (Segmentação de Mercado)</span>
+          </div>
+
+          <div class="persona-pills">
+            <div class="persona-pill active" id="pill-vip" onclick="showPersona('vip')">💎 Clientes VIP</div>
+            <div class="persona-pill" id="pill-student" onclick="showPersona('student')">🎓 Estudante Econômico</div>
+            <div class="persona-pill" id="pill-sporadic" onclick="showPersona('sporadic')">📦 Comprador Esporádico</div>
+          </div>
+
+          <div id="persona-detail" class="highlight-box emerald" style="font-size:0.88rem; min-height:85px;">
+            <!-- Preenchido via JS -->
+          </div>
+
+          <div class="insight-box" style="margin-top:auto;">
+            <div class="i-icon">💡</div>
+            <div class="i-text">
+              <strong>Inferência em Novos Dados:</strong> Quando chega um novo cliente ainda desconhecido, como o classificamos? Basta calcular a distância dele aos centróides existentes e alocá-lo ao mais próximo!
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b1-s02.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b2-s02.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    // Canvas de Coesão e Separação
+    const canvas = document.getElementById('cohesion-canvas');
+    const ctx = canvas.getContext('2d');
+
+    function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+      if (fill) ctx.fill();
+      if (stroke) ctx.stroke();
+    }
+
+    function updateCohesionCanvas() {
+      const sep = parseFloat(document.getElementById('sep-slider').value);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const c1x = canvas.width / 2 - sep;
+      const c2x = canvas.width / 2 + sep;
+      const cy = 142; // Centróides posicionados mais abaixo para liberar espaço superior para a legenda
+
+      // 1. Linhas de projeção vertical e dimensão intercluster ACIMA dos clusters
+      const dimY = 46;
+      ctx.save();
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      
+      // Linhas verticais pontilhadas subindo dos centróides até a linha de cota
+      ctx.beginPath();
+      ctx.moveTo(c1x, cy - 25);
+      ctx.lineTo(c1x, dimY);
+      ctx.moveTo(c2x, cy - 25);
+      ctx.lineTo(c2x, dimY);
+      ctx.stroke();
+
+      // Linha horizontal da cota superior
+      ctx.setLineDash([]);
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(c1x, dimY);
+      ctx.lineTo(c2x, dimY);
+      // Marcadores verticais nas extremidades
+      ctx.moveTo(c1x, dimY - 6);
+      ctx.lineTo(c1x, dimY + 6);
+      ctx.moveTo(c2x, dimY - 6);
+      ctx.lineTo(c2x, dimY + 6);
+      ctx.stroke();
+
+      // Badge / Legenda da distância Intercluster ACIMA dos clusters
+      const distPx = Math.round(sep * 2);
+      const labelText = `Distância Intercluster = ${distPx}px`;
+      ctx.font = '600 11.5px Inter, sans-serif';
+      const textWidth = ctx.measureText(labelText).width;
+      const badgeW = textWidth + 24;
+      const badgeH = 24;
+      const badgeX = canvas.width / 2 - badgeW / 2;
+      const badgeY = 14;
+
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 1.2;
+      ctx.shadowColor = 'rgba(2, 132, 199, 0.12)';
+      ctx.shadowBlur = 6;
+      ctx.shadowOffsetY = 2;
+      roundRect(ctx, badgeX, badgeY, badgeW, badgeH, 6, true, true);
+      ctx.restore();
+
+      // Texto da legenda
+      ctx.fillStyle = '#0369a1';
+      ctx.font = '600 11.5px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(labelText, canvas.width / 2, badgeY + badgeH / 2);
+
+      // 2. Halos / Elipses dos Clusters
+      ctx.fillStyle = 'rgba(2, 132, 199, 0.08)';
+      ctx.beginPath();
+      ctx.arc(c1x, cy, 54, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = 'rgba(124, 58, 237, 0.08)';
+      ctx.beginPath();
+      ctx.arc(c2x, cy, 54, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Linha direta entre centróides (suave)
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(c1x, cy);
+      ctx.lineTo(c2x, cy);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // 3. Pontos dos clusters
+      drawPointsAround(c1x, cy, '#0284c7', 15);
+      drawPointsAround(c2x, cy, '#7c3aed', 15);
+
+      // 4. Centróides com rótulos
+      drawCentroid(c1x, cy, '#0369a1', 'μ₁');
+      drawCentroid(c2x, cy, '#5b21b6', 'μ₂');
+
+      // 5. Atualizar métricas textuais
+      const metricInter = document.getElementById('metric-inter');
+      if (sep > 80) {
+        metricInter.innerText = 'EXCELENTE SEPARAÇÃO';
+        metricInter.style.color = 'var(--emerald)';
+      } else if (sep > 50) {
+        metricInter.innerText = 'BOM ISOLAMENTO';
+        metricInter.style.color = 'var(--primary)';
+      } else {
+        metricInter.innerText = 'SOBREPOSIÇÃO / RUÍDO';
+        metricInter.style.color = 'var(--rose)';
+      }
+    }
+
+    function drawPointsAround(cx, cy, color, count) {
+      ctx.fillStyle = color;
+      // Semente pseudo-estática para os pontos não piscarem
+      for (let i = 0; i < count; i++) {
+        const angle = (i * 137.5) * (Math.PI / 180);
+        const radius = Math.sqrt(i / count) * 40;
+        const px = cx + radius * Math.cos(angle);
+        const py = cy + radius * Math.sin(angle);
+
+        ctx.beginPath();
+        ctx.arc(px, py, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawCentroid(cx, cy, color, label) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 10px Fira Code';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(label, cx, cy);
+    }
+
+    // Detalhes da Taxonomia (Hard, Soft, Particional, Hierárquico)
+    const taxonomyData = {
+      hard: {
+        title: "🧱 Hard Clustering (Pertencimento Rígido / Booleano)",
+        badge: "Ex: K-Means, K-Medoids",
+        colorClass: "cyan",
+        content: "Cada observação $x_i$ é atribuída a <strong>exatamente um único cluster</strong> $C_k$, de forma discreta ($w_{ik} \\in \\{0, 1\\}$, com $\\sum_{k} w_{ik} = 1$). As fronteiras entre clusters são rígidas e mutuamente exclusivas. É a abordagem padrão quando precisamos de segmentação operacional clara (ex: roteamento de entregas ou categorias de clientes)."
+      },
+      soft: {
+        title: "🌫️ Soft / Fuzzy Clustering (Pertencimento Contínuo)",
+        badge: "Ex: Fuzzy C-Means, GMM (EM)",
+        colorClass: "indigo",
+        content: "Cada ponto possui um <strong>grau contínuo de pertinência</strong> em cada cluster ($w_{ik} \\in [0, 1]$, com $\\sum_{k} w_{ik} = 1$). É ideal para dados com sobreposição natural ou incerteza inerente (ex: um gene expressando afinidade com múltiplas vias metabólicas, ou um cliente com perfil híbrido)."
+      },
+      part: {
+        title: "✂️ Agrupamento Particional (Divisão Plana Direta)",
+        badge: "Ex: K-Means, PAM",
+        colorClass: "cyan",
+        content: "Divide diretamente o espaço em $k$ partições disjuntas sem nenhuma estrutura aninhada, otimizando uma função objetivo global (como minimizar a soma dos quadrados dos erros, $SSE$). É computacionalmente eficiente ($O(t \\cdot k \\cdot n)$) e ideal para bases de dados massivas."
+      },
+      hier: {
+        title: "🌳 Agrupamento Hierárquico (Árvore de Aninhamento)",
+        badge: "Ex: Aglomerativo, Divisivo (Dendrograma)",
+        colorClass: "amber",
+        content: "Produz uma hierarquia aninhada de partições representada graficamente por um <strong>dendrograma</strong>. Não requer especificar $k$ previamente: você pode 'cortar' a árvore na altura de dissimilaridade desejada para obter mais ou menos grupos. Amplamente usado em bioinformática e filogenia."
+      }
+    };
+
+    function selectTax(key) {
+      document.querySelectorAll('.tax-card').forEach(c => c.classList.remove('active'));
+      const card = document.getElementById('tax-' + key);
+      if (card) card.classList.add('active');
+
+      const data = taxonomyData[key];
+      const box = document.getElementById('tax-detail');
+      if (box && data) {
+        box.className = 'highlight-box ' + (data.colorClass || 'cyan');
+        box.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.25rem;">
+            <strong style="color:var(--text); font-size:0.88rem;">${data.title}</strong>
+            <span class="badge-tag" style="font-size:0.7rem;">${data.badge}</span>
+          </div>
+          <div style="color:var(--text-muted); line-height:1.45;">${data.content}</div>
+        `;
+        triggerMath();
+      }
+    }
+
+    // Personas
+    const personas = {
+      vip: {
+        title: "Cluster A — Persona: Cliente VIP / High-Spender",
+        colorClass: "emerald",
+        text: "<strong>Características Centrais:</strong> Frequência de compra muito alta, ticket médio superior a R$ 850/mês, baixa sensibilidade a preço.<br /><strong>Ação Recomendada de Marketing:</strong> Programa de fidelidade premium exclusivo, atendimento prioritário e lançamentos em pré-venda."
+      },
+      student: {
+        title: "Cluster B — Persona: Estudante Econômico",
+        colorClass: "cyan",
+        text: "<strong>Características Centrais:</strong> Compras em períodos promocionais (Black Friday, início de semestre), alta sensibilidade a frete e cupons, ticket médio de R$ 90.<br /><strong>Ação Recomendada de Marketing:</strong> Notificações de liquidação com frete grátis e descontos progressivos."
+      },
+      sporadic: {
+        title: "Cluster C — Persona: Comprador de Ocasião",
+        colorClass: "amber",
+        text: "<strong>Características Centrais:</strong> Visitas sazonais (ex.: Dia das Mães, Natal), produtos de categorias variadas sem padrão contínuo.<br /><strong>Ação Recomendada de Marketing:</strong> Campanhas sazonais de reativação por e-mail com lembretes de datas comemorativas."
+      }
+    };
+
+    function showPersona(key) {
+      document.querySelectorAll('.persona-pill').forEach(p => p.classList.remove('active'));
+      const pill = document.getElementById('pill-' + key);
+      if (pill) pill.classList.add('active');
+
+      const data = personas[key];
+      const box = document.getElementById('persona-detail');
+      if (box && data) {
+        box.className = 'highlight-box ' + data.colorClass;
+        box.innerHTML = `<span style="font-weight:700; display:block; margin-bottom:0.2rem;">${data.title}</span><div style="line-height:1.45;">${data.text}</div>`;
+      }
+    }
+
+    function triggerMath() {
+      if (typeof renderMathInElement === 'function') {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '\\[', right: '\\]', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false}
+          ],
+          throwOnError: false
+        });
+      }
+    }
+
+    // Inicialização
+    updateCohesionCanvas();
+    selectTax('hard');
+    showPersona('vip');
+    window.addEventListener('load', () => {
+      triggerMath();
+    });
+  </script>
+</body>
+</html>

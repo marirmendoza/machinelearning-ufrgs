@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agrupamento & K-Means — Índice dos Slides</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f8f9fb; --bg2: #ffffff; --bg3: #f0f4f8;
+      --border: #c7d0e0; --border2: #d1d9e8;
+      --text: #0f172a; --text-muted: #334155; --text-dim: #64748b;
+      --primary: #0284c7; --grad: linear-gradient(135deg, #0284c7 0%, #4338ca 100%);
+    }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 3rem 1.5rem;
+    }
+    .hero { text-align: center; margin-bottom: 3rem; max-width: 720px; }
+    .badge {
+      display: inline-block;
+      padding: 0.35rem 1.1rem;
+      border-radius: 999px;
+      background: rgba(2, 132, 199, 0.08);
+      border: 1px solid rgba(2, 132, 199, 0.25);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin-bottom: 1.2rem;
+    }
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.75rem;
+    }
+    .prof-name {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      margin: 0.4rem 0 0.8rem 0;
+    }
+    .hero-sub {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      max-width: 620px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 1.2rem;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      text-decoration: none;
+      font-family: 'Fira Code', monospace;
+    }
+    .back-link:hover { color: var(--primary); }
+
+    .blocks {
+      display: flex; flex-direction: column;
+      gap: 2.2rem;
+      max-width: 960px; width: 100%;
+    }
+    .block-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--primary);
+      margin-bottom: 1rem;
+      padding-left: 0.5rem;
+      border-left: 3px solid var(--primary);
+    }
+    .slides-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.1rem;
+    }
+    .slide-link {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      padding: 1.2rem 1.3rem;
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      text-decoration: none;
+      color: var(--text);
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 4px rgba(15,23,42,0.06);
+    }
+    .slide-link:hover {
+      border-color: var(--primary);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(2, 132, 199, 0.15);
+    }
+    .sl-num { font-family: 'Fira Code', monospace; font-size: 0.72rem; color: var(--text-dim); }
+    .sl-icon { font-size: 1.6rem; }
+    .sl-title { font-size: 1rem; font-weight: 700; line-height: 1.3; color: var(--text); }
+    .sl-desc { font-size: 0.82rem; color: var(--text-muted); line-height: 1.48; }
+    .sl-tag {
+      align-self: flex-start;
+      padding: 0.2rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      background: rgba(2, 132, 199, 0.08);
+      border: 1px solid rgba(2, 132, 199, 0.2);
+      color: var(--primary);
+    }
+    .sl-tag.calc {
+      background: #fef3c7; border-color: #fde68a; color: #b45309;
+    }
+    .sl-tag.lab {
+      background: #dcfce7; border-color: #bbf7d0; color: #166534;
+    }
+
+    footer {
+      margin-top: 4rem;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      text-align: center;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <a href="../index.html" class="back-link">← Todas as aulas</a>
+    <div class="badge">UFRGS · Aprendizado de Máquina</div>
+    <h1>Agrupamento & K-Means</h1>
+    <div class="prof-name">Profa. Mariana Recamonde-Mendoza & Luciano Beylouni (Mestrando PPGC)</div>
+    <p class="hero-sub">
+      Da ausência de atributo alvo à descoberta de subpopulações latentes: paradigmas não-supervisionados, medidas de proximidade, o algoritmo K-Means passo a passo, método do cotovelo e viés indutivo.
+    </p>
+  </div>
+
+  <div class="blocks">
+    
+    <!-- Bloco 1 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 1 — Introdução ao Aprendizado Não-Supervisionado</div>
+      <div class="slides-grid">
+        <a href="b1-s01.html" class="slide-link">
+          <div class="sl-num">Slide 01</div>
+          <div class="sl-icon">🔍</div>
+          <div class="sl-title">O Paradigma Não-Supervisionado</div>
+          <div class="sl-desc">Tipos de feedback (completo, parcial, nulo), tarefas descritivas vs preditivas e o dilema do dataset WBCD sem rótulo.</div>
+          <div class="sl-tag lab">interativo</div>
+        </a>
+
+        <a href="b1-s02.html" class="slide-link">
+          <div class="sl-num">Slide 02</div>
+          <div class="sl-icon">⚖️</div>
+          <div class="sl-title">Agrupamento vs. Associação</div>
+          <div class="sl-desc">Relações entre instâncias (subgrupos) vs relações entre atributos (regras de associação Market Basket "Fralda ➔ Cerveja").</div>
+          <div class="sl-tag lab">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Bloco 2 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 2 — Fundamentos de Clustering & Medidas de Proximidade</div>
+      <div class="slides-grid">
+        <a href="b2-s01.html" class="slide-link">
+          <div class="sl-num">Slide 01</div>
+          <div class="sl-icon">🫧</div>
+          <div class="sl-title">Coesão, Separação & Taxonomia</div>
+          <div class="sl-desc">Objetivo formal: maximizar coesão intragrupo e separação intergrupos. Hard vs Soft, Particional vs Hierárquico e Personas.</div>
+          <div class="sl-tag lab">interativo</div>
+        </a>
+
+        <a href="b2-s02.html" class="slide-link">
+          <div class="sl-num">Slide 02</div>
+          <div class="sl-icon">📐</div>
+          <div class="sl-title">Medidas de Distância & Escala</div>
+          <div class="sl-desc">Euclidiana, Manhattan e Chebyshev no plano cartesiano. Demonstração interativa de como a falta de normalização destrói o clustering.</div>
+          <div class="sl-tag lab">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Bloco 3 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 3 — O Algoritmo K-Means & Simulação Passo a Passo</div>
+      <div class="slides-grid">
+        <a href="b3-s01.html" class="slide-link">
+          <div class="sl-num">Slide 01</div>
+          <div class="sl-icon">⚡</div>
+          <div class="sl-title">Mecânica do K-Means & Voronoi</div>
+          <div class="sl-desc">Simulador completo com dados de crimes nos EUA (US Arrests): inicialização, passo de atribuição, médias e convergência.</div>
+          <div class="sl-tag lab">simulador</div>
+        </a>
+
+        <a href="b3-s02.html" class="slide-link">
+          <div class="sl-num">Slide 02</div>
+          <div class="sl-icon">🍽️</div>
+          <div class="sl-title">Exemplo Numérico: Restaurantes</div>
+          <div class="sl-desc">O caso real exato da aula: cálculo manual das distâncias euclidianas e médias de 6 clientes avaliando restaurantes.</div>
+          <div class="sl-tag calc">cálculo passo a passo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Bloco 4 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 4 — Diagnóstico, Limitações e Otimização</div>
+      <div class="slides-grid">
+        <a href="b4-s01.html" class="slide-link">
+          <div class="sl-num">Slide 01</div>
+          <div class="sl-icon">📈</div>
+          <div class="sl-title">O Método do Cotovelo (Elbow)</div>
+          <div class="sl-desc">Função objetivo SSE / WCSS, por que k=N é inútil e como identificar o ponto de inflexão na curva de decaimento do erro.</div>
+          <div class="sl-tag lab">interativo</div>
+        </a>
+
+        <a href="b4-s02.html" class="slide-link">
+          <div class="sl-num">Slide 02</div>
+          <div class="sl-icon">🎲</div>
+          <div class="sl-title">Inicialização & Múltiplos Restarts</div>
+          <div class="sl-desc">O perigo dos mínimos locais ruins, o algoritmo de múltiplos restarts e a semeadura inteligente do K-Means++.</div>
+          <div class="sl-tag lab">interativo</div>
+        </a>
+
+        <a href="b4-s03.html" class="slide-link">
+          <div class="sl-num">Slide 03</div>
+          <div class="sl-icon">🌙</div>
+          <div class="sl-title">Viés Indutivo & DBSCAN</div>
+          <div class="sl-desc">Quando o K-Means falha catastroficamente: anéis concêntricos e duas luas. Demonstração interativa da solução por densidade com DBSCAN.</div>
+          <div class="sl-tag lab">interativo</div>
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <strong>UFRGS · Instituto de Informática · Aprendizado de Máquina</strong><br />
+    Profa. Mariana Recamonde-Mendoza e Luciano Beylouni (Mestrando PPGC).<br />
+    Baseado nos slides das Aulas 22 e 23 (INF01017).
+  </footer>
+</body>
+</html>

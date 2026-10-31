@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 3.1 — O Algoritmo K-Means</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .sim-panel {
+      position: relative;
+      width: 100%;
+      height: 380px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      box-shadow: inset 0 1px 4px rgba(0,0,0,0.05);
+    }
+    .controls-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 0.4rem;
+    }
+    .step-card {
+      background: var(--bg3);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem 0.9rem;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+    .step-card.active {
+      border-color: var(--primary);
+      background: var(--primary-lt);
+    }
+    .step-num {
+      display: inline-block;
+      width: 22px;
+      height: 22px;
+      line-height: 22px;
+      text-align: center;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.75rem;
+      margin-right: 0.4rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Agrupamento & K-Means</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 3 · Slide 01</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">O Algoritmo K-Means: Mecânica & Simulação</h1>
+        <p class="slide-subtitle">
+          O K-means alterna repetidamente entre dois passos: <strong>atribuir</strong> cada ponto ao centróide mais próximo e <strong>recalcular</strong> os centróides pela média aritmética dos seus pontos.
+        </p>
+      </div>
+
+      <div class="content-split">
+        <!-- Esquerda: Simulador Canvas Interativo -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>1. Simulador Interativo (US Arrests: Crimes nos EUA)</span>
+            <div style="display:flex; gap:0.5rem; align-items:center;">
+              <span class="mono" style="font-size:0.8rem; font-weight:700; color:var(--text-muted);">k:</span>
+              <button class="btn btn-secondary" id="btn-k3" onclick="setK(3)" style="padding:0.2rem 0.6rem; font-size:0.78rem;">k=3</button>
+              <button class="btn active" id="btn-k4" onclick="setK(4)" style="padding:0.2rem 0.6rem; font-size:0.78rem;">k=4</button>
+            </div>
+          </div>
+
+          <div class="sim-panel">
+            <canvas id="sim-canvas" width="580" height="380"></canvas>
+          </div>
+
+          <div class="controls-row">
+            <button class="btn" onclick="initCentroids()">🎲 1. Inicializar</button>
+            <button class="btn btn-secondary" id="btn-step-a" onclick="stepAssign()">➡️ 2. Passo A (Atribuir)</button>
+            <button class="btn btn-secondary" id="btn-step-b" onclick="stepUpdate()">🔄 3. Passo B (Média)</button>
+            <button class="btn active" onclick="runFullIteration()">▶️ Próxima Iteração</button>
+            <button class="btn btn-secondary" onclick="convergeAll()" style="background:#f1f5f9;">⚡ Convergir Tudo</button>
+            <button class="btn btn-secondary" onclick="resetData()" style="margin-left:auto; font-size:0.8rem;">🔄 Reset</button>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.84rem; margin-top:0.2rem;">
+            <span id="sim-status" class="mono" style="font-weight:700; color:var(--primary);">
+              Iteração #0: Centróides não inicializados
+            </span>
+            <span id="sse-metric" class="mono" style="color:var(--text-dim);">
+              SSE Total: --
+            </span>
+          </div>
+        </div>
+
+        <!-- Direita: Pseudo-código & Critério de Parada -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>2. Passo a Passo do Algoritmo</span>
+            <span class="badge-tag">Convergência</span>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:0.6rem;">
+            <div class="step-card" id="card-step-0">
+              <span class="step-num">1</span>
+              <strong>Inicialização dos Centróides:</strong>
+              <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.2rem;">
+                Escolher $k$ pontos aleatórios no espaço amostral para serem os centros iniciais $c_1, c_2, \dots, c_k$.
+              </div>
+            </div>
+
+            <div class="step-card" id="card-step-1">
+              <span class="step-num">2</span>
+              <strong>Passo A — Atribuição ao Mais Próximo:</strong>
+              <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.2rem;">
+                Para cada instância $x_i$, calcula-se a distância $D(x_i, c_j)$ a todos os centróides e associa-se a $x_i$ ao centróide com menor distância (fronteiras de Voronoi).
+              </div>
+            </div>
+
+            <div class="step-card" id="card-step-2">
+              <span class="step-num">3</span>
+              <strong>Passo B — Atualização dos Centróides (Média):</strong>
+              <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.2rem;">
+                Recalcular a posição de cada centróide como o ponto médio (centroide aritmético) das instâncias atribuídas a ele: $c_j = \frac{1}{|C_j|}\sum_{x \in C_j} x$.
+              </div>
+            </div>
+
+            <div class="step-card" id="card-step-3">
+              <span class="step-num">4</span>
+              <strong>Critério de Parada (Convergência):</strong>
+              <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.2rem;">
+                O algoritmo termina quando <strong>nenhum ponto troca de cluster</strong> entre iterações e a posição dos centróides se estabiliza.
+              </div>
+            </div>
+          </div>
+
+          <div class="highlight-box cyan" style="font-size:0.86rem; margin-top:auto;">
+            <strong>Garantia Matemática:</strong> O K-means sempre converge em um número finito de passos porque o número de partições possíveis é finito e cada passo nunca aumenta o erro quadrático (SSE). Porém, pode convergir para um <em>ótimo local</em>!
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b2-s02.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b3-s02.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('sim-canvas');
+    const ctx = canvas.getContext('2d');
+
+    const clusterColors = ['#0284c7', '#ea580c', '#10b981', '#7c3aed', '#ec4899'];
+    let K = 4;
+    let iteration = 0;
+    let converged = false;
+
+    // Gerar dataset sintético (inspirado no US Arrests: 4 grupos de estados)
+    let points = [];
+    let centroids = [];
+
+    function generateData() {
+      points = [];
+      const centers = [
+        { x: 120, y: 110, count: 20 },
+        { x: 420, y: 100, count: 22 },
+        { x: 160, y: 280, count: 24 },
+        { x: 440, y: 270, count: 20 }
+      ];
+
+      centers.forEach(c => {
+        for (let i = 0; i < c.count; i++) {
+          const r = Math.sqrt(-2 * Math.log(Math.random() || 0.01)) * 36;
+          const th = Math.random() * 2 * Math.PI;
+          points.push({
+            x: Math.max(30, Math.min(canvas.width - 30, c.x + r * Math.cos(th))),
+            y: Math.max(30, Math.min(canvas.height - 30, c.y + r * Math.sin(th))),
+            cluster: -1
+          });
+        }
+      });
+    }
+
+    function setK(newK) {
+      K = newK;
+      document.getElementById('btn-k3').classList.toggle('active', K === 3);
+      document.getElementById('btn-k4').classList.toggle('active', K === 4);
+      resetData();
+    }
+
+    function initCentroids() {
+      centroids = [];
+      iteration = 0;
+      converged = false;
+
+      // Inicializa pegando K pontos aleatórios do dataset
+      const shuffled = [...points].sort(() => 0.5 - Math.random());
+      for (let k = 0; k < K; k++) {
+        centroids.push({
+          x: shuffled[k].x,
+          y: shuffled[k].y,
+          color: clusterColors[k]
+        });
+      }
+
+      highlightStep(0);
+      document.getElementById('sim-status').innerText = `Centróides inicializados aleatoriamente (k=${K}).`;
+      render();
+    }
+
+    function stepAssign() {
+      if (centroids.length === 0) initCentroids();
+      let changed = false;
+
+      points.forEach(p => {
+        let bestDist = Infinity;
+        let bestCluster = -1;
+        centroids.forEach((c, idx) => {
+          const dist = Math.hypot(p.x - c.x, p.y - c.y);
+          if (dist < bestDist) {
+            bestDist = dist;
+            bestCluster = idx;
+          }
+        });
+        if (p.cluster !== bestCluster) {
+          changed = true;
+          p.cluster = bestCluster;
+        }
+      });
+
+      highlightStep(1);
+      document.getElementById('sim-status').innerText = `Iteração #${iteration} · Passo A: Instâncias associadas ao centróide mais próximo.`;
+      calcSSE();
+      render(true);
+      return changed;
+    }
+
+    function stepUpdate() {
+      if (centroids.length === 0) return;
+      let maxMove = 0;
+
+      centroids.forEach((c, idx) => {
+        const assigned = points.filter(p => p.cluster === idx);
+        if (assigned.length > 0) {
+          const sumX = assigned.reduce((acc, p) => acc + p.x, 0);
+          const sumY = assigned.reduce((acc, p) => acc + p.y, 0);
+          const newX = sumX / assigned.length;
+          const newY = sumY / assigned.length;
+          const move = Math.hypot(c.x - newX, c.y - newY);
+          if (move > maxMove) maxMove = move;
+          c.x = newX;
+          c.y = newY;
+        }
+      });
+
+      iteration++;
+      highlightStep(2);
+      document.getElementById('sim-status').innerText = `Iteração #${iteration} · Passo B: Centróides atualizados para a média dos grupos.`;
+      calcSSE();
+      render();
+
+      if (maxMove < 0.5) {
+        converged = true;
+        highlightStep(3);
+        document.getElementById('sim-status').innerHTML = `🎉 <strong>Iteração #${iteration}: Convergência alcançada!</strong> Nenhum ponto trocou de cluster.`;
+      }
+    }
+
+    function runFullIteration() {
+      if (converged) {
+        alert("O algoritmo já convergiu!");
+        return;
+      }
+      const changed = stepAssign();
+      setTimeout(() => {
+        stepUpdate();
+      }, 300);
+    }
+
+    function convergeAll() {
+      if (centroids.length === 0) initCentroids();
+      let maxLoops = 25;
+      function loop() {
+        if (maxLoops <= 0 || converged) return;
+        maxLoops--;
+        const changed = stepAssign();
+        stepUpdate();
+        if (converged || !changed) return;
+        requestAnimationFrame(loop);
+      }
+      loop();
+    }
+
+    function calcSSE() {
+      let totalSSE = 0;
+      points.forEach(p => {
+        if (p.cluster !== -1 && centroids[p.cluster]) {
+          const c = centroids[p.cluster];
+          const distSq = (p.x - c.x) ** 2 + (p.y - c.y) ** 2;
+          totalSSE += distSq;
+        }
+      });
+      document.getElementById('sse-metric').innerText = `SSE Total: ${(totalSSE / 1000).toFixed(1)}k`;
+    }
+
+    function highlightStep(stepIdx) {
+      for (let i = 0; i <= 3; i++) {
+        const el = document.getElementById('card-step-' + i);
+        if (el) el.classList.toggle('active', i === stepIdx);
+      }
+    }
+
+    function render(drawLines = false) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Linhas conectando ponto ao centróide
+      if (drawLines) {
+        points.forEach(p => {
+          if (p.cluster !== -1 && centroids[p.cluster]) {
+            const c = centroids[p.cluster];
+            ctx.strokeStyle = c.color + '44';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(c.x, c.y);
+            ctx.stroke();
+          }
+        });
+      }
+
+      // Pontos do dataset
+      points.forEach(p => {
+        ctx.fillStyle = p.cluster === -1 ? '#94a3b8' : clusterColors[p.cluster];
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      });
+
+      // Centróides (X estilizado)
+      centroids.forEach((c, idx) => {
+        ctx.fillStyle = c.color;
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, 11, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 11px Fira Code';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`c${idx+1}`, c.x, c.y);
+      });
+    }
+
+    function resetData() {
+      iteration = 0;
+      converged = false;
+      centroids = [];
+      generateData();
+      highlightStep(0);
+      document.getElementById('sim-status').innerText = 'Dataset pronto. Clique em Inicializar para começar.';
+      document.getElementById('sse-metric').innerText = 'SSE Total: --';
+      render();
+    }
+
+    function triggerMath() {
+      if (typeof renderMathInElement === 'function') {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '\\[', right: '\\]', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false}
+          ],
+          throwOnError: false
+        });
+      }
+    }
+
+    // Inicialização
+    resetData();
+    initCentroids();
+    window.addEventListener('load', triggerMath);
+  </script>
+</body>
+</html>

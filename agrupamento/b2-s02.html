@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 2.2 — Medidas de Distância & Escala</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .drag-canvas-container {
+      position: relative;
+      width: 100%;
+      height: 250px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      cursor: crosshair;
+    }
+    .metric-badges {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.6rem;
+      margin-top: 0.6rem;
+    }
+    .m-badge {
+      background: var(--bg3);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 0.5rem;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .m-badge.highlight {
+      border-color: var(--primary);
+      background: var(--primary-lt);
+    }
+    .m-val {
+      font-family: 'Fira Code', monospace;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--primary);
+      margin-top: 0.2rem;
+    }
+    .m-lbl { font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); }
+
+    /* Normalization visualizer */
+    .norm-box {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .scale-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      font-size: 0.82rem;
+    }
+    .bar-bg {
+      flex: 1;
+      height: 12px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.4s ease;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Agrupamento & K-Means</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 2 · Slide 02</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Medidas de Proximidade & O Impacto da Escala</h1>
+        <p class="slide-subtitle">
+          Como quantificar se duas instâncias são "próximas"? A escolha da <strong>função de distância</strong> molda o formato dos clusters, e a <strong>escala dos atributos</strong> pode distorcer tudo.
+        </p>
+      </div>
+
+      <div class="content-split">
+        <!-- Esquerda: Comparador Interativo de Distâncias -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>1. Laboratório de Distâncias (Arraste os Pontos A e B)</span>
+            <span class="badge-tag">Geometria $L_1$, $L_2$, $L_\infty$</span>
+          </div>
+
+          <div class="drag-canvas-container" id="canvas-wrap">
+            <canvas id="dist-canvas" width="500" height="250"></canvas>
+          </div>
+
+          <div class="metric-badges">
+            <div class="m-badge highlight" id="badge-euc">
+              <div class="m-lbl">Euclidiana ($L_2$)</div>
+              <div class="m-val" id="val-euc">0.0</div>
+              <div style="font-size: 0.68rem; color: var(--text-dim); font-family: 'Fira Code', monospace;">$\sqrt{\Delta x^2 + \Delta y^2}$</div>
+            </div>
+
+            <div class="m-badge" id="badge-man">
+              <div class="m-lbl">Manhattan ($L_1$)</div>
+              <div class="m-val" id="val-man" style="color: #ea580c;">0.0</div>
+              <div style="font-size: 0.68rem; color: var(--text-dim); font-family: 'Fira Code', monospace;">$|\Delta x| + |\Delta y|$</div>
+            </div>
+
+            <div class="m-badge" id="badge-cheb">
+              <div class="m-lbl">Chebyshev ($L_\infty$)</div>
+              <div class="m-val" id="val-cheb" style="color: #7c3aed;">0.0</div>
+              <div style="font-size: 0.68rem; color: var(--text-dim); font-family: 'Fira Code', monospace;">$\max(|\Delta x|, |\Delta y|)$</div>
+            </div>
+          </div>
+
+          <div class="highlight-box cyan" style="font-size: 0.86rem;">
+            <strong>Intuição Geométrica:</strong><br />
+            • <strong style="color:var(--primary);">Euclidiana:</strong> Linha reta mais curta (hipotenusa do triângulo).<br />
+            • <strong style="color:#ea580c;">Manhattan:</strong> Caminho em "grade de ruas" (quarteirões de táxi).<br />
+            • <strong style="color:#7c3aed;">Chebyshev:</strong> Movimento do Rei no xadrez (o maior desvio domina).
+          </div>
+        </div>
+
+        <!-- Direita: O Perigo da Escala e Normalização -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>2. A Armadilha da Escala (Por que Normalizar?)</span>
+            <div style="display:flex; gap:0.4rem;">
+              <button class="btn" id="btn-toggle-norm" onclick="toggleNormalization()">
+                🔄 Alternar: Normalizar Dados
+              </button>
+            </div>
+          </div>
+
+          <p style="font-size: 0.88rem; color: var(--text-muted);">
+            Imagine calcular a distância entre clientes usando <strong>Salário (R$ 1.000 a 25.000)</strong> e <strong>Idade (18 a 70 anos)</strong>:
+          </p>
+
+          <div class="norm-box">
+            <div style="font-size:0.82rem; font-weight:700; color:var(--text-muted); display:flex; justify-content:space-between;">
+              <span>IMPACTO NO CÁLCULO DA DISTÂNCIA:</span>
+              <span id="norm-status-text" class="mono" style="color:var(--rose); font-weight:700;">SEM NORMALIZAÇÃO</span>
+            </div>
+
+            <div class="scale-bar">
+              <span style="width: 80px; font-weight:600;">Salário:</span>
+              <div class="bar-bg">
+                <div class="bar-fill" id="bar-salary" style="width: 98%; background: #0284c7;"></div>
+              </div>
+              <span id="pct-salary" class="mono" style="width: 50px; font-weight:700; text-align:right;">99.8%</span>
+            </div>
+
+            <div class="scale-bar">
+              <span style="width: 80px; font-weight:600;">Idade:</span>
+              <div class="bar-bg">
+                <div class="bar-fill" id="bar-age" style="width: 2%; background: #ea580c;"></div>
+              </div>
+              <span id="pct-age" class="mono" style="width: 50px; font-weight:700; text-align:right;">0.2%</span>
+            </div>
+          </div>
+
+          <div class="formula-card" id="calc-breakdown" style="font-size:0.82rem; line-height:1.5;">
+            <!-- Detalhe do cálculo via JS -->
+          </div>
+
+          <div class="highlight-box rose" id="norm-alert-box" style="font-size:0.86rem;">
+            <strong>Atenção:</strong> Sem normalização, o atributo de maior ordem de grandeza dita 99% da proximidade! O algoritmo agrupa clientes quase que unicamente pelo Salário, ignorando a Idade por completo.
+          </div>
+
+          <div class="insight-box" style="margin-top:auto;">
+            <div class="i-icon">💡</div>
+            <div class="i-text">
+              <strong>Regra de Ouro em Clustering:</strong> Sempre aplique <em>Min-Max Scaling</em> $[0, 1]$ ou <em>Z-score Standardization</em> ($\mu=0, \sigma=1$) antes de rodar algoritmos baseados em distância como o K-Means!
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b2-s01.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b3-s01.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    // Canvas Interativo de Distâncias
+    const canvas = document.getElementById('dist-canvas');
+    const ctx = canvas.getContext('2d');
+
+    const pointA = { x: 100, y: 190, label: 'A', color: '#0284c7' };
+    const pointB = { x: 380, y: 70,  label: 'B', color: '#ea580c' };
+    let draggingPoint = null;
+
+    function renderDistanceCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Grade de fundo sutil
+      ctx.strokeStyle = '#f1f5f9';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < canvas.width; x += 25) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+      }
+      for (let y = 0; y < canvas.height; y += 25) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+      }
+
+      // Delta X e Delta Y
+      const dx = Math.abs(pointB.x - pointA.x);
+      const dy = Math.abs(pointB.y - pointA.y);
+
+      // 1. Caminho Manhattan (laranja tracejado)
+      ctx.strokeStyle = 'rgba(234, 88, 12, 0.7)';
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(pointA.x, pointA.y);
+      ctx.lineTo(pointB.x, pointA.y);
+      ctx.lineTo(pointB.x, pointB.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // 2. Caixa de Chebyshev (retângulo roxo translúcido)
+      const maxD = Math.max(dx, dy);
+      ctx.fillStyle = 'rgba(124, 58, 237, 0.05)';
+      ctx.strokeStyle = 'rgba(124, 58, 237, 0.25)';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(Math.min(pointA.x, pointB.x), Math.min(pointA.y, pointB.y), dx, dy);
+
+      // 3. Linha Euclidiana (azul sólido)
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(pointA.x, pointA.y);
+      ctx.lineTo(pointB.x, pointB.y);
+      ctx.stroke();
+
+      // Desenhar Pontos
+      drawHandle(pointA);
+      drawHandle(pointB);
+
+      // Calcular valores numéricos escalados (0 a 10)
+      const euc = Math.sqrt(dx * dx + dy * dy) / 30;
+      const man = (dx + dy) / 30;
+      const cheb = maxD / 30;
+
+      document.getElementById('val-euc').innerText = euc.toFixed(2);
+      document.getElementById('val-man').innerText = man.toFixed(2);
+      document.getElementById('val-cheb').innerText = cheb.toFixed(2);
+    }
+
+    function drawHandle(pt) {
+      ctx.fillStyle = pt.color;
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 11, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 11px Fira Code';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(pt.label, pt.x, pt.y);
+    }
+
+    // Drag and Drop
+    function getMousePos(e) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: (e.clientX - rect.left) * (canvas.width / rect.width),
+        y: (e.clientY - rect.top) * (canvas.height / rect.height)
+      };
+    }
+
+    canvas.addEventListener('mousedown', (e) => {
+      const pos = getMousePos(e);
+      if (Math.hypot(pos.x - pointA.x, pos.y - pointA.y) < 20) draggingPoint = pointA;
+      else if (Math.hypot(pos.x - pointB.x, pos.y - pointB.y) < 20) draggingPoint = pointB;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!draggingPoint) return;
+      const pos = getMousePos(e);
+      draggingPoint.x = Math.max(15, Math.min(canvas.width - 15, pos.x));
+      draggingPoint.y = Math.max(15, Math.min(canvas.height - 15, pos.y));
+      renderDistanceCanvas();
+    });
+
+    window.addEventListener('mouseup', () => { draggingPoint = null; });
+
+    // Normalização Demo
+    let isNormalized = false;
+
+    function toggleNormalization() {
+      isNormalized = !isNormalized;
+      const btn = document.getElementById('btn-toggle-norm');
+      const statusText = document.getElementById('norm-status-text');
+      const barSal = document.getElementById('bar-salary');
+      const barAge = document.getElementById('bar-age');
+      const pctSal = document.getElementById('pct-salary');
+      const pctAge = document.getElementById('pct-age');
+      const breakdown = document.getElementById('calc-breakdown');
+      const alertBox = document.getElementById('norm-alert-box');
+
+      if (isNormalized) {
+        btn.classList.add('active');
+        statusText.innerText = "COM NORMALIZAÇÃO MIN-MAX [0, 1]";
+        statusText.style.color = "var(--emerald)";
+
+        barSal.style.width = "52%";
+        barAge.style.width = "48%";
+        pctSal.innerText = "52.0%";
+        pctAge.innerText = "48.0%";
+
+        breakdown.innerHTML = `
+          <strong>Com Normalização Min-Max:</strong><br />
+          $\\Delta \\text{Salário}_{\\text{norm}} = 0.40 \\implies (0.40)^2 = 0.160$<br />
+          $\\Delta \\text{Idade}_{\\text{norm}} = 0.38 \\implies (0.38)^2 = 0.144$<br />
+          <span style="color:var(--emerald); font-weight:700;">Pesos balanceados! A Idade agora contribui igualmente para a separação.</span>
+        `;
+
+        alertBox.className = "highlight-box emerald";
+        alertBox.innerHTML = "<strong>Perfeito!</strong> Com as features na mesma escala, os clusters representam fielmente tanto o comportamento financeiro (Salário) quanto o perfil demográfico (Idade).";
+      } else {
+        btn.classList.remove('active');
+        statusText.innerText = "SEM NORMALIZAÇÃO";
+        statusText.style.color = "var(--rose)";
+
+        barSal.style.width = "99.8%";
+        barAge.style.width = "0.2%";
+        pctSal.innerText = "99.8%";
+        pctAge.innerText = "0.2%";
+
+        breakdown.innerHTML = `
+          <strong>Sem Normalização (Valores Brutos):</strong><br />
+          $\\Delta \\text{Salário} = 1.500 \\implies (1.500)^2 = 2.250.000$<br />
+          $\\Delta \\text{Idade} = 25 \\implies (25)^2 = 625$<br />
+          <span style="color:var(--rose); font-weight:700;">Distorção: 2.250.000 vs 625! O salário domina 99.97% do cálculo.</span>
+        `;
+
+        alertBox.className = "highlight-box rose";
+        alertBox.innerHTML = "<strong>Atenção:</strong> Sem normalização, o atributo de maior ordem de grandeza dita 99% da proximidade! O algoritmo agrupa clientes quase que unicamente pelo Salário, ignorando a Idade por completo.";
+      }
+      triggerMath();
+    }
+
+    function triggerMath() {
+      if (typeof renderMathInElement === 'function') {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '\\[', right: '\\]', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false}
+          ],
+          throwOnError: false
+        });
+      }
+    }
+
+    // Inicialização
+    renderDistanceCanvas();
+    toggleNormalization();
+    toggleNormalization(); // Restaura para estado inicial sem normalização
+    window.addEventListener('load', triggerMath);
+  </script>
+</body>
+</html>

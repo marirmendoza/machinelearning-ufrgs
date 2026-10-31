@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 1.1 — Paradigma Não-Supervisionado</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .feedback-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.8rem;
+    }
+    .f-card {
+      background: var(--bg3);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 1rem 0.8rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .f-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--primary);
+    }
+    .f-card.active {
+      border-color: var(--primary);
+      background: var(--primary-lt);
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.15);
+    }
+    .f-icon { font-size: 1.8rem; margin-bottom: 0.3rem; }
+    .f-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.2rem; }
+    .f-tag { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; padding: 0.15rem 0.5rem; border-radius: 999px; display: inline-block; }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.86rem;
+      margin-top: 0.5rem;
+    }
+    .data-table th, .data-table td {
+      padding: 0.55rem 0.7rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .data-table th {
+      background: var(--bg3);
+      font-weight: 700;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .badge-m {
+      background: #fee2e2;
+      color: #b91c1c;
+      padding: 0.2rem 0.55rem;
+      border-radius: 4px;
+      font-weight: 700;
+      font-family: 'Fira Code', monospace;
+    }
+    .badge-b {
+      background: #dbeafe;
+      color: #1d4ed8;
+      padding: 0.2rem 0.55rem;
+      border-radius: 4px;
+      font-weight: 700;
+      font-family: 'Fira Code', monospace;
+    }
+    .badge-unknown {
+      background: #f1f5f9;
+      color: #94a3b8;
+      padding: 0.2rem 0.55rem;
+      border-radius: 4px;
+      font-weight: 700;
+      font-family: 'Fira Code', monospace;
+    }
+    .target-col {
+      transition: all 0.3s ease;
+    }
+    .target-hidden {
+      filter: blur(5px);
+      opacity: 0.2;
+    }
+
+    .scatter-mini {
+      height: 200px;
+      position: relative;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      margin-top: 0.8rem;
+    }
+    .scatter-point {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .point-m { background: #ef4444; box-shadow: 0 0 6px rgba(239, 68, 68, 0.4); }
+    .point-b { background: #3b82f6; box-shadow: 0 0 6px rgba(59, 130, 246, 0.4); }
+    .point-cluster1 { background: #8b5cf6; }
+    .point-cluster2 { background: #06b6d4; }
+    .point-neutral { background: #94a3b8; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Agrupamento & K-Means</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 1 · Slide 01</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">O Paradigma Não-Supervisionado: Tipos de Feedback</h1>
+        <p class="slide-subtitle">
+          No aprendizado supervisionado, o modelo aprende com um "professor" (atributo alvo). No <strong>não-supervisionado</strong>, o feedback é <strong>nulo</strong>: buscamos propriedades intrínsecas e estruturas latentes nos dados.
+        </p>
+      </div>
+
+      <div class="content-split">
+        <!-- Painel Esquerdo: Os 3 Paradigmas -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>1. Classificação pelo Tipo de Feedback</span>
+            <span class="badge-tag">Teoria & Conceito</span>
+          </div>
+
+          <div class="feedback-cards">
+            <div class="f-card" id="card-sup" onclick="selectParadigm('sup')">
+              <div class="f-icon">🎯</div>
+              <div class="f-title">Supervisionado</div>
+              <span class="f-tag" style="background: #e0e7ff; color: #4338ca;">Feedback Completo</span>
+            </div>
+
+            <div class="f-card" id="card-rl" onclick="selectParadigm('rl')">
+              <div class="f-icon">🕹️</div>
+              <div class="f-title">Por Reforço</div>
+              <span class="f-tag" style="background: #fef3c7; color: #b45309;">Feedback Parcial</span>
+            </div>
+
+            <div class="f-card active" id="card-unsup" onclick="selectParadigm('unsup')">
+              <div class="f-icon">🔍</div>
+              <div class="f-title">Não-Supervisionado</div>
+              <span class="f-tag" style="background: #e0f2fe; color: #0284c7;">Feedback Nulo</span>
+            </div>
+          </div>
+
+          <div id="paradigm-detail" class="highlight-box cyan" style="margin-top: 0.5rem; min-height: 110px;">
+            <!-- Conteúdo dinâmico via JS -->
+          </div>
+
+          <div class="insight-box" style="margin-top: auto;">
+            <div class="i-icon">💡</div>
+            <div class="i-text">
+              <strong>Tarefas Preditivas vs. Descritivas:</strong><br />
+              • <em>Preditiva:</em> Predizer valores futuros ou desconhecidos do atributo alvo ($y = f(x)$).<br />
+              • <em>Descritiva:</em> Encontrar padrões compreensíveis por humanos para descrever, segmentar e explorar regularidades intrínsecas.
+            </div>
+          </div>
+        </div>
+
+        <!-- Painel Direito: O Caso WBCD (Câncer de Mama) -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>2. Relembrando com Dados: WBCD Câncer de Mama</span>
+            <div style="display:flex; gap:0.4rem;">
+              <button class="btn" id="btn-toggle-label" onclick="toggleLabelMode()">
+                👁️ Ocultar Rótulo (Alvo)
+              </button>
+            </div>
+          </div>
+
+          <p style="font-size: 0.88rem; color: var(--text-muted);">
+            No diagnóstico médico, temos atributos como <em>Raio</em>, <em>Textura</em> e <em>Perímetro</em>. O que acontece quando não temos a coluna de diagnóstico?
+          </p>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Raio</th>
+                <th>Textura</th>
+                <th>Perímetro</th>
+                <th id="th-target" class="target-col">Diagnosis (Alvo)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">p1</td>
+                <td>14.2</td>
+                <td>23.1</td>
+                <td>94.0</td>
+                <td class="target-col"><span class="badge-m target-badge">M (Maligno)</span></td>
+              </tr>
+              <tr>
+                <td class="mono">p2</td>
+                <td>20.1</td>
+                <td>22.5</td>
+                <td>130.0</td>
+                <td class="target-col"><span class="badge-m target-badge">M (Maligno)</span></td>
+              </tr>
+              <tr>
+                <td class="mono">p3</td>
+                <td>9.5</td>
+                <td>14.2</td>
+                <td>59.0</td>
+                <td class="target-col"><span class="badge-b target-badge">B (Benigno)</span></td>
+              </tr>
+              <tr>
+                <td class="mono">p4</td>
+                <td>9.1</td>
+                <td>21.3</td>
+                <td>60.0</td>
+                <td class="target-col"><span class="badge-b target-badge">B (Benigno)</span></td>
+              </tr>
+              <tr>
+                <td class="mono">p5</td>
+                <td>16.2</td>
+                <td>21.0</td>
+                <td>108.0</td>
+                <td class="target-col"><span class="badge-m target-badge">M (Maligno)</span></td>
+              </tr>
+              <tr>
+                <td class="mono">p6</td>
+                <td>11.4</td>
+                <td>19.2</td>
+                <td>72.0</td>
+                <td class="target-col"><span class="badge-b target-badge">B (Benigno)</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.6rem;">
+            <span style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
+              Espaço de Atributos (Raio × Perímetro)
+            </span>
+            <button class="btn btn-secondary" id="btn-cluster-demo" onclick="runClusterDemo()" style="font-size: 0.8rem; padding: 0.35rem 0.8rem;">
+              ✨ Agrupar por Densidade Natural
+            </button>
+          </div>
+
+          <div class="scatter-mini" id="scatter-canvas">
+            <!-- Pontos gerados via JS -->
+          </div>
+
+          <div id="wbc-status" style="font-size: 0.84rem; color: var(--text-muted); text-align: center; margin-top: 0.2rem;">
+            Exibindo dados com atributo alvo conhecido (Modo Supervisionado).
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="index.html">← Índice</a>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b1-s02.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    const paradigmData = {
+      sup: {
+        title: "Aprendizado Supervisionado",
+        tag: "Feedback Completo",
+        boxClass: "indigo",
+        text: "<strong>Feedback Completo:</strong> O algoritmo recebe um par de entradas e saídas esperadas $(x_i, y_i)$. O modelo tenta aprender a função de mapeamento $y = f(x)$. Há uma resposta 'certa' ou 'errada' para cada instância durante o treinamento."
+      },
+      rl: {
+        title: "Aprendizado por Reforço",
+        tag: "Feedback Parcial",
+        boxClass: "amber",
+        text: "<strong>Feedback Parcial:</strong> O agente interage com um ambiente dinâmico e recebe uma crítica (recompensa positiva ou penalidade) sobre a qualidade da ação tomada. Não há um gabarito explícito dizendo qual era a ação perfeita a cada instante."
+      },
+      unsup: {
+        title: "Aprendizado Não-Supervisionado",
+        tag: "Feedback Nulo",
+        boxClass: "cyan",
+        text: "<strong>Feedback Nulo:</strong> Não há qualquer informação sobre a saída desejada (não há rótulo ou atributo alvo $y$). O objetivo é puramente <strong>descritivo</strong>: descobrir estruturas, subgrupos naturais e associações latentes puramente a partir de $X$."
+      }
+    };
+
+    function triggerMath() {
+      if (typeof renderMathInElement === 'function') {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '\\[', right: '\\]', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false}
+          ],
+          throwOnError: false
+        });
+      }
+    }
+
+    function selectParadigm(type) {
+      document.querySelectorAll('.f-card').forEach(c => c.classList.remove('active'));
+      document.getElementById('card-' + type).classList.add('active');
+      const data = paradigmData[type];
+      const box = document.getElementById('paradigm-detail');
+      box.className = 'highlight-box ' + data.boxClass;
+      box.innerHTML = data.text;
+      triggerMath();
+    }
+
+    // WBCD Interactive Data Points
+    const pointsData = [
+      { x: 30, y: 70, label: 'M' },
+      { x: 45, y: 82, label: 'M' },
+      { x: 35, y: 88, label: 'M' },
+      { x: 40, y: 65, label: 'M' },
+      { x: 75, y: 25, label: 'B' },
+      { x: 82, y: 32, label: 'B' },
+      { x: 88, y: 20, label: 'B' },
+      { x: 70, y: 35, label: 'B' },
+      { x: 85, y: 40, label: 'B' },
+      { x: 38, y: 75, label: 'M' }
+    ];
+
+    let hasLabels = true;
+    let isClustered = false;
+
+    function renderScatter() {
+      const container = document.getElementById('scatter-canvas');
+      container.innerHTML = '';
+      pointsData.forEach((p, idx) => {
+        const dot = document.createElement('div');
+        dot.className = 'scatter-point';
+        dot.id = 'pt-' + idx;
+        dot.style.left = p.x + '%';
+        dot.style.top = p.y + '%';
+
+        if (hasLabels) {
+          dot.className += p.label === 'M' ? ' point-m' : ' point-b';
+        } else if (isClustered) {
+          dot.className += p.label === 'M' ? ' point-cluster1' : ' point-cluster2';
+        } else {
+          dot.className += ' point-neutral';
+        }
+        container.appendChild(dot);
+      });
+    }
+
+    function toggleLabelMode() {
+      hasLabels = !hasLabels;
+      isClustered = false;
+      const thTarget = document.getElementById('th-target');
+      const badges = document.querySelectorAll('.target-badge');
+      const btn = document.getElementById('btn-toggle-label');
+      const status = document.getElementById('wbc-status');
+
+      if (!hasLabels) {
+        thTarget.innerText = "Sem Atributo Alvo";
+        thTarget.style.color = "var(--text-dim)";
+        badges.forEach(b => {
+          b.className = "badge-unknown";
+          b.innerText = "?";
+        });
+        btn.innerText = "👁️ Revelar Rótulo (Alvo)";
+        btn.classList.add('active');
+        status.innerHTML = "<strong>Modo Não-Supervisionado:</strong> Rótulos removidos! Os pontos agora são anônimos no espaço.";
+      } else {
+        thTarget.innerText = "Diagnosis (Alvo)";
+        thTarget.style.color = "";
+        badges.forEach((b, idx) => {
+          const isM = pointsData[idx % pointsData.length].label === 'M';
+          b.className = isM ? "badge-m" : "badge-b";
+          b.innerText = isM ? "M (Maligno)" : "B (Benigno)";
+        });
+        btn.innerText = "👁️ Ocultar Rótulo (Alvo)";
+        btn.classList.remove('active');
+        status.innerText = "Exibindo dados com atributo alvo conhecido (Modo Supervisionado).";
+      }
+      renderScatter();
+    }
+
+    function runClusterDemo() {
+      hasLabels = false;
+      isClustered = true;
+      document.getElementById('btn-toggle-label').innerText = "👁️ Revelar Rótulo (Alvo)";
+      document.getElementById('btn-toggle-label').classList.add('active');
+      const thTarget = document.getElementById('th-target');
+      thTarget.innerText = "Cluster Descoberto";
+      const badges = document.querySelectorAll('.target-badge');
+      badges.forEach((b, idx) => {
+        const isM = pointsData[idx % pointsData.length].label === 'M';
+        b.className = isM ? "badge-m" : "badge-b";
+        b.style.background = isM ? "#ede9fe" : "#cffafe";
+        b.style.color = isM ? "#6d28d9" : "#0891b2";
+        b.innerText = isM ? "Cluster A" : "Cluster B";
+      });
+      document.getElementById('wbc-status').innerHTML = "✨ <strong>Estrutura Descoberta!</strong> O algoritmo encontrou 2 agrupamentos naturais baseados na proximidade dos atributos, sem nunca ver a coluna de diagnóstico!";
+      renderScatter();
+    }
+
+    // Inicialização
+    selectParadigm('unsup');
+    renderScatter();
+    window.addEventListener('load', triggerMath);
+  </script>
+</body>
+</html>
