@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 5.1 — Padrões Frequentes & Regras de Associação</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .trans-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.84rem;
+      margin-top: 0.5rem;
+    }
+    .trans-table th, .trans-table td {
+      padding: 0.45rem 0.6rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .trans-table th {
+      background: var(--bg3);
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 0.78rem;
+    }
+    .trans-table tr.highlight-a {
+      background: rgba(2, 132, 199, 0.12);
+    }
+    .trans-table tr.highlight-ac {
+      background: rgba(16, 185, 129, 0.18);
+    }
+    .item-badge {
+      display: inline-block;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 0.76rem;
+      font-family: 'Fira Code', monospace;
+    }
+    .badge-0 { background: #f1f5f9; color: #94a3b8; }
+    .badge-1 { background: rgba(2, 132, 199, 0.18); color: var(--primary); }
+
+    .selector-bar {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 0.6rem;
+    }
+    .chip-btn {
+      padding: 0.35rem 0.75rem;
+      border: 1px solid var(--border);
+      background: var(--bg3);
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .chip-btn:hover {
+      border-color: var(--primary);
+    }
+    .chip-btn.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+      box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Regras de Associação</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Seção 3 · Slide 01</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Mineração de Padrões Frequentes & Regras de Associação</h1>
+        <p class="slide-subtitle">
+          Como revelar correlações e coocorrências latentes a partir de registros transacionais ($TID$)? Diferente do agrupamento de instâncias, aqui mineramos <strong>relações de dependência entre atributos (itens)</strong>.
+        </p>
+      </div>
+
+      <div class="content-split">
+        <!-- Esquerda: Conceito de Itemset & Suporte -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>1. Definições: Itens, Transações & Suporte</span>
+            <span class="badge-tag">Base Transacional (T)</span>
+          </div>
+
+          <div style="font-size:0.86rem; color:var(--text-muted); line-height:1.45;">
+            Dado um conjunto de itens $I = \{a, b, c, d\}$, cada transação $t_i \subseteq I$ registra a compra simultânea. Um <strong>$k$-itemset</strong> é um conjunto com $k$ itens.
+          </div>
+
+          <div class="selector-bar">
+            <span style="font-size:0.82rem; font-weight:700; color:var(--text);">Examinar Itemset ($X$):</span>
+            <button class="chip-btn active" onclick="selectItemset('ac')">{a, c}</button>
+            <button class="chip-btn" onclick="selectItemset('a')">{a}</button>
+            <button class="chip-btn" onclick="selectItemset('b')">{b}</button>
+            <button class="chip-btn" onclick="selectItemset('c')">{c}</button>
+            <button class="chip-btn" onclick="selectItemset('d')">{d}</button>
+            <button class="chip-btn" onclick="selectItemset('ab')">{a, b}</button>
+            <button class="chip-btn" onclick="selectItemset('acd')">{a, c, d}</button>
+          </div>
+
+          <!-- Tabela de Transações dos Slides 7-11 da Aula -->
+          <div style="max-height: 230px; overflow-y:auto; border: 1px solid var(--border); border-radius:var(--radius-sm);">
+            <table class="trans-table" id="table-trans">
+              <thead>
+                <tr>
+                  <th>TID</th>
+                  <th>Itens Comprados</th>
+                  <th>a</th>
+                  <th>b</th>
+                  <th>c</th>
+                  <th>d</th>
+                  <th>Contém $X$?</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-trans">
+                <!-- Preenchido via JS -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Cartões de Suporte -->
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.6rem; margin-top:0.6rem;">
+            <div class="formula-card">
+              <span style="color:var(--text-dim); font-size:0.78rem;">Suporte Absoluto ($s_T$)</span>
+              <strong id="card-sup-abs" style="font-size:1.15rem; color:var(--primary);">5 transações</strong>
+              <span style="font-size:0.75rem; color:var(--text-dim);">$s_T(X) = |K_T(X)|$</span>
+            </div>
+            <div class="formula-card">
+              <span style="color:var(--text-dim); font-size:0.78rem;">Suporte Relativo ($\sigma_T$)</span>
+              <strong id="card-sup-rel" style="font-size:1.15rem; color:var(--emerald);">62.5%</strong>
+              <span style="font-size:0.75rem; color:var(--text-dim);">$\sigma_T(X) = \frac{s_T(X)}{n}$ ($n=8$)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Direita: Regras de Associação & Confiança -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>2. Regras de Associação & Grau de Confiança</span>
+            <span class="badge-tag">Condicional P(C | A)</span>
+          </div>
+
+          <div style="font-size:0.86rem; color:var(--text-muted); line-height:1.45;">
+            Uma regra $A \Rightarrow C$ estabelece que <em>"clientes que compram $A$ (antecedente) tendem a comprar $C$ (consequente)"</em> ($A \cap C = \emptyset$).
+          </div>
+
+          <div class="selector-bar" style="margin-top:0.4rem;">
+            <span style="font-size:0.82rem; font-weight:700; color:var(--text);">Regra $A \Rightarrow C$:</span>
+            <button class="chip-btn active" id="btn-rule-ac" onclick="selectRule('a', 'c')">a ➔ c</button>
+            <button class="chip-btn" id="btn-rule-ca" onclick="selectRule('c', 'a')">c ➔ a</button>
+            <button class="chip-btn" id="btn-rule-ba" onclick="selectRule('b', 'a')">b ➔ a</button>
+            <button class="chip-btn" id="btn-rule-ab" onclick="selectRule('a', 'b')">a ➔ b</button>
+          </div>
+
+          <div class="highlight-box cyan" id="rule-box" style="font-size:0.88rem;">
+            <!-- Preenchido via JS -->
+          </div>
+
+          <div class="formula-card" style="margin-top:0.4rem;">
+            <div style="font-weight:700; font-size:0.84rem; color:var(--text); margin-bottom:0.25rem;">
+              Fórmula da Confiança ($conf_T$):
+            </div>
+            $$conf_T(A \Rightarrow C) = \frac{s_T(A \cup C)}{s_T(A)} = \frac{\sigma_T(A \cup C)}{\sigma_T(A)} = P(C \mid A)$$
+            <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.3rem;" id="rule-calc-breakdown">
+              Calculando...
+            </div>
+          </div>
+
+          <div class="insight-box" style="margin-top:auto;">
+            <div class="i-icon">💡</div>
+            <div class="i-text">
+              <strong>Suporte vs. Confiança:</strong> O <em>suporte</em> mede a representatividade estatística (o quão popular o padrão é no todo), enquanto a <em>confiança</em> mede o grau de certeza ou força preditiva da regra condicional.
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="h1-s04.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b5-s02.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    // Base de Dados Transacional exatamente como nos Slides 7-11 da Aula 22
+    const transactions = [
+      { tid: "0001", items: ["a", "c"] },
+      { tid: "0002", items: ["a", "b", "c"] },
+      { tid: "0003", items: ["a"] },
+      { tid: "0004", items: ["a", "c", "d"] },
+      { tid: "0005", items: ["c"] },
+      { tid: "0006", items: ["a", "b"] },
+      { tid: "0007", items: ["a", "b", "c", "d"] },
+      { tid: "0008", items: ["a", "b", "c", "d"] }
+    ];
+
+    let currentItemset = ["a", "c"];
+    let currentAntecedent = ["a"];
+    let currentConsequent = ["c"];
+
+    function selectItemset(code) {
+      document.querySelectorAll('.panel:first-child .chip-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+
+      if (code === 'ac') currentItemset = ['a', 'c'];
+      else if (code === 'a') currentItemset = ['a'];
+      else if (code === 'b') currentItemset = ['b'];
+      else if (code === 'c') currentItemset = ['c'];
+      else if (code === 'd') currentItemset = ['d'];
+      else if (code === 'ab') currentItemset = ['a', 'b'];
+      else if (code === 'acd') currentItemset = ['a', 'c', 'd'];
+
+      renderTable();
+      triggerMath();
+    }
+
+    function selectRule(ant, con) {
+      document.querySelectorAll('.panel:last-child .chip-btn').forEach(b => b.classList.remove('active'));
+      const activeBtn = event ? event.target : document.getElementById(`btn-rule-${ant}${con}`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      currentAntecedent = [ant];
+      currentConsequent = [con];
+
+      renderRuleDetails();
+      triggerMath();
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('tbody-trans');
+      tbody.innerHTML = '';
+
+      let matchCount = 0;
+
+      transactions.forEach(t => {
+        const hasA = t.items.includes('a');
+        const hasB = t.items.includes('b');
+        const hasC = t.items.includes('c');
+        const hasD = t.items.includes('d');
+
+        const containsCurrent = currentItemset.every(item => t.items.includes(item));
+        if (containsCurrent) matchCount++;
+
+        const tr = document.createElement('tr');
+        if (containsCurrent) tr.className = 'highlight-ac';
+
+        tr.innerHTML = `
+          <td style="font-family:'Fira Code'; font-weight:600;">${t.tid}</td>
+          <td style="font-family:'Fira Code';">{${t.items.join(', ')}}</td>
+          <td><span class="item-badge ${hasA ? 'badge-1' : 'badge-0'}">${hasA ? '1' : '0'}</span></td>
+          <td><span class="item-badge ${hasB ? 'badge-1' : 'badge-0'}">${hasB ? '1' : '0'}</span></td>
+          <td><span class="item-badge ${hasC ? 'badge-1' : 'badge-0'}">${hasC ? '1' : '0'}</span></td>
+          <td><span class="item-badge ${hasD ? 'badge-1' : 'badge-0'}">${hasD ? '1' : '0'}</span></td>
+          <td style="font-weight:700; color:${containsCurrent ? 'var(--emerald)' : 'var(--text-dim)'};">
+            ${containsCurrent ? '✓ Sim' : '—'}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      const total = transactions.length;
+      const relSup = ((matchCount / total) * 100).toFixed(1);
+
+      document.getElementById('card-sup-abs').innerText = `${matchCount} de ${total}`;
+      document.getElementById('card-sup-rel').innerText = `${relSup}%`;
+    }
+
+    function renderRuleDetails() {
+      const ant = currentAntecedent[0];
+      const con = currentConsequent[0];
+      const union = Array.from(new Set([...currentAntecedent, ...currentConsequent]));
+
+      // Contar ocorrências
+      const countAnt = transactions.filter(t => t.items.includes(ant)).length;
+      const countUnion = transactions.filter(t => union.every(i => t.items.includes(i))).length;
+      const countCon = transactions.filter(t => t.items.includes(con)).length;
+      const total = transactions.length;
+
+      const conf = (countUnion / countAnt);
+      const confPct = (conf * 100).toFixed(1);
+      const supUnionPct = ((countUnion / total) * 100).toFixed(1);
+
+      const ruleBox = document.getElementById('rule-box');
+      ruleBox.innerHTML = `
+        <div style="font-weight:700; font-size:0.95rem; margin-bottom:0.3rem;">
+          Regra: <span style="color:var(--primary);">{${ant}}</span> ➔ <span style="color:var(--emerald);">{${con}}</span>
+        </div>
+        <div>
+          Em <strong>${countUnion} das ${countAnt}</strong> transações que contêm o item <code>{${ant}}</code>, o cliente também comprou o item <code>{${con}}</code>.
+        </div>
+        <div style="margin-top:0.35rem; font-size:0.84rem; color:var(--text);">
+          Grau de Certeza: <strong style="color:var(--primary); font-size:1rem;">${confPct}%</strong> de confiança.
+        </div>
+      `;
+
+      const breakdown = document.getElementById('rule-calc-breakdown');
+      breakdown.innerHTML = `
+        Substituindo os valores da base transacional:<br />
+        $$conf_T(\\{${ant}\\} \\Rightarrow \\{${con}\\}) = \\frac{s_T(\\{${union.join(',')}\\})}{s_T(\\{${ant}\\})} = \\frac{${countUnion}}{${countAnt}} \\approx ${conf.toFixed(3)} \\text{ (${confPct}\\%)}$$
+      `;
+    }
+
+    function triggerMath() {
+      if (typeof renderMathInElement === 'function') {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '\\[', right: '\\]', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false}
+          ],
+          throwOnError: false
+        });
+      }
+    }
+
+    renderTable();
+    renderRuleDetails();
+    window.addEventListener('load', triggerMath);
+  </script>
+</body>
+</html>

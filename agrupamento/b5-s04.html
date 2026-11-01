@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 5.4 — Armadilha da Confiança, Lift & FP-Growth</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .contingency-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.84rem;
+      margin-top: 0.4rem;
+    }
+    .contingency-table th, .contingency-table td {
+      border: 1px solid var(--border);
+      padding: 0.45rem 0.6rem;
+      text-align: center;
+    }
+    .contingency-table th {
+      background: var(--bg3);
+      font-weight: 700;
+    }
+    .lift-gauge {
+      height: 14px;
+      border-radius: 999px;
+      background: linear-gradient(to right, #ef4444 0%, #cbd5e1 50%, #10b981 100%);
+      position: relative;
+      margin: 1.2rem 0 0.6rem;
+    }
+    .lift-needle {
+      position: absolute;
+      top: -6px;
+      width: 4px;
+      height: 26px;
+      background: #0f172a;
+      border: 1.5px solid #ffffff;
+      border-radius: 2px;
+      transform: translateX(-50%);
+      transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Regras de Associação</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Seção 3 · Slide 04</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">A Armadilha da Confiança, Coeficiente Lift & Paradigma FP-Growth</h1>
+        <p class="slide-subtitle">
+          Por que uma confiança alta pode ser estatisticamente enganosa? Como a métrica de <strong>Lift</strong> corrige o viés de popularidade e por que o <strong>FP-Growth</strong> supera as varreduras do Apriori?
+        </p>
+      </div>
+
+      <div class="content-split">
+        <!-- Esquerda: O Paradoxo do Chá & Café e Lift -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>1. O Paradoxo do Chá & Café (Slides 70-73)</span>
+            <span class="badge-tag">Métrica de Lift</span>
+          </div>
+
+          <div style="font-size:0.84rem; color:var(--text-muted); line-height:1.4;">
+            Pesquisa com <strong>1000 pessoas</strong> sobre o consumo de café e chá. Ajuste os valores abaixo para testar a sensibilidade:
+          </div>
+
+          <!-- Tabela de Contingência Interativa -->
+          <table class="contingency-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Café</th>
+                <th>Não Café</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="font-weight:700;">Chá</td>
+                <td><input type="number" id="cell-both" value="150" min="0" max="1000" oninput="updateLiftCalc()" style="width:58px; text-align:center; padding:0.2rem; font-weight:700;" /></td>
+                <td><input type="number" id="cell-tea-only" value="50" min="0" max="1000" oninput="updateLiftCalc()" style="width:58px; text-align:center; padding:0.2rem;" /></td>
+                <td id="tot-tea" style="font-weight:700; color:var(--primary);">200</td>
+              </tr>
+              <tr>
+                <td style="font-weight:700;">Não Chá</td>
+                <td><input type="number" id="cell-coffee-only" value="650" min="0" max="1000" oninput="updateLiftCalc()" style="width:58px; text-align:center; padding:0.2rem;" /></td>
+                <td><input type="number" id="cell-neither" value="150" min="0" max="1000" oninput="updateLiftCalc()" style="width:58px; text-align:center; padding:0.2rem;" /></td>
+                <td id="tot-no-tea" style="font-weight:700;">800</td>
+              </tr>
+              <tr style="background:var(--bg3); font-weight:700;">
+                <td>Total</td>
+                <td id="tot-coffee" style="color:var(--emerald);">800</td>
+                <td id="tot-no-coffee">200</td>
+                <td id="tot-all">1000</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem; margin-top:0.6rem;">
+            <div class="formula-card" style="font-size:0.8rem; text-align:center;">
+              <span style="color:var(--text-dim);">Confiança {Chá} ➔ {Café}</span>
+              <strong id="disp-conf" style="font-size:1.15rem; color:var(--primary);">75.0%</strong>
+              <span style="font-size:0.75rem; color:var(--text-dim);">Parece alta...</span>
+            </div>
+            <div class="formula-card" style="font-size:0.8rem; text-align:center;">
+              <span style="color:var(--text-dim);">Popularidade Geral Café</span>
+              <strong id="disp-base-coffee" style="font-size:1.15rem; color:var(--emerald);">80.0%</strong>
+              <span style="font-size:0.75rem; color:var(--text-dim);">$s_T(Café)$ sem o chá!</span>
+            </div>
+          </div>
+
+          <!-- Barra de Lift -->
+          <div class="lift-gauge">
+            <div class="lift-needle" id="lift-needle" style="left: 46%;"></div>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:0.74rem; font-weight:700; color:var(--text-dim); margin-top:-0.3rem;">
+            <span style="color:var(--rose);">Repulsão (Lift &lt; 1)</span>
+            <span style="color:var(--text-muted);">Independência (Lift = 1)</span>
+            <span style="color:var(--emerald);">Atração (Lift &gt; 1)</span>
+          </div>
+
+          <div class="highlight-box cyan" id="lift-detail-box" style="font-size:0.84rem; margin-top:0.5rem;">
+            <!-- Preenchido via JS -->
+          </div>
+        </div>
+
+        <!-- Direita: Limitações do Apriori & Inovação do FP-Growth -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>2. Apriori vs. FP-Growth (Árvores de Prefixos)</span>
+            <span class="badge-tag">Alta Escalabilidade</span>
+          </div>
+
+          <div style="font-size:0.84rem; color:var(--text-muted); line-height:1.45;">
+            Por que o Apriori clássico tem gargalos severos de desempenho em bancos de dados corporativos reais (milhões de transações)?
+          </div>
+
+          <div class="table-container" style="margin-top:0.4rem;">
+            <table class="styled-table" style="font-size:0.82rem;">
+              <thead>
+                <tr>
+                  <th>Critério</th>
+                  <th>Algoritmo Apriori</th>
+                  <th>Algoritmo FP-Growth</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Varreduras no Banco</strong></td>
+                  <td style="color:var(--rose); font-weight:600;">$k$ varreduras completas (alto I/O)</td>
+                  <td style="color:var(--emerald); font-weight:600;">Apenas 2 varreduras</td>
+                </tr>
+                <tr>
+                  <td><strong>Geração de Candidatos</strong></td>
+                  <td style="color:var(--rose); font-weight:600;">Sim ($C_k$ combinatório)</td>
+                  <td style="color:var(--emerald); font-weight:600;">Zero geração de candidatos</td>
+                </tr>
+                <tr>
+                  <td><strong>Estrutura de Dados</strong></td>
+                  <td>Arrays / Matrizes de suporte</td>
+                  <td style="color:var(--primary); font-weight:600;"><strong>FP-Tree</strong> (Árvore de Prefixos compacta)</td>
+                </tr>
+                <tr>
+                  <td><strong>Estratégia de Mineração</strong></td>
+                  <td>Iterativa por tamanho (Breadth-first)</td>
+                  <td>Divisão e conquista recursiva (Divide-and-conquer)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="formula-card" style="margin-top:0.5rem;">
+            <div style="font-weight:700; font-size:0.82rem; color:var(--text); margin-bottom:0.2rem;">
+              Fórmula Formal do Lift:
+            </div>
+            $$Lift(A \Rightarrow C) = \frac{s_T(A \cup C)}{s_T(A) \cdot s_T(C)} = \frac{conf(A \Rightarrow C)}{s_T(C)}$$
+          </div>
+
+          <div class="insight-box" style="margin-top:auto;">
+            <div class="i-icon">💡</div>
+            <div class="i-text">
+              <strong>Conclusão do Módulo:</strong> Enquanto o <strong>Clustering (K-Means)</strong> descobre geometrias e clusters de instâncias no espaço euclidiano, a <strong>Associação (Apriori / FP-Growth)</strong> mapeia dependências simbióticas entre itens discretos. Juntos, constituem os dois pilares clássicos do aprendizado descritivo!
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b5-s03.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <a class="btn-nav" href="index.html" style="background:var(--emerald); color:#fff; border-color:var(--emerald);">Concluir Trilha Completa ✓</a>
+    </nav>
+  </div>
+
+  <script>
+    function updateLiftCalc() {
+      const a_c = parseFloat(document.getElementById('cell-both').value) || 0;
+      const a_nc = parseFloat(document.getElementById('cell-tea-only').value) || 0;
+      const na_c = parseFloat(document.getElementById('cell-coffee-only').value) || 0;
+      const na_nc = parseFloat(document.getElementById('cell-neither').value) || 0;
+
+      const totTea = a_c + a_nc;
+      const totNoTea = na_c + na_nc;
+      const totCoffee = a_c + na_c;
+      const totNoCoffee = a_nc + na_nc;
+      const total = totTea + totNoTea;
+
+      document.getElementById('tot-tea').innerText = totTea;
+      document.getElementById('tot-no-tea').innerText = totNoTea;
+      document.getElementById('tot-coffee').innerText = totCoffee;
+      document.getElementById('tot-no-coffee').innerText = totNoCoffee;
+      document.getElementById('tot-all').innerText = total;
+
+      if (totTea === 0 || total === 0 || totCoffee === 0) return;
+
+      const sUnion = a_c / total;
+      const sTea = totTea / total;
+      const sCoffee = totCoffee / total;
+
+      const conf = (a_c / totTea);
+      const lift = sUnion / (sTea * sCoffee);
+
+      document.getElementById('disp-conf').innerText = (conf * 100).toFixed(1) + '%';
+      document.getElementById('disp-base-coffee').innerText = (sCoffee * 100).toFixed(1) + '%';
+
+      // Posicionar agulha na barra de Lift: 1.0 é no centro (50%)
+      // 0.0 -> 0%, 1.0 -> 50%, 2.0+ -> 100%
+      let gaugePct = (lift / 2.0) * 100;
+      if (gaugePct < 4) gaugePct = 4;
+      if (gaugePct > 96) gaugePct = 96;
+      document.getElementById('lift-needle').style.left = gaugePct + '%';
+
+      const detailBox = document.getElementById('lift-detail-box');
+      if (lift < 0.98) {
+        detailBox.className = 'highlight-box rose';
+        detailBox.innerHTML = `
+          <strong>Lift = ${lift.toFixed(4)} (&lt; 1 — Associação Negativa / Substitutos):</strong><br />
+          A confiança de <strong>${(conf * 100).toFixed(1)}%</strong> é uma armadilha! Quem consome chá tem uma probabilidade <em>menor</em> de tomar café do que a média geral da população (${(sCoffee * 100).toFixed(1)}%). Os itens se inibem mutuamente.
+        `;
+      } else if (lift > 1.02) {
+        detailBox.className = 'highlight-box emerald';
+        detailBox.innerHTML = `
+          <strong>Lift = ${lift.toFixed(4)} (&gt; 1 — Associação Positiva / Atração):</strong><br />
+          A ocorrência de Chá estimula a ocorrência de Café além do acaso. A probabilidade condicional supera a taxa basal da população.
+        `;
+      } else {
+        detailBox.className = 'highlight-box cyan';
+        detailBox.innerHTML = `
+          <strong>Lift = ${lift.toFixed(4)} (≈ 1 — Independência Estatística):</strong><br />
+          O consumo de Chá e Café é estatisticamente independente. A confiança reflete apenas a popularidade isolada do Café.
+        `;
+      }
+
+      triggerMath();
+    }
+
+    function triggerMath() {
+      if (typeof renderMathInElement === 'function') {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '\\[', right: '\\]', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false}
+          ],
+          throwOnError: false
+        });
+      }
+    }
+
+    window.addEventListener('load', () => {
+      updateLiftCalc();
+    });
+  </script>
+</body>
+</html>

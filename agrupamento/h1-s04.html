@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide H4 — Validação de Clusters: Dunn & Silhueta</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .k-btn-group {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      margin-bottom: 0.6rem;
+    }
+    .k-btn {
+      padding: 0.35rem 0.8rem;
+      border: 1px solid var(--border);
+      background: var(--bg3);
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .k-btn:hover { border-color: var(--primary); }
+    .k-btn.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+      box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+    }
+    .sil-canvas {
+      width: 100%;
+      height: 230px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Agrupamento Hierárquico</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Seção 2 · Slide 04</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Validação de Agrupamento: Critérios Internos, Índice Dunn & Silhueta</h1>
+        <p class="slide-subtitle">
+          Na ausência de rótulos verdadeiros (*ground truth*), como validar matematicamente se um agrupamento é consistente? Examinamos a razão de Dunn e o Coeficiente de Silhueta com visualização gráfica.
+        </p>
+      </div>
+
+      <div class="content-split">
+        <!-- Esquerda: Dunn vs Silhueta -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>1. Critérios Internos de Validação (Slides 49-52)</span>
+            <span class="badge-tag">Métricas Geométricas</span>
+          </div>
+
+          <div style="font-size:0.86rem; color:var(--text-muted); line-height:1.45;">
+            Os critérios internos são <strong>independentes de rótulos externos</strong> e avaliam o compromisso fundamental entre coesão intragrupo e isolamento intergrupos.
+          </div>
+
+          <!-- Card Índice Dunn -->
+          <div class="formula-card" style="margin-top:0.4rem;">
+            <div style="font-weight:700; font-size:0.84rem; color:var(--text); margin-bottom:0.2rem;">
+              Índice Dunn:
+            </div>
+            $$Dunn = \frac{\min_{i \ne j} d(C_i, C_j)}{\max_k \text{diam}(C_k)}$$
+            <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.25rem;">
+              Razão entre a menor distância intergrupos e a maior dispersão (diâmetro) intragrupo. <strong>Quanto maior, melhor!</strong>
+            </div>
+          </div>
+
+          <!-- Card Coeficiente Silhouette -->
+          <div class="formula-card" style="margin-top:0.4rem;">
+            <div style="font-weight:700; font-size:0.84rem; color:var(--text); margin-bottom:0.2rem;">
+              Coeficiente de Silhueta para a instância $i$:
+            </div>
+            $$s(i) = \frac{b(i) - a(i)}{\max(a(i), b(i))}, \quad s(i) \in [-1, 1]$$
+            <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.25rem;">
+              • $a(i)$: distância média ao mesmo grupo (coesão).<br />
+              • $b(i)$: distância média ao grupo vizinho mais próximo (separação).
+            </div>
+          </div>
+
+          <div class="highlight-box cyan" style="font-size:0.84rem; margin-top:auto;">
+            <strong>Interpretação do Silhouette Score:</strong><br />
+            • $\approx +1$: Objeto bem alocado e isolado.<br />
+            • $\approx 0$: Ponto ambíguo na fronteira de decisão.<br />
+            • $&lt; 0$: Ponto mais próximo de outro cluster do que do seu próprio!
+          </div>
+        </div>
+
+        <!-- Direita: Visualizador do Gráfico de Silhueta -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>2. Visualização do Silhouette Plot (Slides 53-55)</span>
+            <span class="badge-tag">Simulador Interativo</span>
+          </div>
+
+          <div class="k-btn-group">
+            <span style="font-size:0.82rem; font-weight:700; color:var(--text);">Avaliar Partição:</span>
+            <button class="k-btn active" id="btn-k2" onclick="setK(2)">k = 2 Clusters</button>
+            <button class="k-btn" id="btn-k3" onclick="setK(3)">k = 3 Clusters</button>
+            <button class="k-btn" id="btn-k4" onclick="setK(4)">k = 4 Clusters</button>
+          </div>
+
+          <canvas id="sil-canvas" class="sil-canvas" width="460" height="230"></canvas>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.5rem;">
+            <span style="font-size:0.82rem; color:var(--text-muted);">Silhueta Média Global ($\overline{s}$):</span>
+            <strong id="avg-sil-label" style="font-family:'Fira Code'; font-size:1.05rem; color:var(--emerald);">0.71</strong>
+          </div>
+
+          <div id="sil-analysis-box" class="highlight-box emerald" style="font-size:0.84rem; margin-top:0.4rem;">
+            <!-- Preenchido via JS -->
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="h1-s03.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <a class="btn-nav" href="b5-s01.html" style="background:var(--primary); color:#fff; border-color:var(--primary);">Próximo (Regras de Associação) →</a>
+    </nav>
+  </div>
+
+  <script>
+    let currentK = 2;
+
+    // Perfis simulados de silhueta para k=2, k=3, k=4 (Slides 53-55)
+    const silData = {
+      2: {
+        avg: 0.71,
+        clusters: [
+          { name: "Cluster 1 (n=18)", color: "#0284c7", scores: [0.82, 0.81, 0.79, 0.77, 0.76, 0.74, 0.73, 0.71, 0.69, 0.68, 0.66, 0.65, 0.63, 0.61, 0.58, 0.54, 0.51, 0.48] },
+          { name: "Cluster 2 (n=22)", color: "#7c3aed", scores: [0.88, 0.86, 0.85, 0.84, 0.82, 0.81, 0.80, 0.78, 0.77, 0.75, 0.74, 0.72, 0.70, 0.69, 0.67, 0.65, 0.62, 0.59, 0.55, 0.51, 0.47, 0.42] }
+        ],
+        desc: "<strong>Excelente Definição (k=2):</strong> Quase todos os pontos possuem silhueta superior a 0.50, com espessura uniforme e nenhum valor negativo. Indica dois grupos compactos e amplamente isolados."
+      },
+      3: {
+        avg: 0.58,
+        clusters: [
+          { name: "Cluster 1 (n=18)", color: "#0284c7", scores: [0.82, 0.81, 0.79, 0.77, 0.76, 0.74, 0.73, 0.71, 0.69, 0.68, 0.66, 0.65, 0.63, 0.61, 0.58, 0.54, 0.51, 0.48] },
+          { name: "Cluster 2 (n=12)", color: "#7c3aed", scores: [0.72, 0.70, 0.68, 0.65, 0.61, 0.57, 0.52, 0.48, 0.44, 0.39, 0.32, 0.25] },
+          { name: "Cluster 3 (n=10)", color: "#10b981", scores: [0.65, 0.62, 0.58, 0.53, 0.47, 0.41, 0.35, 0.28, 0.18, 0.05] }
+        ],
+        desc: "<strong>Definição Moderada (k=3):</strong> A silhueta média cai para 0.58. Alguns pontos do Cluster 3 aproximam-se de zero (fronteira ambígua), mas ainda não há alocações negativas."
+      },
+      4: {
+        avg: 0.39,
+        clusters: [
+          { name: "Cluster 1 (n=18)", color: "#0284c7", scores: [0.82, 0.81, 0.79, 0.77, 0.76, 0.74, 0.73, 0.71, 0.69, 0.68, 0.66, 0.65, 0.63, 0.61, 0.58, 0.54, 0.51, 0.48] },
+          { name: "Cluster 2 (n=10)", color: "#7c3aed", scores: [0.62, 0.59, 0.54, 0.49, 0.42, 0.35, 0.28, 0.20, 0.11, 0.02] },
+          { name: "Cluster 3 (n=8)", color: "#10b981", scores: [0.55, 0.48, 0.41, 0.33, 0.24, 0.12, -0.05, -0.14] },
+          { name: "Cluster 4 (n=4)", color: "#f59e0b", scores: [0.42, 0.31, 0.15, -0.08] }
+        ],
+        desc: "<strong>Superfatiamento / Má Alocação (k=4):</strong> A presença de <em>valores negativos de silhueta</em> nos Clusters 3 e 4 denuncia que essas partições foram forçadas artificialmente, violando a geometria natural dos dados."
+      }
+    };
+
+    const sCanvas = document.getElementById('sil-canvas');
+    const sCtx = sCanvas.getContext('2d');
+
+    function setK(k) {
+      currentK = k;
+      document.querySelectorAll('.k-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('btn-k' + k).classList.add('active');
+
+      drawSilhouette();
+    }
+
+    function drawSilhouette() {
+      sCtx.clearRect(0, 0, sCanvas.width, sCanvas.height);
+
+      const data = silData[currentK];
+      document.getElementById('avg-sil-label').innerText = data.avg.toFixed(2);
+      document.getElementById('sil-analysis-box').innerHTML = data.desc;
+
+      const padLeft = 45;
+      const padRight = 20;
+      const padTop = 20;
+      const padBottom = 25;
+      const plotW = sCanvas.width - padLeft - padRight;
+      const plotH = sCanvas.height - padTop - padBottom;
+
+      // Eixo X vai de -0.2 a 1.0 (total range = 1.2)
+      const minX = -0.2;
+      const maxX = 1.0;
+      const xRange = maxX - minX;
+
+      function mapX(val) {
+        return padLeft + ((val - minX) / xRange) * plotW;
+      }
+
+      // Linha do zero (x=0)
+      const zeroX = mapX(0);
+      sCtx.strokeStyle = '#cbd5e1';
+      sCtx.lineWidth = 1.5;
+      sCtx.beginPath();
+      sCtx.moveTo(zeroX, padTop);
+      sCtx.lineTo(zeroX, padTop + plotH);
+      sCtx.stroke();
+
+      // Contar total de barras + espaçamento entre clusters
+      let totalBars = 0;
+      data.clusters.forEach(c => totalBars += c.scores.length);
+      const gapBars = (data.clusters.length - 1) * 3;
+      const barH = plotH / (totalBars + gapBars);
+
+      let currentY = padTop;
+
+      data.clusters.forEach(cluster => {
+        sCtx.fillStyle = cluster.color;
+
+        cluster.scores.forEach(score => {
+          const barEndX = mapX(score);
+          const x = Math.min(zeroX, barEndX);
+          const w = Math.abs(barEndX - zeroX);
+
+          sCtx.fillRect(x, currentY, Math.max(1, w), Math.max(1, barH - 0.5));
+          currentY += barH;
+        });
+
+        // Espaço entre clusters
+        currentY += barH * 3;
+      });
+
+      // Linha tracejada da média geral (Silhouette Score)
+      const avgX = mapX(data.avg);
+      sCtx.save();
+      sCtx.strokeStyle = '#ef4444';
+      sCtx.lineWidth = 2;
+      sCtx.setLineDash([4, 4]);
+      sCtx.beginPath();
+      sCtx.moveTo(avgX, padTop - 5);
+      sCtx.lineTo(avgX, padTop + plotH + 5);
+      sCtx.stroke();
+      sCtx.restore();
+
+      // Rótulos do eixo inferior (-0.2, 0.0, 0.5, 1.0)
+      sCtx.fillStyle = '#64748b';
+      sCtx.font = '10px Fira Code';
+      sCtx.textAlign = 'center';
+      [-0.2, 0.0, 0.2, 0.5, 0.8, 1.0].forEach(tick => {
+        const tx = mapX(tick);
+        sCtx.fillText(tick.toFixed(1), tx, padTop + plotH + 16);
+      });
+
+      // Rótulo da linha vermelha
+      sCtx.fillStyle = '#ef4444';
+      sCtx.font = 'bold 9.5px Inter';
+      sCtx.textAlign = 'center';
+      sCtx.fillText(`Média = ${data.avg.toFixed(2)}`, avgX, padTop - 8);
+    }
+
+    setK(2);
+  </script>
+</body>
+</html>

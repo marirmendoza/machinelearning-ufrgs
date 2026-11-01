@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide H3 — Construção do Dendrograma Passo a Passo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .dual-sim-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+    }
+    .sim-canvas {
+      width: 100%;
+      height: 250px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+    .step-ctrls {
+      display: flex;
+      gap: 0.4rem;
+      align-items: center;
+      margin-top: 0.5rem;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Agrupamento Hierárquico</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Seção 2 · Slide 03</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Construção do Dendrograma Passo a Passo: Simulação da Aula 24</h1>
+        <p class="slide-subtitle">
+          Acompanhe o algoritmo aglomerativo (*Single Linkage*) agrupando 14 instâncias ($A$ até $N$) com base nas distâncias euclidianas dos slides 25 a 44, com análise de cortes horizontais.
+        </p>
+      </div>
+
+      <div class="dual-sim-grid">
+        <!-- Esquerda: Scatter Plot dos Pontos no Espaço 2D -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>1. Espaço 2D das Instâncias ($A$ até $N$)</span>
+            <span class="badge-tag" id="cluster-count-badge">14 Clusters</span>
+          </div>
+
+          <canvas id="scatter-canvas" class="sim-canvas" width="460" height="250"></canvas>
+
+          <div class="step-ctrls">
+            <button class="btn-nav" id="btn-prev" onclick="prevDendroStep()" disabled>← Anterior</button>
+            <button class="btn-nav" id="btn-next" onclick="nextDendroStep()" style="background:var(--primary); color:#fff; border-color:var(--primary);">Próximo Passo →</button>
+            <button class="btn-nav" onclick="autoRunDendro()">Executar Tudo</button>
+            <button class="btn-nav" onclick="resetDendro()">Resetar</button>
+          </div>
+
+          <div id="step-expl" class="highlight-box cyan" style="font-size:0.84rem; margin-top:0.5rem; min-height:48px;">
+            <!-- Preenchido via JS -->
+          </div>
+        </div>
+
+        <!-- Direita: Construção Sincronizada do Dendrograma -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>2. Dendrograma Resultante & Cortes Horizontais</span>
+            <span class="badge-tag">Altura = Distância</span>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.25rem;">
+            <label style="font-size:0.8rem; font-weight:600; color:var(--text-muted);">
+              Corte Horizontal de Dissimilaridade:
+            </label>
+            <span id="cut-height-label" style="font-family:'Fira Code'; font-size:0.82rem; font-weight:700; color:var(--rose);">
+              Corte = 40.0
+            </span>
+          </div>
+          <input type="range" id="cut-slider" min="5" max="95" value="40" oninput="updateCutLine()" style="width:100%; cursor:pointer; margin-bottom:0.4rem;" />
+
+          <canvas id="dendro-canvas" class="sim-canvas" width="460" height="250"></canvas>
+
+          <div id="cut-summary-box" class="highlight-box emerald" style="font-size:0.84rem; margin-top:auto;">
+            <!-- Preenchido via JS -->
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="h1-s02.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="h1-s04.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    // 14 pontos inspirados na disposição da Aula 24 (slides 25-44)
+    const points = [
+      { id: 'E', x: 65, y: 70 },
+      { id: 'C', x: 80, y: 130 },
+      { id: 'D', x: 105, y: 145 },
+      { id: 'A', x: 130, y: 80 },
+      { id: 'B', x: 155, y: 95 },
+      { id: 'F', x: 120, y: 200 },
+      { id: 'G', x: 230, y: 150 },
+      { id: 'H', x: 310, y: 80 },
+      { id: 'I', x: 335, y: 65 },
+      { id: 'J', x: 375, y: 100 },
+      { id: 'K', x: 395, y: 115 },
+      { id: 'L', x: 340, y: 175 },
+      { id: 'M', x: 370, y: 190 },
+      { id: 'N', x: 420, y: 165 }
+    ];
+
+    // Ordem no eixo X do dendrograma: E, C, D, A, B, F, G, H, I, J, K, L, M, N (Slide 25)
+    const order = ['E', 'C', 'D', 'A', 'B', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N'];
+    const leafX = {};
+    order.forEach((id, idx) => {
+      leafX[id] = 30 + idx * 30.5;
+    });
+
+    // Passos de fusão correspondentes aos slides 25 a 40 da Aula 24
+    const mergeSteps = [
+      {
+        step: 0,
+        text: "Início: 14 clusters individuais com 1 ponto cada. A matriz calcula a menor distância euclidiana inicial.",
+        k: 14,
+        merges: []
+      },
+      {
+        step: 1,
+        text: "Passo 1 (Slide 27-28): Fusão dos pontos mais próximos {C, D} e {A, B} a uma distância pequena (~12px).",
+        k: 12,
+        merges: [
+          { c1: 'C', c2: 'D', h: 12, id: 'CD' },
+          { c1: 'A', c2: 'B', h: 14, id: 'AB' }
+        ]
+      },
+      {
+        step: 2,
+        text: "Passo 2 (Slide 30): No lado direito, fusão de {H, I}, {J, K} e {L, M}.",
+        k: 9,
+        merges: [
+          { c1: 'C', c2: 'D', h: 12, id: 'CD' },
+          { c1: 'A', c2: 'B', h: 14, id: 'AB' },
+          { c1: 'H', c2: 'I', h: 13, id: 'HI' },
+          { c1: 'J', c2: 'K', h: 15, id: 'JK' },
+          { c1: 'L', c2: 'M', h: 16, id: 'LM' }
+        ]
+      },
+      {
+        step: 3,
+        text: "Passo 3 (Slide 31): Agrupamento dos pares {A, B} e {C, D} formando o cluster {A, B, C, D} (distância ~24px).",
+        k: 8,
+        merges: [
+          { c1: 'C', c2: 'D', h: 12, id: 'CD' },
+          { c1: 'A', c2: 'B', h: 14, id: 'AB' },
+          { c1: 'CD', c2: 'AB', h: 24, id: 'ABCD' },
+          { c1: 'H', c2: 'I', h: 13, id: 'HI' },
+          { c1: 'J', c2: 'K', h: 15, id: 'JK' },
+          { c1: 'L', c2: 'M', h: 16, id: 'LM' }
+        ]
+      },
+      {
+        step: 4,
+        text: "Passo 4 (Slide 34-35): E une-se a {A,B,C,D} formando {A,B,C,D,E}. À direita, fusão de {HI} e {JK} em {HIJK}.",
+        k: 6,
+        merges: [
+          { c1: 'C', c2: 'D', h: 12, id: 'CD' },
+          { c1: 'A', c2: 'B', h: 14, id: 'AB' },
+          { c1: 'CD', c2: 'AB', h: 24, id: 'ABCD' },
+          { c1: 'E', c2: 'ABCD', h: 32, id: 'ABCDE' },
+          { c1: 'H', c2: 'I', h: 13, id: 'HI' },
+          { c1: 'J', c2: 'K', h: 15, id: 'JK' },
+          { c1: 'HI', c2: 'JK', h: 28, id: 'HIJK' },
+          { c1: 'L', c2: 'M', h: 16, id: 'LM' }
+        ]
+      },
+      {
+        step: 5,
+        text: "Passo 5 (Slide 37-38): F une-se a {ABCDE} e N une-se a {HIJKLM}.",
+        k: 4,
+        merges: [
+          { c1: 'C', c2: 'D', h: 12, id: 'CD' },
+          { c1: 'A', c2: 'B', h: 14, id: 'AB' },
+          { c1: 'CD', c2: 'AB', h: 24, id: 'ABCD' },
+          { c1: 'E', c2: 'ABCD', h: 32, id: 'ABCDE' },
+          { c1: 'ABCDE', c2: 'F', h: 42, id: 'ABCDEF' },
+          { c1: 'H', c2: 'I', h: 13, id: 'HI' },
+          { c1: 'J', c2: 'K', h: 15, id: 'JK' },
+          { c1: 'HI', c2: 'JK', h: 28, id: 'HIJK' },
+          { c1: 'L', c2: 'M', h: 16, id: 'LM' },
+          { c1: 'HIJK', c2: 'LM', h: 38, id: 'HIJKLM' },
+          { c1: 'HIJKLM', c2: 'N', h: 46, id: 'HIJKLMN' }
+        ]
+      },
+      {
+        step: 6,
+        text: "Passo 6 (Slide 39-40): G une-se ao cluster esquerdo, e finalmente ambos os macrogrupos convergem na raiz!",
+        k: 1,
+        merges: [
+          { c1: 'C', c2: 'D', h: 12, id: 'CD' },
+          { c1: 'A', c2: 'B', h: 14, id: 'AB' },
+          { c1: 'CD', c2: 'AB', h: 24, id: 'ABCD' },
+          { c1: 'E', c2: 'ABCD', h: 32, id: 'ABCDE' },
+          { c1: 'ABCDE', c2: 'F', h: 42, id: 'ABCDEF' },
+          { c1: 'ABCDEF', c2: 'G', h: 58, id: 'ABCDEFG' },
+          { c1: 'H', c2: 'I', h: 13, id: 'HI' },
+          { c1: 'J', c2: 'K', h: 15, id: 'JK' },
+          { c1: 'HI', c2: 'JK', h: 28, id: 'HIJK' },
+          { c1: 'L', c2: 'M', h: 16, id: 'LM' },
+          { c1: 'HIJK', c2: 'LM', h: 38, id: 'HIJKLM' },
+          { c1: 'HIJKLM', c2: 'N', h: 46, id: 'HIJKLMN' },
+          { c1: 'ABCDEFG', c2: 'HIJKLMN', h: 84, id: 'ROOT' }
+        ]
+      }
+    ];
+
+    let currentStep = 0;
+
+    const sCanvas = document.getElementById('scatter-canvas');
+    const sCtx = sCanvas.getContext('2d');
+
+    const dCanvas = document.getElementById('dendro-canvas');
+    const dCtx = dCanvas.getContext('2d');
+
+    function updateDendroView() {
+      const stepData = mergeSteps[currentStep];
+
+      document.getElementById('step-expl').innerHTML = `<strong>${stepData.text}</strong>`;
+      document.getElementById('cluster-count-badge').innerText = `${stepData.k} Clusters Ativos`;
+
+      document.getElementById('btn-prev').disabled = (currentStep === 0);
+      document.getElementById('btn-next').disabled = (currentStep === mergeSteps.length - 1);
+
+      drawScatter();
+      drawDendrogram();
+      updateCutLine();
+    }
+
+    function nextDendroStep() {
+      if (currentStep < mergeSteps.length - 1) {
+        currentStep++;
+        updateDendroView();
+      }
+    }
+
+    function prevDendroStep() {
+      if (currentStep > 0) {
+        currentStep--;
+        updateDendroView();
+      }
+    }
+
+    function autoRunDendro() {
+      currentStep = mergeSteps.length - 1;
+      updateDendroView();
+    }
+
+    function resetDendro() {
+      currentStep = 0;
+      updateDendroView();
+    }
+
+    function drawScatter() {
+      sCtx.clearRect(0, 0, sCanvas.width, sCanvas.height);
+
+      // Desenhar pontos
+      points.forEach(p => {
+        sCtx.fillStyle = '#0284c7';
+        sCtx.beginPath();
+        sCtx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+        sCtx.fill();
+        sCtx.strokeStyle = '#ffffff';
+        sCtx.lineWidth = 1.5;
+        sCtx.stroke();
+
+        sCtx.fillStyle = '#0f172a';
+        sCtx.font = 'bold 11px Fira Code';
+        sCtx.textAlign = 'center';
+        sCtx.fillText(p.id, p.x, p.y - 10);
+      });
+    }
+
+    // Posições X acumuladas para os nós intermediários do dendrograma
+    const nodeCoords = { ...leafX };
+
+    function drawDendrogram() {
+      dCtx.clearRect(0, 0, dCanvas.width, dCanvas.height);
+
+      const baseY = 215;
+      const scaleY = 2.1;
+
+      // Desenhar rótulos das folhas no eixo inferior
+      dCtx.fillStyle = '#0f172a';
+      dCtx.font = 'bold 10.5px Fira Code';
+      dCtx.textAlign = 'center';
+      order.forEach(id => {
+        dCtx.fillText(id, leafX[id], baseY + 16);
+      });
+
+      // Desenhar ramos ativos do passo atual
+      const stepData = mergeSteps[currentStep];
+      dCtx.strokeStyle = '#334155';
+      dCtx.lineWidth = 1.6;
+
+      stepData.merges.forEach(m => {
+        const x1 = nodeCoords[m.c1];
+        const x2 = nodeCoords[m.c2];
+        const targetY = baseY - m.h * scaleY;
+
+        // Posição x do novo nó é o ponto médio
+        nodeCoords[m.id] = (x1 + x2) / 2;
+
+        dCtx.beginPath();
+        dCtx.moveTo(x1, baseY);
+        dCtx.lineTo(x1, targetY);
+        dCtx.lineTo(x2, targetY);
+        dCtx.lineTo(x2, baseY);
+        dCtx.stroke();
+      });
+    }
+
+    function updateCutLine() {
+      const cutH = parseFloat(document.getElementById('cut-slider').value);
+      document.getElementById('cut-height-label').innerText = `Corte = ${cutH.toFixed(1)}`;
+
+      drawDendrogram();
+
+      // Linha de corte vermelha
+      const baseY = 215;
+      const scaleY = 2.1;
+      const cutCanvasY = baseY - cutH * scaleY;
+
+      dCtx.save();
+      dCtx.strokeStyle = '#ef4444';
+      dCtx.lineWidth = 2;
+      dCtx.setLineDash([4, 4]);
+      dCtx.beginPath();
+      dCtx.moveTo(15, cutCanvasY);
+      dCtx.lineTo(dCanvas.width - 15, cutCanvasY);
+      dCtx.stroke();
+      dCtx.restore();
+
+      // Rótulo da linha
+      dCtx.fillStyle = '#ef4444';
+      dCtx.font = 'bold 10px Inter';
+      dCtx.textAlign = 'right';
+      dCtx.fillText('Corte Horizontal', dCanvas.width - 20, cutCanvasY - 5);
+
+      // Interpretar número de clusters conforme slides 41-44 da aula
+      let kClusters = 14;
+      let desc = "";
+
+      if (cutH >= 84) {
+        kClusters = 1;
+        desc = "1 único cluster global com todos os 14 pontos (corte acima da raiz)";
+      } else if (cutH >= 58) {
+        kClusters = 2;
+        desc = "k = 2 clusters: {A..G} e {H..N}";
+      } else if (cutH >= 42) {
+        kClusters = 3;
+        desc = "k = 3 clusters: {A..G}, {H..M} e {N} (Slide 42 da Aula 24)";
+      } else if (cutH >= 28) {
+        kClusters = 5;
+        desc = "k = 5 clusters bem definidos (Slide 43 da Aula 24)";
+      } else if (cutH >= 16) {
+        kClusters = 6;
+        desc = "k = 6 clusters locais (Slide 44 da Aula 24)";
+      } else {
+        kClusters = 14;
+        desc = "14 clusters individuais (cada ponto em seu próprio cluster)";
+      }
+
+      document.getElementById('cut-summary-box').innerHTML = `
+        <strong>Análise do Corte Horizontal (Slides 41-44):</strong><br />
+        Na altura $d = ${cutH.toFixed(1)}$, o corte transversal produz <strong>${desc}</strong>.
+      `;
+    }
+
+    updateDendroView();
+  </script>
+</body>
+</html>

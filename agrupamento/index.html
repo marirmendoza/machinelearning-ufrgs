@@ -152,15 +152,20 @@
   <div class="hero">
     <a href="../index.html" class="back-link">← Todas as aulas</a>
     <div class="badge">UFRGS · Aprendizado de Máquina</div>
-    <h1>Agrupamento & K-Means</h1>
+    <h1>Agrupamento & Regras de Associação</h1>
     <div class="prof-name">Profa. Mariana Recamonde-Mendoza & Luciano Beylouni (Mestrando PPGC)</div>
     <p class="hero-sub">
-      Da ausência de atributo alvo à descoberta de subpopulações latentes: paradigmas não-supervisionados, medidas de proximidade, o algoritmo K-Means passo a passo, método do cotovelo e viés indutivo.
+      Da ausência de atributo alvo à descoberta de subpopulações e regras latentes: paradigmas não-supervisionados, medidas de proximidade, algoritmo K-Means, viés indutivo e mineração de padrões frequentes (Apriori, Lift & FP-Growth).
     </p>
   </div>
 
   <div class="blocks">
     
+    <!-- SEÇÃO 1: K-MEANS -->
+    <div style="font-size:1.25rem; font-weight:800; color:var(--primary); margin: 1.5rem 0 0.5rem; display:flex; align-items:center; gap:0.5rem;">
+      <span>🫧</span> Seção 1: Agrupamento Particional & K-Means (Aulas 22-P1 & 23)
+    </div>
+
     <!-- Bloco 1 -->
     <div class="block-section">
       <div class="block-title">Bloco 1 — Introdução ao Aprendizado Não-Supervisionado</div>
@@ -257,12 +262,96 @@
       </div>
     </div>
 
+    <!-- SEÇÃO 2: AGRUPAMENTO HIERÁRQUICO -->
+    <div style="font-size:1.25rem; font-weight:800; color:var(--primary); margin: 2.5rem 0 0.5rem; display:flex; align-items:center; gap:0.5rem;">
+      <span>🌳</span> Seção 2: Agrupamento Hierárquico (Aula 24)
+    </div>
+
+    <div class="block-section">
+      <div class="block-title">Bloco Hierárquico — AGNES, DIANA, Linkage & Dendrograma</div>
+      <div class="slides-grid">
+        <a href="h1-s01.html" class="slide-link">
+          <div class="sl-num">Slide H1</div>
+          <div class="sl-icon">🌱</div>
+          <div class="sl-title">Paradigma Hierárquico: AGNES vs DIANA</div>
+          <div class="sl-desc">Abordagens aglomerativa (bottom-up) e divisiva (top-down), ausência de k prévio e determinação de grupos por corte de dissimilaridade.</div>
+          <div class="sl-tag lab">interativo</div>
+        </a>
+
+        <a href="h1-s02.html" class="slide-link">
+          <div class="sl-num">Slide H2</div>
+          <div class="sl-icon">📐</div>
+          <div class="sl-title">Critérios de Ligação (Linkage)</div>
+          <div class="sl-desc">Single, Complete, Average e Centroid Linkage. Laboratório dinâmico de arraste de pontos evidenciando efeito de encadeamento e esfericidade.</div>
+          <div class="sl-tag lab">laboratório 2d</div>
+        </a>
+
+        <a href="h1-s03.html" class="slide-link">
+          <div class="sl-num">Slide H3</div>
+          <div class="sl-icon">🌳</div>
+          <div class="sl-title">Construção do Dendrograma (Aula 24)</div>
+          <div class="sl-desc">Simulação passo a passo dos 14 pontos (A até N) dos slides 25-44 da aula com slider de corte horizontal dinâmico.</div>
+          <div class="sl-tag calc">simulação da aula</div>
+        </a>
+
+        <a href="h1-s04.html" class="slide-link">
+          <div class="sl-num">Slide H4</div>
+          <div class="sl-icon">📊</div>
+          <div class="sl-title">Validação: Índice Dunn & Silhueta</div>
+          <div class="sl-desc">Critérios internos: formulação matemática do Índice Dunn e visualizador do Silhouette Plot para diagnosticar superfatiamento.</div>
+          <div class="sl-tag lab">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- SEÇÃO 3: REGRAS DE ASSOCIAÇÃO -->
+    <div style="font-size:1.25rem; font-weight:800; color:var(--primary); margin: 2.5rem 0 0.5rem; display:flex; align-items:center; gap:0.5rem;">
+      <span>🛒</span> Seção 3: Mineração de Padrões Frequentes & Regras de Associação (Aula 22-P2)
+    </div>
+
+    <div class="block-section">
+      <div class="block-title">Bloco Associação — Padrões Frequentes, Apriori & Lift</div>
+      <div class="slides-grid">
+        <a href="b5-s01.html" class="slide-link">
+          <div class="sl-num">Slide A1</div>
+          <div class="sl-icon">🛒</div>
+          <div class="sl-title">Padrões Frequentes & Suporte</div>
+          <div class="sl-desc">Base transacional ($TID$), representação matricial binária, suporte absoluto ($s_T$), suporte relativo ($\sigma_T$) e probabilidade condicional de confiança.</div>
+          <div class="sl-tag lab">interativo</div>
+        </a>
+
+        <a href="b5-s02.html" class="slide-link">
+          <div class="sl-num">Slide A2</div>
+          <div class="sl-icon">🌲</div>
+          <div class="sl-title">Espaço de Busca & Princípio Apriori</div>
+          <div class="sl-desc">O reticulado (lattice) de itemsets ($2^d-1$), propriedade da monotonicidade do suporte (downward-closure) e laboratório de poda em cascata.</div>
+          <div class="sl-tag lab">interativo</div>
+        </a>
+
+        <a href="b5-s03.html" class="slide-link">
+          <div class="sl-num">Slide A3</div>
+          <div class="sl-icon">⚙️</div>
+          <div class="sl-title">Algoritmo Apriori Passo a Passo</div>
+          <div class="sl-desc">Simulação interativa oficial da aula (slides 48-67): autocombinação com prefixo, join & prune, eliminação de infrequentes e extração de regras fortes.</div>
+          <div class="sl-tag calc">simulação da aula</div>
+        </a>
+
+        <a href="b5-s04.html" class="slide-link">
+          <div class="sl-num">Slide A4</div>
+          <div class="sl-icon">⚖️</div>
+          <div class="sl-title">Armadilha da Confiança, Lift & FP-Growth</div>
+          <div class="sl-desc">O paradoxo do Chá & Café, métrica de Lift (atração vs repulsão), limitações de I/O do Apriori e a revolução da árvore FP-Tree.</div>
+          <div class="sl-tag lab">interativo</div>
+        </a>
+      </div>
+    </div>
+
   </div>
 
   <footer>
     <strong>UFRGS · Instituto de Informática · Aprendizado de Máquina</strong><br />
     Profa. Mariana Recamonde-Mendoza e Luciano Beylouni (Mestrando PPGC).<br />
-    Baseado nos slides das Aulas 22 e 23 (INF01017).
+    Baseado nos slides das Aulas 22 (P1 e P2), 23 e 24 (INF01017).
   </footer>
 </body>
 </html>
