@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 5.3 — O Algoritmo Apriori Passo a Passo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .trans-matrix {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+    .trans-matrix th, .trans-matrix td {
+      padding: 0.35rem 0.5rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .trans-matrix th {
+      background: var(--bg3);
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+    .row-matched {
+      background: rgba(16, 185, 129, 0.2) !important;
+      font-weight: 700;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 0.15rem 0.45rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .status-badge.ok { background: #dcfce7; color: #15803d; }
+    .status-badge.prune { background: #fee2e2; color: #b91c1c; }
+
+    .step-log {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.8rem;
+      max-height: 270px;
+      overflow-y: auto;
+      font-size: 0.84rem;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Agrupamento & Associação</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 5 · Slide 03</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">O Algoritmo Apriori Passo a Passo: Simulação do Exemplo da Aula</h1>
+        <p class="slide-subtitle">
+          Acompanhe iterativamente as duas etapas do algoritmo Apriori na base transacional oficial da aula ($n=7$), com $\sigma_{min} = 40\%$ (mínimo de 3 transações) e $c_{min} = 80\%$.
+        </p>
+      </div>
+
+      <div class="content-split">
+        <!-- Esquerda: Base Transacional & Estado de Execução -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>1. Base Transacional de Exemplo (Slides 48-67)</span>
+            <span class="badge-tag">$\sigma_{min} = 40\%$ · $c_{min} = 80\%$</span>
+          </div>
+
+          <table class="trans-matrix" id="apriori-table">
+            <thead>
+              <tr>
+                <th>TID</th>
+                <th>Código</th>
+                <th>a</th>
+                <th>b</th>
+                <th>c</th>
+                <th>d</th>
+                <th>Itens Presentes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr id="row-t1"><td>t1</td><td>0001</td><td>1</td><td>0</td><td>1</td><td>0</td><td>{a, c}</td></tr>
+              <tr id="row-t2"><td>t2</td><td>0002</td><td>1</td><td>1</td><td>1</td><td>0</td><td>{a, b, c}</td></tr>
+              <tr id="row-t3"><td>t3</td><td>0003</td><td>1</td><td>0</td><td>0</td><td>0</td><td>{a}</td></tr>
+              <tr id="row-t4"><td>t4</td><td>0004</td><td>1</td><td>0</td><td>1</td><td>1</td><td>{a, c, d}</td></tr>
+              <tr id="row-t5"><td>t5</td><td>0005</td><td>0</td><td>0</td><td>1</td><td>0</td><td>{c}</td></tr>
+              <tr id="row-t6"><td>t6</td><td>0006</td><td>1</td><td>1</td><td>0</td><td>0</td><td>{a, b}</td></tr>
+              <tr id="row-t7"><td>t7</td><td>0007</td><td>1</td><td>1</td><td>1</td><td>1</td><td>{a, b, c, d}</td></tr>
+            </tbody>
+          </table>
+
+          <div style="display:flex; gap:0.5rem; align-items:center; margin-top:0.8rem;">
+            <button class="btn-nav" id="btn-prev" onclick="prevStep()" disabled>← Anterior</button>
+            <button class="btn-nav" id="btn-next" onclick="nextStep()" style="background:var(--primary); color:#fff; border-color:var(--primary);">Próximo Passo →</button>
+            <button class="btn-nav" onclick="autoRun()">Executar Tudo</button>
+            <button class="btn-nav" onclick="resetSim()">Resetar</button>
+          </div>
+
+          <div style="font-size:0.78rem; color:var(--text-dim); margin-top:0.3rem;">
+            Passo atual: <strong id="step-indicator" style="color:var(--text);">0 de 6 (Inicialização)</strong>
+          </div>
+        </div>
+
+        <!-- Direita: Detalhamento Algébrico das Etapas 1 e 2 -->
+        <div class="panel">
+          <div class="panel-title">
+            <span id="step-title">Etapa 1: Mineração de Itemsets Frequentes</span>
+            <span class="badge-tag" id="step-badge">F1, F2 & F3</span>
+          </div>
+
+          <div class="step-log" id="step-log">
+            <!-- Preenchido via JS com os passos exatos da aula -->
+          </div>
+
+          <div class="formula-card" style="margin-top:0.6rem;">
+            <div style="font-size:0.82rem; font-weight:700; color:var(--text);">Itemsets Frequentes Finais ($F$):</div>
+            <div id="f-display" style="font-family:'Fira Code'; font-size:0.95rem; color:var(--primary); margin-top:0.2rem;">
+              F = ∅
+            </div>
+          </div>
+
+          <div class="highlight-box emerald" id="rules-display" style="font-size:0.86rem; margin-top:auto;">
+            <strong>Regras Fortes Mineradas ($C$):</strong>
+            <div id="rules-list" style="margin-top:0.25rem; font-family:'Fira Code';">Aguardando execução da Etapa 2...</div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b5-s02.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b5-s04.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    let currentStepIndex = 0;
+
+    const steps = [
+      {
+        title: "Passo 0: Inicialização dos Parâmetros",
+        badge: "Preparação",
+        frequent: "F = ∅; k = 1",
+        rules: "Aguardando execução da Etapa 2...",
+        matches: [],
+        html: `
+          <strong>Parâmetros de Entrada da Aula:</strong><br />
+          • Número de transações: $n = 7$<br />
+          • Suporte relativo mínimo: $\\sigma_{min} = 40\\%$ (equivale a no mínimo $\\lceil 0.4 \\times 7 \\rceil = 3$ transações)<br />
+          • Confiança mínima para regras: $c_{min} = 80\\%$<br /><br />
+          Clique em <strong>Próximo Passo</strong> para analisar o suporte de cada 1-itemset ($k=1$).
+        `
+      },
+      {
+        title: "Passo 1: Avaliação de C1 (1-itemsets)",
+        badge: "Etapa 1 (k=1)",
+        frequent: "F1 = {{a}, {b}, {c}}",
+        rules: "Aguardando execução da Etapa 2...",
+        matches: ["row-t1", "row-t2", "row-t3", "row-t4", "row-t6", "row-t7"],
+        html: `
+          <strong>Contagem de Suporte para k=1:</strong><br />
+          • $\\{a\\}$: presente em $\\{t_1, t_2, t_3, t_4, t_6, t_7\\} \\to s_T = 6$ ($86\\% \\ge 40\\%$) <span class="status-badge ok">Frequente</span><br />
+          • $\\{b\\}$: presente em $\\{t_2, t_6, t_7\\} \\to s_T = 3$ ($43\\% \\ge 40\\%$) <span class="status-badge ok">Frequente</span><br />
+          • $\\{c\\}$: presente em $\\{t_1, t_2, t_4, t_5, t_7\\} \\to s_T = 5$ ($71\\% \\ge 40\\%$) <span class="status-badge ok">Frequente</span><br />
+          • $\\{d\\}$: presente em $\\{t_4, t_7\\} \\to s_T = 2$ ($28\\% < 40\\%$) <span class="status-badge prune">Poda Apriori</span><br /><br />
+          <strong>Resultado:</strong> $\\{d\\}$ é infrequente e é eliminado! Nenhum superconjunto contendo $d$ precisará ser explorado.
+        `
+      },
+      {
+        title: "Passo 2: Geração de Candidatos C2 (2-itemsets)",
+        badge: "Etapa 1 (k=2)",
+        frequent: "F1 = {{a}, {b}, {c}}",
+        rules: "Aguardando execução da Etapa 2...",
+        matches: [],
+        html: `
+          <strong>Autocombinação dos Itens de F1:</strong><br />
+          A partir de $F_1 = \\{\\{a\\}, \\{b\\}, \\{c\\}\\}$, geramos os pares de candidatos:<br />
+          $$C_2 = \\{\\{a,b\\}, \\{a,c\\}, \\{b,c\\}\\}$$<br />
+          Como todos os subconjuntos de 1 item estão em $F_1$, nenhum par é podado antes da contagem.<br />
+          No próximo passo, faremos a varredura no banco para calcular os suportes de $C_2$.
+        `
+      },
+      {
+        title: "Passo 3: Avaliação de C2 e Geração de F2",
+        badge: "Etapa 1 (k=2)",
+        frequent: "F2 = {{a,b}, {a,c}}",
+        rules: "Aguardando execução da Etapa 2...",
+        matches: ["row-t1", "row-t2", "row-t4", "row-t6", "row-t7"],
+        html: `
+          <strong>Contagem de Suporte para k=2:</strong><br />
+          • $\\{a,b\\}$: presente em $\\{t_2, t_6, t_7\\} \\to s_T = 3$ ($43\\% \\ge 40\\%$) <span class="status-badge ok">Frequente</span><br />
+          • $\\{a,c\\}$: presente em $\\{t_1, t_2, t_4, t_7\\} \\to s_T = 4$ ($57\\% \\ge 40\\%$) <span class="status-badge ok">Frequente</span><br />
+          • $\\{b,c\\}$: presente em $\\{t_2, t_7\\} \\to s_T = 2$ ($28\\% < 40\\%$) <span class="status-badge prune">Infrequente</span><br /><br />
+          <strong>Resultado:</strong> $F_2 = \\{\\{a,b\\}, \\{a,c\\}\\}$. O itemset $\\{b,c\\}$ é descartado!
+        `
+      },
+      {
+        title: "Passo 4: Teste de C3 e Encerramento da Etapa 1",
+        badge: "Etapa 1 (k=3)",
+        frequent: "F = {{a,b}, {a,c}}",
+        rules: "Aguardando execução da Etapa 2...",
+        matches: ["row-t2", "row-t7"],
+        html: `
+          <strong>Tentativa de Geração de 3-itemset (k=3):</strong><br />
+          União dos itemsets de $F_2$ com mesmo prefixo 'a': $\\{a,b\\} \\cup \\{a,c\\} = \\{a,b,c\\}$.<br /><br />
+          <strong>Verificação de Poda Apriori:</strong><br />
+          Todos os subconjuntos de 2 itens de $\\{a,b,c\\}$ estão em $F_2$?<br />
+          • $\\{a,b\\} \\in F_2$ (Sim)<br />
+          • $\\{a,c\\} \\in F_2$ (Sim)<br />
+          • $\\{b,c\\} \\in F_2$? <strong>NÃO!</strong> $\\{b,c\\}$ foi descartado no passo anterior!<br />
+          Portanto, pela Propriedade Apriori, $\\{a,b,c\\}$ é garantidamente infrequente ($s_T = 2$ em $\\{t_2, t_7\\} \\to 28\\% < 40\\%$).<br /><br />
+          Como $F_3 = \\emptyset$, a <strong>Etapa 1 encerra com $F = \\{\\{a,b\\}, \\{a,c\\}\\}$</strong>!
+        `
+      },
+      {
+        title: "Passo 5: Etapa 2 — Geração de Todas as Regras Possíveis",
+        badge: "Etapa 2 (Regras)",
+        frequent: "F = {{a,b}, {a,c}}",
+        rules: "Testando: a➔b, b➔a, a➔c, c➔a com c_min = 80%",
+        matches: ["row-t1", "row-t2", "row-t4", "row-t6", "row-t7"],
+        html: `
+          <strong>A partir de F = {{a,b}, {a,c}}, geramos 4 regras candidatas:</strong><br />
+          1. $a \\Rightarrow b$<br />
+          2. $b \\Rightarrow a$<br />
+          3. $a \\Rightarrow c$<br />
+          4. $c \\Rightarrow a$<br /><br />
+          Pela Propriedade Apriori, todas essas 4 regras já satisfazem o suporte mínimo ($\\ge 40\\%$). Resta testar a <strong>confiança</strong> com $c_{min} = 80\\%$.
+        `
+      },
+      {
+        title: "Passo 6: Filtragem de Confiança & Regras Fortes Finais",
+        badge: "Conclusão",
+        frequent: "F = {{a,b}, {a,c}}",
+        rules: "C = { b ➔ a (100%), c ➔ a (80%) }",
+        matches: ["row-t2", "row-t6", "row-t7", "row-t1", "row-t4"],
+        html: `
+          <strong>Cálculo de Confiança ($conf_T = s_T(A \\cup C) / s_T(A)$):</strong><br />
+          • $a \\Rightarrow b$: $conf = 0.43 / 0.86 = 50\\% < 80\\%$ <span class="status-badge prune">Descartada</span><br />
+          • $b \\Rightarrow a$: $conf = 0.43 / 0.43 = \\mathbf{100\\%} \\ge 80\\%$ <span class="status-badge ok">REGRA FORTE</span><br />
+          • $a \\Rightarrow c$: $conf = 0.57 / 0.86 = 66\\% < 80\\%$ <span class="status-badge prune">Descartada</span><br />
+          • $c \\Rightarrow a$: $conf = 0.57 / 0.71 = \\mathbf{80\\%} \\ge 80\\%$ <span class="status-badge ok">REGRA FORTE</span><br /><br />
+          <strong>Resultado Final Oficial:</strong><br />
+          $$C = \\{b \\Rightarrow a, \\; c \\Rightarrow a\\}$$
+          <em>"Quem compra b certamente compra a (100%), e 80% dos que compram c também levam a."</em>
+        `
+      }
+    ];
+
+    function updateStep() {
+      const step = steps[currentStepIndex];
+
+      document.getElementById('step-title').innerText = step.title;
+      document.getElementById('step-badge').innerText = step.badge;
+      document.getElementById('step-indicator').innerText = `${currentStepIndex} de ${steps.length - 1}`;
+      document.getElementById('step-log').innerHTML = step.html;
+      document.getElementById('f-display').innerText = step.frequent;
+      document.getElementById('rules-list').innerText = step.rules;
+
+      // Destacar linhas da tabela
+      document.querySelectorAll('#apriori-table tbody tr').forEach(tr => {
+        tr.classList.remove('row-matched');
+      });
+      step.matches.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('row-matched');
+      });
+
+      // Botões
+      document.getElementById('btn-prev').disabled = (currentStepIndex === 0);
+      document.getElementById('btn-next').disabled = (currentStepIndex === steps.length - 1);
+
+      triggerMath();
+    }
+
+    function nextStep() {
+      if (currentStepIndex < steps.length - 1) {
+        currentStepIndex++;
+        updateStep();
+      }
+    }
+
+    function prevStep() {
+      if (currentStepIndex > 0) {
+        currentStepIndex--;
+        updateStep();
+      }
+    }
+
+    function resetSim() {
+      currentStepIndex = 0;
+      updateStep();
+    }
+
+    function autoRun() {
+      currentStepIndex = steps.length - 1;
+      updateStep();
+    }
+
+    function triggerMath() {
+      if (typeof renderMathInElement === 'function') {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '\\[', right: '\\]', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false}
+          ],
+          throwOnError: false
+        });
+      }
+    }
+
+    window.addEventListener('load', () => {
+      updateStep();
+    });
+  </script>
+</body>
+</html>

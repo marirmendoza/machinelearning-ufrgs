@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 5.2 — Espaço de Busca & Princípio Apriori</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .lattice-container {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      position: relative;
+      width: 100%;
+      height: 290px;
+    }
+    .node-pill {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      padding: 0.3rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      font-family: 'Fira Code', monospace;
+      border: 1.5px solid var(--border);
+      background: var(--bg2);
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+      z-index: 2;
+    }
+    .node-pill:hover {
+      transform: translate(-50%, -50%) scale(1.08);
+      border-color: var(--primary);
+    }
+    .node-pill.frequent {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: var(--emerald);
+      color: #065f46;
+    }
+    .node-pill.infrequent {
+      background: #fee2e2;
+      border-color: var(--rose);
+      color: #991b1b;
+      box-shadow: 0 0 8px rgba(225, 29, 72, 0.3);
+    }
+    .node-pill.pruned {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+      color: #94a3b8;
+      text-decoration: line-through;
+      opacity: 0.55;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Agrupamento & Associação</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Bloco 5 · Slide 02</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">O Espaço de Busca & O Princípio Apriori (Poda por Monotonicidade)</h1>
+        <p class="slide-subtitle">
+          Para $d$ itens, o número de combinações possíveis é $2^d - 1$. Como minerar itemsets frequentes sem varrer um espaço combinatório exponencial de forma exaustiva?
+        </p>
+      </div>
+
+      <div class="content-split">
+        <!-- Esquerda: Teoria da Monotonicidade & Poda -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>1. Teorema da Monotonicidade do Suporte</span>
+            <span class="badge-tag">Downward-Closure</span>
+          </div>
+
+          <div style="font-size:0.86rem; color:var(--text-muted); line-height:1.45;">
+            O conjunto de transações $K_T(X)$ que sustentam um itemset $X$ <strong>diminui ou mantém-se constante</strong> à medida que adicionamos novos itens:
+          </div>
+
+          <div class="formula-card">
+            $$K_T(X \cup Y) \subseteq K_T(X) \implies s_T(X \cup Y) \le s_T(X)$$
+            <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.25rem;">
+              O suporte de qualquer superconjunto é <em>limitado superiormente</em> pelo suporte de seus subconjuntos.
+            </div>
+          </div>
+
+          <div class="highlight-box cyan" style="font-size:0.86rem;">
+            <strong>O Princípio Apriori (Agrawal & Srikant, 1994):</strong>
+            <ul style="margin: 0.3rem 0 0.3rem 1.2rem; padding:0;">
+              <li><em>"Todos os subconjuntos não-vazios de um conjunto de itens frequente devem ser frequentes."</em></li>
+              <li><strong>Contrapositiva (Regra de Poda):</strong> <em>"Se um itemset é infrequente ($\sigma < \sigma_{min}$), todos os seus superconjuntos são garantidamente infrequentes e podem ser <strong>imediatamente podados</strong> do espaço de busca!"</em></li>
+            </ul>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.6rem; margin-top:auto;">
+            <div class="formula-card" style="text-align:center;">
+              <span style="font-size:0.75rem; color:var(--text-dim);">Combinações para $d=4$</span>
+              <strong style="color:var(--primary); font-size:1.15rem;">$2^4 - 1 = 15$</strong>
+              <span style="font-size:0.75rem; color:var(--text-dim);">Espaço total no reticulado</span>
+            </div>
+            <div class="formula-card" style="text-align:center;">
+              <span style="font-size:0.75rem; color:var(--text-dim);">Combinações para $d=100$</span>
+              <strong style="color:var(--rose); font-size:1.15rem;">$\approx 1.26 \times 10^{30}$</strong>
+              <span style="font-size:0.75rem; color:var(--text-dim);">Inviável sem poda!</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Direita: Simulador de Reticulado (Lattice) & Poda Apriori -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>2. Laboratório do Reticulado (Lattice): Poda em Ação</span>
+            <span class="badge-tag">Simulador Interativo</span>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+            <span style="font-size:0.82rem; color:var(--text-muted);">
+              Clique em nós para marcar como <strong>infrequente</strong>:
+            </span>
+            <div style="display:flex; gap:0.4rem;">
+              <button class="btn-nav" style="padding:0.25rem 0.6rem; font-size:0.78rem;" onclick="simulateCase('bc')">Simular {b,c} Infreq.</button>
+              <button class="btn-nav" style="padding:0.25rem 0.6rem; font-size:0.78rem;" onclick="simulateCase('d')">Simular {d} Infreq.</button>
+              <button class="btn-nav" style="padding:0.25rem 0.6rem; font-size:0.78rem;" onclick="resetLattice()">Resetar</button>
+            </div>
+          </div>
+
+          <div class="lattice-container" id="lattice-box">
+            <canvas id="lattice-canvas" width="460" height="290" style="position:absolute; top:0; left:0; z-index:1;"></canvas>
+            <div id="lattice-nodes">
+              <!-- Nós inseridos via JS -->
+            </div>
+          </div>
+
+          <div id="pruning-summary" class="highlight-box emerald" style="font-size:0.86rem; margin-top:0.6rem;">
+            <!-- Preenchido via JS -->
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b5-s01.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="b5-s03.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    // Estrutura do Reticulado para 4 itens: a, b, c, d (15 nós)
+    const nodes = [
+      // Nível 1 (4 nós)
+      { id: 'a', label: '{a}', level: 1, x: 75, y: 55, items: ['a'] },
+      { id: 'b', label: '{b}', level: 1, x: 180, y: 55, items: ['b'] },
+      { id: 'c', label: '{c}', level: 1, x: 285, y: 55, items: ['c'] },
+      { id: 'd', label: '{d}', level: 1, x: 390, y: 55, items: ['d'] },
+
+      // Nível 2 (6 nós)
+      { id: 'ab', label: '{a,b}', level: 2, x: 50, y: 130, items: ['a','b'] },
+      { id: 'ac', label: '{a,c}', level: 2, x: 125, y: 130, items: ['a','c'] },
+      { id: 'ad', label: '{a,d}', level: 2, x: 200, y: 130, items: ['a','d'] },
+      { id: 'bc', label: '{b,c}', level: 2, x: 275, y: 130, items: ['b','c'] },
+      { id: 'bd', label: '{b,d}', level: 2, x: 345, y: 130, items: ['b','d'] },
+      { id: 'cd', label: '{cd}', label: '{c,d}', level: 2, x: 415, y: 130, items: ['c','d'] },
+
+      // Nível 3 (4 nós)
+      { id: 'abc', label: '{a,b,c}', level: 3, x: 90, y: 205, items: ['a','b','c'] },
+      { id: 'abd', label: '{a,b,d}', level: 3, x: 180, y: 205, items: ['a','b','d'] },
+      { id: 'acd', label: '{a,c,d}', level: 3, x: 280, y: 205, items: ['a','c','d'] },
+      { id: 'bcd', label: '{b,c,d}', level: 3, x: 375, y: 205, items: ['b','c','d'] },
+
+      // Nível 4 (1 nó)
+      { id: 'abcd', label: '{a,b,c,d}', level: 4, x: 232, y: 265, items: ['a','b','c','d'] }
+    ];
+
+    let infrequentSet = new Set();
+
+    function isSubset(sub, sup) {
+      return sub.every(item => sup.includes(item));
+    }
+
+    function toggleNode(nodeId) {
+      if (infrequentSet.has(nodeId)) {
+        infrequentSet.delete(nodeId);
+      } else {
+        infrequentSet.add(nodeId);
+      }
+      renderLattice();
+    }
+
+    function simulateCase(caseId) {
+      infrequentSet.clear();
+      if (caseId === 'bc') {
+        infrequentSet.add('bc');
+      } else if (caseId === 'd') {
+        infrequentSet.add('d');
+      }
+      renderLattice();
+    }
+
+    function resetLattice() {
+      infrequentSet.clear();
+      renderLattice();
+    }
+
+    function renderLattice() {
+      const container = document.getElementById('lattice-nodes');
+      container.innerHTML = '';
+
+      // Determinar quais nós são podados por superset
+      const prunedSet = new Set();
+      nodes.forEach(node => {
+        infrequentSet.forEach(infId => {
+          const infNode = nodes.find(n => n.id === infId);
+          if (infNode && node.id !== infNode.id && isSubset(infNode.items, node.items)) {
+            prunedSet.add(node.id);
+          }
+        });
+      });
+
+      // Desenhar conexões no Canvas
+      const canvas = document.getElementById('lattice-canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      nodes.forEach(n1 => {
+        nodes.forEach(n2 => {
+          if (n2.level === n1.level + 1 && isSubset(n1.items, n2.items)) {
+            ctx.beginPath();
+            ctx.moveTo(n1.x, n1.y);
+            ctx.lineTo(n2.x, n2.y);
+
+            const isPathPruned = infrequentSet.has(n1.id) || prunedSet.has(n1.id) || infrequentSet.has(n2.id) || prunedSet.has(n2.id);
+            if (isPathPruned) {
+              ctx.strokeStyle = 'rgba(239, 68, 68, 0.25)';
+              ctx.lineWidth = 1;
+              ctx.setLineDash([2, 2]);
+            } else {
+              ctx.strokeStyle = '#e2e8f0';
+              ctx.lineWidth = 1.2;
+              ctx.setLineDash([]);
+            }
+            ctx.stroke();
+          }
+        });
+      });
+
+      // Renderizar nós HTML
+      nodes.forEach(node => {
+        const div = document.createElement('div');
+        div.className = 'node-pill';
+        div.style.left = node.x + 'px';
+        div.style.top = node.y + 'px';
+
+        if (infrequentSet.has(node.id)) {
+          div.classList.add('infrequent');
+          div.innerHTML = `${node.label} ✂️`;
+        } else if (prunedSet.has(node.id)) {
+          div.classList.add('pruned');
+          div.innerHTML = `${node.label} ✕`;
+        } else {
+          div.classList.add('frequent');
+          div.innerText = node.label;
+        }
+
+        div.onclick = () => toggleNode(node.id);
+        container.appendChild(div);
+      });
+
+      // Atualizar sumário de poda
+      const totalPruned = prunedSet.size + infrequentSet.size;
+      const pctSaved = ((totalPruned / nodes.length) * 100).toFixed(0);
+
+      const summaryBox = document.getElementById('pruning-summary');
+      if (infrequentSet.size === 0) {
+        summaryBox.className = 'highlight-box cyan';
+        summaryBox.innerHTML = `
+          <strong>Busca Sem Poda:</strong> Todos os 15 nós ativos. Clique em nós como <code>{b,c}</code> ou <code>{d}</code> para ver o corte em cascata.
+        `;
+      } else {
+        const infLabels = Array.from(infrequentSet).map(id => nodes.find(n => n.id === id).label).join(', ');
+        summaryBox.className = 'highlight-box emerald';
+        summaryBox.innerHTML = `
+          <strong>Economia da Poda Apriori:</strong> Itemset(s) infrequente(s) identificado(s): <code>${infLabels}</code>.<br />
+          <strong>${prunedSet.size}</strong> superconjunto(s) podado(s) automaticamente sem ler o banco de dados! 
+          Economia de <strong>${pctSaved}%</strong> nas contagens de suporte.
+        `;
+      }
+    }
+
+    function triggerMath() {
+      if (typeof renderMathInElement === 'function') {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '\\[', right: '\\]', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false}
+          ],
+          throwOnError: false
+        });
+      }
+    }
+
+    window.addEventListener('load', () => {
+      renderLattice();
+      triggerMath();
+    });
+  </script>
+</body>
+</html>

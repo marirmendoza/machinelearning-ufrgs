@@ -152,10 +152,10 @@
   <div class="hero">
     <a href="../index.html" class="back-link">← Todas as aulas</a>
     <div class="badge">UFRGS · Aprendizado de Máquina</div>
-    <h1>Agrupamento & K-Means</h1>
+    <h1>Agrupamento & Regras de Associação</h1>
     <div class="prof-name">Profa. Mariana Recamonde-Mendoza & Luciano Beylouni (Mestrando PPGC)</div>
     <p class="hero-sub">
-      Da ausência de atributo alvo à descoberta de subpopulações latentes: paradigmas não-supervisionados, medidas de proximidade, o algoritmo K-Means passo a passo, método do cotovelo e viés indutivo.
+      Da ausência de atributo alvo à descoberta de subpopulações e regras latentes: paradigmas não-supervisionados, medidas de proximidade, algoritmo K-Means, viés indutivo e mineração de padrões frequentes (Apriori, Lift & FP-Growth).
     </p>
   </div>
 
@@ -257,12 +257,50 @@
       </div>
     </div>
 
+    <!-- Bloco 5 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 5 — Mineração de Padrões Frequentes & Regras de Associação</div>
+      <div class="slides-grid">
+        <a href="b5-s01.html" class="slide-link">
+          <div class="sl-num">Slide 01</div>
+          <div class="sl-icon">🛒</div>
+          <div class="sl-title">Padrões Frequentes & Suporte</div>
+          <div class="sl-desc">Base transacional ($TID$), representação matricial binária, suporte absoluto ($s_T$), suporte relativo ($\sigma_T$) e probabilidade condicional de confiança.</div>
+          <div class="sl-tag lab">interativo</div>
+        </a>
+
+        <a href="b5-s02.html" class="slide-link">
+          <div class="sl-num">Slide 02</div>
+          <div class="sl-icon">🌲</div>
+          <div class="sl-title">Espaço de Busca & Princípio Apriori</div>
+          <div class="sl-desc">O reticulado (lattice) de itemsets ($2^d-1$), propriedade da monotonicidade do suporte (downward-closure) e laboratório de poda em cascata.</div>
+          <div class="sl-tag lab">interativo</div>
+        </a>
+
+        <a href="b5-s03.html" class="slide-link">
+          <div class="sl-num">Slide 03</div>
+          <div class="sl-icon">⚙️</div>
+          <div class="sl-title">Algoritmo Apriori Passo a Passo</div>
+          <div class="sl-desc">Simulação interativa oficial da aula (slides 48-67): autocombinação com prefixo, join & prune, eliminação de infrequentes e extração de regras fortes.</div>
+          <div class="sl-tag calc">simulação da aula</div>
+        </a>
+
+        <a href="b5-s04.html" class="slide-link">
+          <div class="sl-num">Slide 04</div>
+          <div class="sl-icon">⚖️</div>
+          <div class="sl-title">Armadilha da Confiança, Lift & FP-Growth</div>
+          <div class="sl-desc">O paradoxo do Chá & Café, métrica de Lift (atração vs repulsão), limitações de I/O do Apriori e a revolução da árvore FP-Tree.</div>
+          <div class="sl-tag lab">interativo</div>
+        </a>
+      </div>
+    </div>
+
   </div>
 
   <footer>
     <strong>UFRGS · Instituto de Informática · Aprendizado de Máquina</strong><br />
     Profa. Mariana Recamonde-Mendoza e Luciano Beylouni (Mestrando PPGC).<br />
-    Baseado nos slides das Aulas 22 e 23 (INF01017).
+    Baseado nos slides das Aulas 22 (P1 e P2) e 23 (INF01017).
   </footer>
 </body>
 </html>
