@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide H2 — Critérios de Ligação (Linkage)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .linkage-btn-group {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.4rem;
+      margin-bottom: 0.6rem;
+    }
+    .link-btn {
+      padding: 0.45rem 0.5rem;
+      border: 1px solid var(--border);
+      background: var(--bg3);
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+    .link-btn:hover { border-color: var(--primary); }
+    .link-btn.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);
+    }
+    .interactive-canvas-box {
+      width: 100%;
+      height: 250px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: crosshair;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Agrupamento Hierárquico</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Seção 2 · Slide 02</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Critérios de Ligação (Linkage): Como Medir a Distância Entre Clusters?</h1>
+        <p class="slide-subtitle">
+          Na fusão aglomerativa, como determinar a dissimilaridade $D(C_1, C_2)$ entre dois grupos de pontos? A escolha do método de ligação define drasticamente a geometria dos clusters recuperados.
+        </p>
+      </div>
+
+      <div class="content-split">
+        <!-- Esquerda: Teoria dos 4 Critérios da Aula 24 -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>1. As 4 Abordagens de Linkage (Slides 19-22)</span>
+            <span class="badge-tag">Geometria & Ruído</span>
+          </div>
+
+          <div class="linkage-btn-group">
+            <button class="link-btn active" id="btn-single" onclick="setLinkage('single')">Single Link</button>
+            <button class="link-btn" id="btn-complete" onclick="setLinkage('complete')">Complete Link</button>
+            <button class="link-btn" id="btn-average" onclick="setLinkage('average')">Average Link</button>
+            <button class="link-btn" id="btn-centroid" onclick="setLinkage('centroid')">Centróides</button>
+          </div>
+
+          <div id="linkage-formula-box" class="formula-card">
+            <!-- Preenchido via JS com KaTeX -->
+          </div>
+
+          <div id="linkage-desc-box" class="highlight-box cyan" style="font-size:0.86rem; line-height:1.5; margin-top:0.6rem;">
+            <!-- Preenchido via JS -->
+          </div>
+
+          <div class="insight-box" style="margin-top:auto;">
+            <div class="i-icon">💡</div>
+            <div class="i-text">
+              <strong>Na prática:</strong> Nenhum critério é universalmente superior. É aconselhável testar múltiplos critérios e comparar a consistência do dendrograma com o conhecimento do domínio.
+            </div>
+          </div>
+        </div>
+
+        <!-- Direita: Laboratório Interativo de Arraste e Visualização de Pares -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>2. Laboratório de Linkage no Plano 2D</span>
+            <span class="badge-tag">Arraste os Pontos</span>
+          </div>
+
+          <div style="font-size:0.82rem; color:var(--text-muted); margin-bottom:0.4rem; display:flex; justify-content:space-between;">
+            <span>Arraste os pontos do <strong>Cluster 1</strong> (Azul) ou <strong>Cluster 2</strong> (Roxo):</span>
+            <span id="dist-metric-badge" style="font-weight:700; color:var(--primary); font-family:'Fira Code';">Dist = 0.0</span>
+          </div>
+
+          <canvas id="linkage-canvas" class="interactive-canvas-box" width="460" height="250"></canvas>
+
+          <div id="linkage-live-feedback" class="highlight-box emerald" style="font-size:0.84rem; margin-top:0.6rem;">
+            <!-- Preenchido via JS -->
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="h1-s01.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="h1-s03.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    let currentLinkage = 'single';
+
+    const linkageDefs = {
+      single: {
+        title: "Single Linkage (Menor Distância Par a Par)",
+        formula: "$$D(C_1, C_2) = \\min_{x_i \\in C_1, x_j \\in C_2} d(x_i, x_j)$$",
+        badge: "Vizinhos Mais Próximos",
+        desc: "• <strong>Vantagem:</strong> Excelente para recuperar formatos não-elípticos e concêntricos.<br />• <strong>Desvantagem:</strong> Altamente sensível a ruído e outliers. Apresenta o clássico <em>efeito de encadeamento (chaining)</em>, onde um único ponto espúrio liga dois clusters grandes prematuramente."
+      },
+      complete: {
+        title: "Complete Linkage (Maior Distância Par a Par)",
+        formula: "$$D(C_1, C_2) = \\max_{x_i \\in C_1, x_j \\in C_2} d(x_i, x_j)$$",
+        badge: "Vizinhos Mais Distantes",
+        desc: "• <strong>Vantagem:</strong> Menos sensível a ruído e outliers isolados. Favorece clusters compactos e esféricos.<br />• <strong>Desvantagem:</strong> Tende a quebrar clusters longos ou não-convexos em múltiplos subgrupos artificiais."
+      },
+      average: {
+        title: "Average Linkage (Distância Média Entre Todos os Pares)",
+        formula: "$$D(C_1, C_2) = \\frac{1}{|C_1||C_2|} \\sum_{x_i \\in C_1} \\sum_{x_j \\in C_2} d(x_i, x_j)$$",
+        badge: "Média Global (UPGMA)",
+        desc: "• <strong>Vantagem:</strong> Geralmente oferece o melhor <em>trade-off</em> entre sensibilidade a ruído e capacidade de recuperar formatos naturais.<br />• <strong>Custo:</strong> Exige calcular todos os $|C_1| \\times |C_2|$ pares de distâncias."
+      },
+      centroid: {
+        title: "Centroid Linkage (Distância Entre Médias dos Clusters)",
+        formula: "$$D(C_1, C_2) = d(\\mu_1, \\mu_2), \\quad \\mu_k = \\frac{1}{|C_k|} \\sum_{x \\in C_k} x$$",
+        badge: "Centróides Geométricos",
+        desc: "• <strong>Vantagem:</strong> Conceito intuitivo diretamente análogo ao K-Means.<br />• <strong>Atenção:</strong> Pode sofrer de <em>inversões no dendrograma</em> (onde a distância de fusão é menor que a anterior) se os clusters tiverem tamanhos desiguais."
+      }
+    };
+
+    function setLinkage(type) {
+      currentLinkage = type;
+      document.querySelectorAll('.link-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('btn-' + type).classList.add('active');
+
+      const data = linkageDefs[type];
+      document.getElementById('linkage-formula-box').innerHTML = `
+        <div style="font-weight:700; font-size:0.86rem; color:var(--text);">${data.title}</div>
+        ${data.formula}
+      `;
+      document.getElementById('linkage-desc-box').innerHTML = data.desc;
+
+      drawLinkageCanvas();
+      triggerMath();
+    }
+
+    // Canvas Interativo
+    const canvas = document.getElementById('linkage-canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Dois grupos de pontos
+    let cluster1 = [
+      { x: 100, y: 80 },
+      { x: 130, y: 130 },
+      { x: 80, y: 170 },
+      { x: 150, y: 180 }
+    ];
+
+    let cluster2 = [
+      { x: 320, y: 70 },
+      { x: 380, y: 120 },
+      { x: 340, y: 170 },
+      { x: 300, y: 210 }
+    ];
+
+    let draggedPoint = null;
+
+    canvas.addEventListener('mousedown', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+
+      [...cluster1, ...cluster2].forEach(p => {
+        const dist = Math.hypot(p.x - mx, p.y - my);
+        if (dist < 12) draggedPoint = p;
+      });
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (!draggedPoint) return;
+      const rect = canvas.getBoundingClientRect();
+      draggedPoint.x = Math.max(15, Math.min(canvas.width - 15, e.clientX - rect.left));
+      draggedPoint.y = Math.max(15, Math.min(canvas.height - 15, e.clientY - rect.top));
+      drawLinkageCanvas();
+    });
+
+    window.addEventListener('mouseup', () => { draggedPoint = null; });
+
+    function drawLinkageCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Calcular distâncias
+      let minPair = null, maxPair = null;
+      let minD = Infinity, maxD = -Infinity;
+      let sumD = 0, countPairs = 0;
+
+      cluster1.forEach(p1 => {
+        cluster2.forEach(p2 => {
+          const d = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+          if (d < minD) { minD = d; minPair = [p1, p2]; }
+          if (d > maxD) { maxD = d; maxPair = [p1, p2]; }
+          sumD += d;
+          countPairs++;
+        });
+      });
+
+      const avgD = sumD / countPairs;
+
+      // Centróides
+      const c1 = {
+        x: cluster1.reduce((s, p) => s + p.x, 0) / cluster1.length,
+        y: cluster1.reduce((s, p) => s + p.y, 0) / cluster1.length
+      };
+      const c2 = {
+        x: cluster2.reduce((s, p) => s + p.x, 0) / cluster2.length,
+        y: cluster2.reduce((s, p) => s + p.y, 0) / cluster2.length
+      };
+      const centD = Math.hypot(c1.x - c2.x, c1.y - c2.y);
+
+      // Desenhar conexões de acordo com o Linkage
+      if (currentLinkage === 'single') {
+        drawLine(minPair[0], minPair[1], '#10b981', 3, false);
+        document.getElementById('dist-metric-badge').innerText = `Min d = ${minD.toFixed(1)} px`;
+        document.getElementById('linkage-live-feedback').innerHTML = `
+          <strong>Single Linkage Ativo:</strong> A dissimilaridade é definida exclusivamente pelo par mais próximo (${minD.toFixed(1)} px). Ignore todos os outros pontos distantes.
+        `;
+      } else if (currentLinkage === 'complete') {
+        drawLine(maxPair[0], maxPair[1], '#ef4444', 3, false);
+        document.getElementById('dist-metric-badge').innerText = `Max d = ${maxD.toFixed(1)} px`;
+        document.getElementById('linkage-live-feedback').innerHTML = `
+          <strong>Complete Linkage Ativo:</strong> A dissimilaridade é definida pelo pior caso / par mais distante (${maxD.toFixed(1)} px), garantindo que nada fique longe demais.
+        `;
+      } else if (currentLinkage === 'average') {
+        cluster1.forEach(p1 => {
+          cluster2.forEach(p2 => {
+            drawLine(p1, p2, 'rgba(2, 132, 199, 0.25)', 1, true);
+          });
+        });
+        document.getElementById('dist-metric-badge').innerText = `Média d = ${avgD.toFixed(1)} px`;
+        document.getElementById('linkage-live-feedback').innerHTML = `
+          <strong>Average Linkage Ativo:</strong> Considera todas as 16 combinações de pares possíveis. A distância efetiva é a média de todos os traços (${avgD.toFixed(1)} px).
+        `;
+      } else if (currentLinkage === 'centroid') {
+        drawLine(c1, c2, '#7c3aed', 3, true);
+        // Desenhar marcas de centróide
+        drawCentroidMark(c1, '#0284c7');
+        drawCentroidMark(c2, '#7c3aed');
+        document.getElementById('dist-metric-badge').innerText = `Centróides d = ${centD.toFixed(1)} px`;
+        document.getElementById('linkage-live-feedback').innerHTML = `
+          <strong>Centroid Linkage Ativo:</strong> Calcula os centros médios $\\mu_1$ e $\\mu_2$ e mede a distância euclidiana entre eles (${centD.toFixed(1)} px).
+        `;
+      }
+
+      // Desenhar pontos do Cluster 1
+      drawClusterPoints(cluster1, '#0284c7', 'C1');
+      // Desenhar pontos do Cluster 2
+      drawClusterPoints(cluster2, '#7c3aed', 'C2');
+    }
+
+    function drawLine(p1, p2, color, width, dash) {
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      if (dash) ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawClusterPoints(points, color, label) {
+      points.forEach(p => {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      });
+    }
+
+    function drawCentroidMark(c, color) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, 9, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 9px Fira Code';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('μ', c.x, c.y);
+    }
+
+    function triggerMath() {
+      if (typeof renderMathInElement === 'function') {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '\\[', right: '\\]', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false}
+          ],
+          throwOnError: false
+        });
+      }
+    }
+
+    setLinkage('single');
+    drawLinkageCanvas();
+    window.addEventListener('load', triggerMath);
+  </script>
+</body>
+</html>

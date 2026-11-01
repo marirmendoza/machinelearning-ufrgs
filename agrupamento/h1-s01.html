@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide H1 — Paradigma Hierárquico & Dendrograma</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .approach-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .approach-card:hover {
+      border-color: var(--primary);
+    }
+    .approach-card.active {
+      border-color: var(--primary);
+      background: var(--primary-lt);
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.18);
+    }
+    .tree-vis {
+      width: 100%;
+      height: 250px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Agrupamento Hierárquico</span>
+      <span class="prof-tag">Profa. Mariana Recamonde-Mendoza</span>
+      <span class="slide-counter">Seção 2 · Slide 01</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Agrupamento Hierárquico: Paradigmas, AGNES, DIANA & Dendrograma</h1>
+        <p class="slide-subtitle">
+          Ao contrário do particionamento plano (K-Means), o agrupamento hierárquico produz uma árvore de aninhamento contínua. Não é necessário fixar o número $k$ de clusters antes de executar o algoritmo!
+        </p>
+      </div>
+
+      <div class="content-split">
+        <!-- Esquerda: Aglomerativo vs Divisivo -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>1. Duas Estratégias Fundamentais (Aula 24)</span>
+            <span class="badge-tag">AGNES vs. DIANA</span>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.6rem; margin-bottom:0.6rem;">
+            <div class="approach-card active" id="card-agnes" onclick="selectApproach('agnes')">
+              <div style="font-weight:700; font-size:0.92rem; color:var(--primary); margin-bottom:0.25rem;">
+                🌱 Aglomerativo (AGNES)
+              </div>
+              <div style="font-size:0.8rem; color:var(--text-muted); line-height:1.4;">
+                Abordagem <em>Bottom-Up</em>: cada ponto começa como um cluster unitário e pares mais próximos vão sendo fundidos iterativamente.
+              </div>
+            </div>
+
+            <div class="approach-card" id="card-diana" onclick="selectApproach('diana')">
+              <div style="font-weight:700; font-size:0.92rem; color:var(--emerald); margin-bottom:0.25rem;">
+                ✂️ Divisivo (DIANA)
+              </div>
+              <div style="font-size:0.8rem; color:var(--text-muted); line-height:1.4;">
+                Abordagem <em>Top-Down</em>: todos os pontos iniciam em um único cluster global e são subdivididos recursivamente (ex: via K-Means).
+              </div>
+            </div>
+          </div>
+
+          <div id="approach-detail" class="highlight-box cyan" style="font-size:0.86rem; line-height:1.5;">
+            <!-- Preenchido dinamicamente via JS -->
+          </div>
+
+          <div class="table-container" style="margin-top:auto;">
+            <table class="styled-table" style="font-size:0.82rem;">
+              <thead>
+                <tr>
+                  <th>Propriedade</th>
+                  <th>K-Means (Particional)</th>
+                  <th>Hierárquico (AGNES)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>$k$ a priori?</strong></td>
+                  <td style="color:var(--rose);">Obrigatório antes</td>
+                  <td style="color:var(--emerald); font-weight:600;">Desnecessário (corte livre)</td>
+                </tr>
+                <tr>
+                  <td><strong>Complexidade</strong></td>
+                  <td style="color:var(--emerald); font-weight:600;">$O(t \cdot k \cdot n)$ — Escalável</td>
+                  <td style="color:var(--rose);">$O(n^2)$ a $O(n^3)$ — Quadrático</td>
+                </tr>
+                <tr>
+                  <td><strong>Estrutura</strong></td>
+                  <td>Partição plana rígida</td>
+                  <td>Árvore de aninhamento rica</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Direita: Conceito do Dendrograma e Linha de Corte -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>2. O Dendrograma & O Corte de Dissimilaridade</span>
+            <span class="badge-tag">Visualizador Interativo</span>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem;">
+            <label style="font-size:0.82rem; font-weight:600; color:var(--text-muted);">
+              Altura do Corte Horizontal ($\text{Cut Height}$):
+            </label>
+            <span id="disp-cut" style="font-family:'Fira Code'; font-size:0.85rem; font-weight:700; color:var(--primary);">
+              Distância = 45.0
+            </span>
+          </div>
+          <input type="range" id="cut-slider" min="15" max="85" value="45" oninput="updateCutDemo()" style="width:100%; cursor:pointer; margin-bottom:0.6rem;" />
+
+          <canvas id="dendro-demo-canvas" class="tree-vis" width="460" height="230"></canvas>
+
+          <div id="cut-result" class="highlight-box emerald" style="font-size:0.86rem; margin-top:0.6rem;">
+            <!-- Preenchido via JS -->
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <a class="btn-nav" href="b4-s03.html">← Anterior</a>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <a class="btn-nav" href="h1-s02.html">Próximo →</a>
+    </nav>
+  </div>
+
+  <script>
+    const approachData = {
+      agnes: {
+        title: "🌱 Abordagem Aglomerativa (AGNES — Agglomerative Nesting)",
+        color: "cyan",
+        text: `
+          • <strong>Inicialização:</strong> Inicia com $n$ clusters, cada um contendo exatamente um único objeto.<br />
+          • <strong>Matriz de Distâncias:</strong> Calcula a matriz simétrica $n \\times n$ com distâncias euclidianas ou de Manhattan.<br />
+          • <strong>Fusão Sucessiva:</strong> Identifica iterativamente os dois clusters mais próximos segundo um critério de ligação e os agrupa em um novo nó.<br />
+          • <strong>Parada:</strong> O algoritmo encerra quando todos os objetos convergem em uma única raiz no topo da árvore.
+        `
+      },
+      diana: {
+        title: "✂️ Abordagem Divisiva (DIANA — Divisive Analysis)",
+        color: "emerald",
+        text: `
+          • <strong>Inicialização:</strong> Inicia com todos os $n$ pontos em um único cluster global gigante.<br />
+          • <strong>Divisão Recursiva:</strong> Pode ser visto como uma aplicação recursiva de um algoritmo particional (como K-Means com $k=2$) para cindir sucessivamente grupos heterogêneos.<br />
+          • <strong>Trade-off:</strong> Geralmente mais complexo por rodar particionamento como subrotina, mas muito eficiente se limitarmos a profundidade da árvore (parada antecipada).
+        `
+      }
+    };
+
+    function selectApproach(key) {
+      document.querySelectorAll('.approach-card').forEach(c => c.classList.remove('active'));
+      document.getElementById('card-' + key).classList.add('active');
+
+      const data = approachData[key];
+      const box = document.getElementById('approach-detail');
+      box.className = 'highlight-box ' + data.color;
+      box.innerHTML = `<div style="font-weight:700; margin-bottom:0.25rem;">${data.title}</div>${data.text}`;
+      triggerMath();
+    }
+
+    // Mini Dendrograma Interativo demonstrativo
+    const dCanvas = document.getElementById('dendro-demo-canvas');
+    const dCtx = dCanvas.getContext('2d');
+
+    // Estrutura pré-computada de 6 folhas: A, B, C, D, E, F
+    // x positions: A=50, B=110, C=180, D=240, E=330, F=400
+    // Fusões:
+    // 1. (A, B) fusão em y=25 (dist=15)
+    // 2. (C, D) fusão em y=35 (dist=22)
+    // 3. ((A, B), (C, D)) fusão em y=65 (dist=40)
+    // 4. (E, F) fusão em y=45 (dist=28)
+    // 5. Root fusão em y=95 (dist=75)
+    function updateCutDemo() {
+      const cutVal = parseFloat(document.getElementById('cut-slider').value);
+      document.getElementById('disp-cut').innerText = `Distância = ${cutVal.toFixed(1)}`;
+
+      dCtx.clearRect(0, 0, dCanvas.width, dCanvas.height);
+
+      const baseY = 195;
+      const scaleY = 1.9;
+
+      // Coordenadas
+      const leafX = { A: 50, B: 110, C: 180, D: 240, E: 330, F: 410 };
+      const labels = ['A', 'B', 'C', 'D', 'E', 'F'];
+
+      // Níveis de distância
+      const h_AB = 20; // y = baseY - 20*scaleY
+      const h_CD = 30;
+      const h_ABCD = 55;
+      const h_EF = 38;
+      const h_ROOT = 82;
+
+      // Desenhar ramos pretos
+      dCtx.strokeStyle = '#64748b';
+      dCtx.lineWidth = 2;
+
+      // Ramo AB
+      drawFork(dCtx, leafX.A, leafX.B, baseY, baseY - h_AB * scaleY);
+      const abX = (leafX.A + leafX.B) / 2;
+
+      // Ramo CD
+      drawFork(dCtx, leafX.C, leafX.D, baseY, baseY - h_CD * scaleY);
+      const cdX = (leafX.C + leafX.D) / 2;
+
+      // Ramo ABCD
+      drawFork(dCtx, abX, cdX, baseY - h_AB * scaleY, baseY - h_ABCD * scaleY, baseY - h_CD * scaleY);
+      const abcdX = (abX + cdX) / 2;
+
+      // Ramo EF
+      drawFork(dCtx, leafX.E, leafX.F, baseY, baseY - h_EF * scaleY);
+      const efX = (leafX.E + leafX.F) / 2;
+
+      // Ramo ROOT
+      drawFork(dCtx, abcdX, efX, baseY - h_ABCD * scaleY, baseY - h_ROOT * scaleY, baseY - h_EF * scaleY);
+
+      // Desenhar rótulos das folhas
+      dCtx.fillStyle = '#0f172a';
+      dCtx.font = 'bold 12px Fira Code';
+      dCtx.textAlign = 'center';
+      labels.forEach(l => {
+        dCtx.fillText(l, leafX[l], baseY + 18);
+      });
+
+      // Linha de corte horizontal
+      const cutCanvasY = baseY - cutVal * scaleY;
+      dCtx.save();
+      dCtx.strokeStyle = '#ef4444';
+      dCtx.lineWidth = 2;
+      dCtx.setLineDash([5, 4]);
+      dCtx.beginPath();
+      dCtx.moveTo(20, cutCanvasY);
+      dCtx.lineTo(dCanvas.width - 20, cutCanvasY);
+      dCtx.stroke();
+      dCtx.restore();
+
+      // Label do corte
+      dCtx.fillStyle = '#ef4444';
+      dCtx.font = 'bold 10px Inter';
+      dCtx.textAlign = 'right';
+      dCtx.fillText('Linha de Corte', dCanvas.width - 25, cutCanvasY - 6);
+
+      // Determinar número de clusters resultantes
+      let k = 1;
+      let clusterDesc = "";
+      if (cutVal >= h_ROOT) {
+        k = 1;
+        clusterDesc = "<strong>1 único cluster:</strong> {A, B, C, D, E, F} (corte acima da raiz)";
+      } else if (cutVal >= h_ABCD) {
+        k = 2;
+        clusterDesc = "<strong>k = 2 clusters:</strong> {A, B, C, D} e {E, F}";
+      } else if (cutVal >= h_EF) {
+        k = 3;
+        clusterDesc = "<strong>k = 3 clusters:</strong> {A, B}, {C, D} e {E, F}";
+      } else if (cutVal >= h_CD) {
+        k = 4;
+        clusterDesc = "<strong>k = 4 clusters:</strong> {A, B}, {C, D}, {E} e {F}";
+      } else if (cutVal >= h_AB) {
+        k = 5;
+        clusterDesc = "<strong>k = 5 clusters:</strong> {A, B}, {C}, {D}, {E} e {F}";
+      } else {
+        k = 6;
+        clusterDesc = "<strong>k = 6 clusters:</strong> Todos os 6 pontos isolados individualmente";
+      }
+
+      const resBox = document.getElementById('cut-result');
+      resBox.innerHTML = `
+        <strong>Interpretação do Corte:</strong> Cortar o dendrograma na altura de dissimilaridade <code>${cutVal.toFixed(1)}</code> produz <strong>${clusterDesc}</strong>.
+      `;
+    }
+
+    function drawFork(ctx, x1, x2, y1, forkY, y2 = y1) {
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x1, forkY);
+      ctx.lineTo(x2, forkY);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    }
+
+    function triggerMath() {
+      if (typeof renderMathInElement === 'function') {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '\\[', right: '\\]', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false}
+          ],
+          throwOnError: false
+        });
+      }
+    }
+
+    selectApproach('agnes');
+    updateCutDemo();
+    window.addEventListener('load', triggerMath);
+  </script>
+</body>
+</html>
